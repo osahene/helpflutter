@@ -4,6 +4,7 @@ import 'package:helpflutter/core/utils/size_config.dart';
 // import 'package:helpflutter/core/widgets/bottom_nav_bar.dart';
 import 'package:helpflutter/core/widgets/emergency_tile.dart';
 import 'package:helpflutter/core/widgets/top_nav_bar.dart';
+import 'package:helpflutter/presentation/screens/profile/profile_screen.dart';
 // import 'package:helpflutter/presentation/routes/app_router.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -38,7 +39,14 @@ class HomeScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: const TopNavBar(),
+      appBar: TopNavBar(
+        onProfileTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          );
+        },
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: GridView.builder(
