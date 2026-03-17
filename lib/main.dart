@@ -4,6 +4,7 @@ import 'package:helpflutter/data/repositories/contact_repository.dart';
 import 'package:helpflutter/data/repositories/dependent_repository.dart';
 import 'package:helpflutter/data/repositories/live_report_repository.dart';
 import 'package:helpflutter/data/repositories/tutorial_repository.dart';
+import 'package:helpflutter/data/repositories/profile_repository.dart';
 import 'package:helpflutter/presentation/routes/app_router.dart';
 import 'package:provider/provider.dart';
 
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
           create: (_) => MockLiveReportRepository(),
         ),
         Provider<TutorialRepository>(create: (_) => MockTutorialRepository()),
+        Provider<ProfileRepository>(create: (_) => MockProfileRepository()),
         // Add other repositories if needed
       ],
       child: MaterialApp(
