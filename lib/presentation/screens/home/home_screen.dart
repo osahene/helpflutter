@@ -21,12 +21,12 @@ class HomeScreen extends StatelessWidget {
     SizeConfig().init(context);
     final situations = AppConstants.situations;
     final icons = [
-      Icons.masks, // robbery
+      Icons.security, // robbery
       Icons.health_and_safety, // health
       Icons.fire_truck, // fire
       Icons.flood, // flood
       Icons.car_crash, // accident
-      Icons.gavel, // violence
+      Icons.back_hand, // violence
     ];
     final colors = [
       const Color(0xFFFF6B6B), // softer red

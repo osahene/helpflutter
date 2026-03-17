@@ -36,7 +36,7 @@ class EmergencyTile extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, size: 50, color: Colors.white),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
               Text(
                 title,
                 style: const TextStyle(

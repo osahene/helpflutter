@@ -22,4 +22,6 @@ class Tutorial {
       videoUrl: json['video_url'],
     );
   }
+
+  get duration => null;
 }

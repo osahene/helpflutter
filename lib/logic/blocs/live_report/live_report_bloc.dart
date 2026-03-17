@@ -10,11 +10,12 @@ class LiveReportBloc extends Bloc<LiveReportEvent, LiveReportState> {
   final LiveReportRepository repository;
 
   LiveReportBloc({required this.repository}) : super(LiveReportInitial()) {
-    on<SendTextReport>(_onSendTextReport);
+    // Change the event type here to SendLiveReport
+    on<SendLiveReport>(_onSendLiveReport);
   }
 
-  Future<void> _onSendTextReport(
-    SendTextReport event,
+  Future<void> _onSendLiveReport(
+    SendLiveReport event,
     Emitter<LiveReportState> emit,
   ) async {
     emit(LiveReportLoading());
@@ -23,10 +24,12 @@ class LiveReportBloc extends Bloc<LiveReportEvent, LiveReportState> {
         situation: event.situation,
         recipientIds: event.recipientIds,
         message: event.message,
-        type: ReportType.text,
-        // location would be added later
+        type: event.mediaPaths.isEmpty ? ReportType.text : ReportType.video,
+        // mediaPaths: event.mediaPaths, // Ensure your LiveReport model has this field!
       );
+
       final success = await repository.sendReport(report);
+
       if (success) {
         emit(LiveReportSuccess());
       } else {
