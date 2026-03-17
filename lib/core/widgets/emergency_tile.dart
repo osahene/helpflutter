@@ -18,18 +18,19 @@ class EmergencyTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
+        splashColor: color.withValues(alpha: 0.3),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [color.withValues(alpha: 0.7), color],
+              colors: [color.withValues(alpha: 0.8), color],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -39,7 +40,7 @@ class EmergencyTile extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),

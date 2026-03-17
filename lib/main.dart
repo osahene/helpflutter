@@ -5,6 +5,7 @@ import 'package:helpflutter/data/repositories/dependent_repository.dart';
 import 'package:helpflutter/data/repositories/live_report_repository.dart';
 import 'package:helpflutter/data/repositories/tutorial_repository.dart';
 import 'package:helpflutter/data/repositories/profile_repository.dart';
+import 'package:helpflutter/data/repositories/alert_repository.dart';
 import 'package:helpflutter/presentation/routes/app_router.dart';
 import 'package:provider/provider.dart';
 
@@ -27,6 +28,14 @@ class MyApp extends StatelessWidget {
         ),
         Provider<TutorialRepository>(create: (_) => MockTutorialRepository()),
         Provider<ProfileRepository>(create: (_) => MockProfileRepository()),
+
+        // FIXED: Replaced constructor signature with actual instantiation
+        Provider<AlertRepository>(
+          create: (_) => AlertRepositoryImpl(
+            baseUrl:
+                'https://your-production-backend.com/api', // <-- Insert your actual API base URL here
+          ),
+        ),
         // Add other repositories if needed
       ],
       child: MaterialApp(

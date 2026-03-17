@@ -29,20 +29,44 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
       create: (context) =>
           RegisterContactBloc(repository: context.read<ContactRepository>()),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Register Contact')),
+        appBar: AppBar(
+          title: const Text('Add Trusted Contact'),
+          centerTitle: true,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.secondary,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+        ),
         body: BlocListener<RegisterContactBloc, RegisterContactState>(
           listener: (context, state) {
             if (state is RegisterContactSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Contact registered successfully'),
+                SnackBar(
+                  content: const Text('Contact registered successfully'),
+                  backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               );
               Navigator.pop(context);
             } else if (state is RegisterContactFailure) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(state.message)));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             }
           },
           child: BlocBuilder<RegisterContactBloc, RegisterContactState>(
@@ -51,45 +75,77 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
                 return const LoadingIndicator(message: 'Registering...');
               }
               return SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 child: Form(
                   key: _formKey,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextFormField(
-                        controller: _firstNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'First Name',
-                        ),
-                        validator: Validators.validateName,
+                      const SizedBox(height: 10),
+                      Text(
+                        'Contact Information',
+                        style: Theme.of(context).textTheme.headlineMedium,
                       ),
-                      TextFormField(
-                        controller: _lastNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Last Name',
-                        ),
-                        validator: Validators.validateName,
+                      const SizedBox(height: 20),
+                      // First & Last name row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _firstNameController,
+                              decoration: const InputDecoration(
+                                labelText: 'First Name',
+                                prefixIcon: Icon(Icons.person_outline),
+                              ),
+                              validator: Validators.validateName,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _lastNameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Last Name',
+                                prefixIcon: Icon(Icons.person_outline),
+                              ),
+                              validator: Validators.validateName,
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _addressController,
-                        decoration: const InputDecoration(labelText: 'Address'),
+                        decoration: const InputDecoration(
+                          labelText: 'Address',
+                          prefixIcon: Icon(Icons.location_on),
+                        ),
                         validator: Validators.validateAddress,
                       ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _phoneController,
+                        keyboardType: TextInputType.phone,
                         decoration: const InputDecoration(
                           labelText: 'Phone Number',
                           hintText: '+233XXXXXXXXX',
+                          prefixIcon: Icon(Icons.phone_outlined),
                         ),
                         validator: Validators.validatePhone,
                       ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _emailController,
-                        decoration: const InputDecoration(labelText: 'Email'),
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
                         validator: Validators.validateEmail,
                       ),
+                      const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
-                        initialValue: _selectedRelation,
+                        value: _selectedRelation,
                         items: AppConstants.relations.map((relation) {
                           return DropdownMenuItem(
                             value: relation,
@@ -100,20 +156,20 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
                             setState(() => _selectedRelation = value),
                         decoration: const InputDecoration(
                           labelText: 'Relation',
+                          prefixIcon: Icon(Icons.family_restroom),
                         ),
                         validator: (value) =>
                             Validators.validateRelation(value),
                       ),
-                      const SizedBox(height: 16),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Situations to notify:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Notify for these situations:',
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
+                      const SizedBox(height: 12),
                       Wrap(
                         spacing: 8,
+                        runSpacing: 8,
                         children: AppConstants.situations.map((situation) {
                           final isSelected = _selectedSituations.contains(
                             situation,
@@ -130,37 +186,75 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
                                 }
                               });
                             },
+                            backgroundColor: Colors.grey.shade100,
+                            selectedColor: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.2),
+                            checkmarkColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
+                            labelStyle: TextStyle(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.black87,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                            shape: StadiumBorder(
+                              side: BorderSide(
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.grey.shade300,
+                              ),
+                            ),
                           );
                         }).toList(),
                       ),
                       if (_selectedSituations.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             'Select at least one situation',
-                            style: TextStyle(color: Colors.red, fontSize: 12),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate() &&
-                              _selectedSituations.isNotEmpty) {
-                            context.read<RegisterContactBloc>().add(
-                              SubmitContact(
-                                firstName: _firstNameController.text,
-                                lastName: _lastNameController.text,
-                                address: _addressController.text,
-                                phone: _phoneController.text,
-                                email: _emailController.text,
-                                relation: _selectedRelation!,
-                                situations: _selectedSituations,
-                              ),
-                            );
-                          }
-                        },
-                        child: const Text('Register'),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate() &&
+                                _selectedSituations.isNotEmpty) {
+                              context.read<RegisterContactBloc>().add(
+                                SubmitContact(
+                                  firstName: _firstNameController.text,
+                                  lastName: _lastNameController.text,
+                                  address: _addressController.text,
+                                  phone: _phoneController.text,
+                                  email: _emailController.text,
+                                  relation: _selectedRelation!,
+                                  situations: _selectedSituations,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: const Text(
+                            'Register Contact',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
                       ),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
