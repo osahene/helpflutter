@@ -103,7 +103,7 @@ class EmergencyContactsScreen extends StatelessWidget {
                   ),
                 ),
               );
-            }).toList(),
+            }),
             const Divider(height: 32, thickness: 1),
             Text(
               '🤝 Help Oo Help Organization',

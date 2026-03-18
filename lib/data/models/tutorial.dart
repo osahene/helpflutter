@@ -1,9 +1,10 @@
 class Tutorial {
   final String id;
   final String title;
-  final String category; // health, flood, fire, robbery, accident
+  final String category;
   final String thumbnailUrl;
-  final String videoUrl; // could be YouTube link or direct mp4
+  final String videoUrl;
+  final Duration? duration;
 
   Tutorial({
     required this.id,
@@ -11,6 +12,7 @@ class Tutorial {
     required this.category,
     required this.thumbnailUrl,
     required this.videoUrl,
+    this.duration,
   });
 
   factory Tutorial.fromJson(Map<String, dynamic> json) {
@@ -20,8 +22,10 @@ class Tutorial {
       category: json['category'],
       thumbnailUrl: json['thumbnail_url'],
       videoUrl: json['video_url'],
+      // 3. Parse duration from JSON (assuming it's stored as seconds/int)
+      duration: json['duration_seconds'] != null
+          ? Duration(seconds: json['duration_seconds'])
+          : null,
     );
   }
-
-  get duration => null;
 }

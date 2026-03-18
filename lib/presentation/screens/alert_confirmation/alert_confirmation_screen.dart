@@ -24,7 +24,7 @@ class AlertConfirmationScreen extends StatefulWidget {
 class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
-  bool _includeLocation = true;
+  final _includeLocation = true;
   late Future<int> _contactsCountFuture;
 
   @override

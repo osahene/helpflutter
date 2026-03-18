@@ -86,7 +86,7 @@ class _LiveReportScreenState extends State<LiveReportScreen> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: _selectedSituation,
+                  initialValue: _selectedSituation,
                   items: AppConstants.situations.map((s) {
                     return DropdownMenuItem(value: s, child: Text(s));
                   }).toList(),
