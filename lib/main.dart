@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:helpflutter/core/theme/theme.dart';
 import 'package:helpflutter/data/repositories/contact_repository.dart';
 import 'package:helpflutter/data/repositories/dependent_repository.dart';
@@ -10,11 +11,33 @@ import 'package:helpflutter/presentation/routes/app_router.dart';
 import 'package:provider/provider.dart';
 
 void main() {
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    initialization();
+  }
+
+  void initialization() async {
+    // This is where you could load user data, check login status, etc.
+    // For now, we'll just wait a brief moment to ensure everything is ready.
+    await Future.delayed(const Duration(seconds: 1));
+
+    // This is the line you were missing!
+    FlutterNativeSplash.remove();
+  }
 
   @override
   Widget build(BuildContext context) {
