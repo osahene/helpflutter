@@ -3,7 +3,7 @@ import 'package:helpflutter/presentation/screens/contact/contact_screen.dart';
 import 'package:helpflutter/presentation/screens/emergency_contact/emergency_contacts_screen.dart';
 import 'package:helpflutter/presentation/screens/home/home_screen.dart';
 import 'package:helpflutter/presentation/screens/live_report/live_report_screen.dart';
-import 'package:helpflutter/presentation/screens/register/register_contact_screen.dart';
+import 'package:helpflutter/presentation/screens/register_contacts/register_contact_screen.dart';
 import 'package:helpflutter/presentation/screens/video_tutorials/video_tutorials_screen.dart';
 import 'package:helpflutter/core/widgets/suspended_button_nav_bar.dart';
 

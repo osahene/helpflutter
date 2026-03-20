@@ -60,6 +60,12 @@ dependencies:
   font_awesome_flutter: ^11.0.0
   image_picker: ^1.2.1
   flutter_native_splash: ^2.4.7
+  dio_cookie_manager: ^3.4.0
+  cookie_jar: ^4.0.9
+  jwt_decoder: ^2.0.1
+  google_sign_in: ^7.2.0
+  pinput: ^6.0.2
+  country_code_picker: ^3.4.1
 
 dev_dependencies:
   flutter_test:
