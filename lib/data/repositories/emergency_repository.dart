@@ -14,7 +14,7 @@ class EmergencyRepository {
         .toList();
   }
 
-  Map<String, String> getHelpOoHelpContacts() {
+  List<Map<String, dynamic>> getHelpOoHelpContacts() {
     return AppConstants.helpOoHelpContacts;
   }
 }

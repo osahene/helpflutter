@@ -9,11 +9,13 @@ import 'package:helpflutter/presentation/screens/profile/profile_screen.dart';
 class HomeScreen extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTabTapped;
+  final VoidCallback? onMenuTap; //
 
   const HomeScreen({
     super.key,
     required this.currentIndex,
     required this.onTabTapped,
+    this.onMenuTap,
   });
 
   @override
@@ -21,24 +23,24 @@ class HomeScreen extends StatelessWidget {
     SizeConfig().init(context);
     final situations = AppConstants.situations;
     final icons = [
-      Icons.security, // robbery
-      Icons.health_and_safety, // health
-      Icons.fire_truck, // fire
-      Icons.flood, // flood
-      Icons.car_crash, // accident
-      Icons.back_hand, // violence
+      Icons.security,
+      Icons.health_and_safety,
+      Icons.fire_truck,
+      Icons.flood,
+      Icons.car_crash,
+      Icons.back_hand,
     ];
     final colors = [
-      const Color(0xFFFF6B6B), // softer red
-      const Color(0xFF4ECDC4), // mint
-      const Color(0xFFFFB347), // orange
-      const Color(0xFF5D9BEC), // blue
-      const Color(0xFF9B6B9B), // purple
-      const Color(0xFFCC8E65), // brown
+      const Color(0xFFFF6B6B),
+      const Color(0xFF4ECDC4),
+      const Color(0xFFFFB347),
+      const Color(0xFF5D9BEC),
+      const Color(0xFF9B6B9B),
+      const Color(0xFFCC8E65),
     ];
 
     return Scaffold(
-      extendBody: true, // for transparent bottom nav
+      extendBody: true,
       appBar: TopNavBar(
         onProfileTap: () {
           Navigator.push(
@@ -46,13 +48,17 @@ class HomeScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const ProfileScreen()),
           );
         },
+        onMenuTap: onMenuTap, // pass the drawer opener
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Theme.of(context).colorScheme.surface],
+            colors: [
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+            ],
           ),
         ),
         child: Padding(
@@ -63,44 +69,50 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 'What’s the emergency?',
-                style: Theme.of(context).textTheme.headlineMedium,
+                style: Theme.of(context).textTheme.displaySmall,
               ),
               const SizedBox(height: 8),
               Text(
                 'Select the situation to alert your trusted contacts',
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
               const SizedBox(height: 24),
               Expanded(
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount:
-                        SizeConfig.orientation == Orientation.portrait ? 2 : 3,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.0,
-                  ),
-                  itemCount: situations.length,
-                  itemBuilder: (context, index) {
-                    return EmergencyTile(
-                      title: situations[index],
-                      icon: icons[index],
-                      color: colors[index],
-                      onTap: () {
-                        // Navigate to alert confirmation with selected situation
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => AlertConfirmationScreen(
-                              situation: situations[index],
-                              situationIcon: icons[index],
-                              situationColor: colors[index],
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 80,
+                  ), // avoid content behind bottom nav
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount:
+                          SizeConfig.orientation == Orientation.portrait
+                          ? 2
+                          : 3,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.98,
+                    ),
+                    itemCount: situations.length,
+                    itemBuilder: (context, index) {
+                      return EmergencyTile(
+                        title: situations[index],
+                        icon: icons[index],
+                        color: colors[index],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => AlertConfirmationScreen(
+                                situation: situations[index],
+                                situationIcon: icons[index],
+                                situationColor: colors[index],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    );
-                  },
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],

@@ -123,7 +123,7 @@ class _LiveReportScreenState extends State<LiveReportScreen> {
                         setState(() {
                           if (selected) {
                             _selectedOrgIds = organizations
-                                .map((e) => e['name']!)
+                                .map((e) => e['name'] as String)
                                 .toSet();
                           } else {
                             _selectedOrgIds.clear();
@@ -162,7 +162,7 @@ class _LiveReportScreenState extends State<LiveReportScreen> {
                           style: const TextStyle(fontSize: 16),
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
                 if (_selectedOrgIds.isEmpty)

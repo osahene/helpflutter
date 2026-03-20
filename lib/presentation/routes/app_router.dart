@@ -5,6 +5,7 @@ import 'package:helpflutter/presentation/screens/home/home_screen.dart';
 import 'package:helpflutter/presentation/screens/live_report/live_report_screen.dart';
 import 'package:helpflutter/presentation/screens/register/register_contact_screen.dart';
 import 'package:helpflutter/presentation/screens/video_tutorials/video_tutorials_screen.dart';
+import 'package:helpflutter/core/widgets/suspended_button_nav_bar.dart';
 
 class AppRouter {
   static const String home = '/';
@@ -50,17 +51,17 @@ class HomeWrapper extends StatefulWidget {
 
 class _HomeWrapperState extends State<HomeWrapper> {
   int _currentIndex = 0;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final List<Widget> _screens = [
     HomeScreen(
       currentIndex: 0,
       onTabTapped: (index) {},
-    ), // We'll pass a function that updates index from outside
+      onMenuTap: null, // placeholder, will be replaced later
+    ),
     const RegisterContactScreen(),
     const ContactsScreen(),
     const EmergencyContactsScreen(),
-    const LiveReportScreen(),
-    const VideoTutorialsScreen(),
   ];
 
   void _onTabTapped(int index) {
@@ -69,43 +70,71 @@ class _HomeWrapperState extends State<HomeWrapper> {
     });
   }
 
+  void _openDrawer() {
+    _scaffoldKey.currentState?.openDrawer();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Rebuild HomeScreen with updated onTabTapped
+    // Update the home screen with current index and the drawer opener
     final homeScreen = HomeScreen(
       currentIndex: _currentIndex,
       onTabTapped: _onTabTapped,
+      onMenuTap: _openDrawer,
     );
-    // Replace first screen with updated homeScreen
     _screens[0] = homeScreen;
 
     return Scaffold(
+      key: _scaffoldKey, // needed to open drawer
+      extendBody: true, // allows body to go under the floating bottom nav
       body: _screens[_currentIndex],
-      // Use BottomNavigationBar if you don't have a custom BottomNavBar widget
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: SuspendedBottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
-        // The built-in widget requires 'items' to be defined
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_add),
-            label: 'Register',
+      ),
+      drawer: Drawer(
+        child: SafeArea(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(color: Color(0xFF6C5CE7)),
+                child: Text(
+                  'Menu',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.report),
+                title: const Text('Live Report'),
+                onTap: () {
+                  Navigator.pop(context); // close drawer
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LiveReportScreen()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.video_library),
+                title: const Text('Video Tutorials'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const VideoTutorialsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.contacts),
-            label: 'Contacts',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.warning),
-            label: 'Emergency',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.report), label: 'Report'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.video_library),
-            label: 'Tutorials',
-          ),
-        ],
+        ),
       ),
     );
   }

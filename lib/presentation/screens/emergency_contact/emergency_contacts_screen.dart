@@ -23,8 +23,8 @@ class EmergencyContactsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nationalNumbers = AppConstants.nationalEmergencies;
-    final helpContacts = AppConstants.helpOoHelpContacts;
+    final emergencyServices = AppConstants.nationalEmergencies;
+    final contactUs = AppConstants.helpOoHelpContacts;
 
     return Scaffold(
       appBar: AppBar(
@@ -48,7 +48,12 @@ class EmergencyContactsScreen extends StatelessWidget {
           ),
         ),
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            MediaQuery.of(context).padding.bottom + 16, // extra bottom padding
+          ),
           children: [
             const SizedBox(height: 8),
             Text(
@@ -58,7 +63,9 @@ class EmergencyContactsScreen extends StatelessWidget {
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            ...nationalNumbers.map((item) {
+            ...emergencyServices.map((service) {
+              final name = service['name'] as String;
+              final contacts = service['phone'] as List<String>;
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: Card(
@@ -66,40 +73,40 @@ class EmergencyContactsScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...contacts.map(
+                          (phone) => ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.phone,
+                                color: Colors.green.shade700,
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(phone),
+                            onTap: () => _makePhoneCall(phone),
+                          ),
+                        ),
+                      ],
                     ),
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: item['name']!.contains('Police')
-                            ? Colors.blue.shade50
-                            : Colors.red.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        item['icon']!,
-                        style: const TextStyle(fontSize: 24),
-                      ),
-                    ),
-                    title: Text(
-                      item['name']!,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text(item['phone']!),
-                    trailing: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.phone, color: Colors.green.shade700),
-                        onPressed: () => _makePhoneCall(item['phone']!),
-                      ),
-                    ),
-                    onTap: () => _makePhoneCall(item['phone']!),
                   ),
                 ),
               );
@@ -112,91 +119,79 @@ class EmergencyContactsScreen extends StatelessWidget {
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            // Use a grid or list for organization contacts
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              children: [
-                _buildOrgCard(
-                  context,
-                  Icons.phone,
-                  'Call',
-                  helpContacts['phone']!,
-                  Colors.green,
-                  () => _makePhoneCall(helpContacts['phone']!),
-                ),
-                _buildOrgCard(
-                  context,
-                  Icons.message,
-                  'WhatsApp',
-                  helpContacts['whatsapp']!,
-                  Colors.teal,
-                  () => _launchUrl(helpContacts['whatsapp']!),
-                ),
-                _buildOrgCard(
-                  context,
-                  Icons.email,
-                  'Email',
-                  helpContacts['email']!,
-                  Colors.blue,
-                  () => _launchUrl('mailto:${helpContacts['email']}'),
-                ),
-                _buildOrgCard(
-                  context,
-                  Icons.language,
-                  'Website',
-                  helpContacts['website']!,
-                  Colors.purple,
-                  () => _launchUrl(helpContacts['website']!),
-                ),
-              ],
+              children: contactUs.map((contact) {
+                final name = contact['name'] as String;
+                final icon = contact['icon'] as IconData;
+                final actions = contact['actions'];
+                final link = contact['link'] as String?;
+
+                // Determine the action and display text
+                VoidCallback? onTap;
+                String displayText = '';
+
+                if (name == 'WhatsApp' || name == 'Call') {
+                  // actions is a list of phone numbers
+                  if (actions is List && actions.isNotEmpty) {
+                    final phone = actions.first.toString();
+                    displayText = phone;
+                    onTap = () => _makePhoneCall(phone);
+                  }
+                } else if (name == 'Facebook' || name == 'Twitter') {
+                  // actions is a string description, link is the URL
+                  displayText = actions.toString();
+                  if (link != null && link.isNotEmpty) {
+                    onTap = () => _launchUrl(link);
+                  }
+                } else {
+                  // fallback
+                  displayText = actions.toString();
+                }
+
+                return InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    width: (MediaQuery.of(context).size.width - 56) / 2,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.shade200,
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(icon, size: 32, color: Colors.teal),
+                        const SizedBox(height: 8),
+                        Text(
+                          name,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          displayText,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrgCard(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String subtitle,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width:
-            (MediaQuery.of(context).size.width - 56) /
-            2, // two columns with spacing
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.shade200,
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 32, color: color),
-            const SizedBox(height: 8),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              textAlign: TextAlign.center,
-            ),
           ],
         ),
       ),
