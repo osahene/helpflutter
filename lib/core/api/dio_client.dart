@@ -50,7 +50,7 @@ class DioClient {
   }
 
   static Future<void> _onError(
-    DioError error,
+    DioException error,
     ErrorInterceptorHandler handler,
   ) async {
     if (error.response?.statusCode == 401) {

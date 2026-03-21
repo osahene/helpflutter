@@ -22,9 +22,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     _googleSignIn.initialize();
 
     on<CheckAuthStatus>(_onCheckAuthStatus);
-    on<LoginWithGoogleRequested>(_onLoginWithGoogle);
-
-    on<CheckAuthStatus>(_onCheckAuthStatus);
     on<LoginWithEmailRequested>(_onLoginWithEmail);
     on<RegisterWithEmailRequested>(_onRegisterWithEmail);
     on<LoginWithGoogleRequested>(_onLoginWithGoogle);

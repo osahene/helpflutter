@@ -45,7 +45,7 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [theme.colorScheme.background, theme.colorScheme.surface],
+              colors: [theme.colorScheme.surface, theme.colorScheme.surface],
             ),
           ),
           child: SafeArea(
