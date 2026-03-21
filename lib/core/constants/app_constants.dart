@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppConstants {
   static const String appName = 'Help Oo Help';
-  static const String logoPath = 'assets/logo.png'; // Add your logo asset
+  static const String logoPath = 'assets/logo/logo.png'; // Add your logo asset
 
   // Emergency situations
   static const List<String> situations = [

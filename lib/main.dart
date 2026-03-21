@@ -8,12 +8,12 @@ import 'package:helpflutter/data/repositories/live_report_repository.dart';
 import 'package:helpflutter/data/repositories/tutorial_repository.dart';
 import 'package:helpflutter/data/repositories/profile_repository.dart';
 import 'package:helpflutter/data/repositories/alert_repository.dart';
-import 'package:helpflutter/data/repositories/auth_repository.dart'; // ✅ Add this
-import 'package:helpflutter/logic/blocs/auth/auth_bloc.dart'; // ✅ Add this
+import 'package:helpflutter/data/repositories/auth_repository.dart';
+import 'package:helpflutter/logic/blocs/auth/auth_bloc.dart';
 import 'package:helpflutter/presentation/screens/onboarding/onboarding_screen.dart';
-import 'package:helpflutter/presentation/screens/login/login_screen.dart'; // ✅ Adjust path if needed
-import 'package:helpflutter/presentation/screens/home/home_screen.dart';
+import 'package:helpflutter/presentation/screens/login/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:helpflutter/presentation/routes/app_router.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -37,7 +37,6 @@ class _MyAppState extends State<MyApp> {
   }
 
   void initialization() async {
-    // Simulate loading (e.g., load user data)
     await Future.delayed(const Duration(seconds: 1));
     FlutterNativeSplash.remove();
   }
@@ -46,7 +45,6 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Repositories (using Provider)
         Provider<ContactRepository>(create: (_) => MockContactRepository()),
         Provider<DependentRepository>(create: (_) => MockDependentRepository()),
         Provider<LiveReportRepository>(
@@ -59,7 +57,6 @@ class _MyAppState extends State<MyApp> {
             baseUrl: 'https://your-production-backend.com/api',
           ),
         ),
-        // ✅ Add AuthRepository
         Provider<AuthRepository>(
           create: (_) => AuthRepositoryImpl(
             baseUrl: 'https://your-production-backend.com/api',
@@ -68,7 +65,6 @@ class _MyAppState extends State<MyApp> {
       ],
       child: MultiBlocProvider(
         providers: [
-          // ✅ Add AuthBloc (requires AuthRepository)
           BlocProvider<AuthBloc>(
             create: (context) =>
                 AuthBloc(repository: context.read<AuthRepository>()),
@@ -79,7 +75,6 @@ class _MyAppState extends State<MyApp> {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system,
-          // ✅ Replace initialRoute with a splash screen that decides
           home: const SplashScreen(),
           debugShowCheckedModeBanner: false,
         ),
@@ -88,7 +83,6 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-// ✅ New SplashScreen widget that checks onboarding and auth state
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -97,17 +91,9 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  int _currentIndex = 0;
-  void _onTabTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
   @override
   void initState() {
     super.initState();
-    // Trigger auth status check after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuthBloc>().add(CheckAuthStatus());
     });
@@ -119,21 +105,13 @@ class _SplashScreenState extends State<SplashScreen> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
-            // User is logged in → go to home
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(
-                builder: (_) => HomeScreen(
-                  currentIndex: _currentIndex,
-                  onTabTapped: _onTabTapped,
-                ),
-              ),
+              MaterialPageRoute(builder: (_) => HomeWrapper()),
             );
           } else if (state is Unauthenticated) {
-            // Not logged in → check if onboarding was completed
             _checkOnboardingAndNavigate();
           } else if (state is AuthError) {
-            // On error, also check onboarding
             _checkOnboardingAndNavigate();
           }
         },
@@ -141,7 +119,7 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/logo.png', height: 120),
+              Image.asset('assets/logo/logo.png', height: 120),
               const SizedBox(height: 24),
               const CircularProgressIndicator(),
             ],
@@ -155,15 +133,12 @@ class _SplashScreenState extends State<SplashScreen> {
     final prefs = await SharedPreferences.getInstance();
     final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
     if (!mounted) return;
-
     if (onboardingCompleted) {
-      // Onboarding seen → go to login
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     } else {
-      // First time → show onboarding
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const OnboardingScreen()),

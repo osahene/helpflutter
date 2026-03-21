@@ -3,20 +3,13 @@ import 'package:http/http.dart' as http;
 import 'package:helpflutter/data/models/user.dart';
 
 abstract class AuthRepository {
-  Future<User> loginWithEmail(String email, String password, bool remember);
-  Future<User> registerWithEmail(
+  Future<void> registerWithPhone(
     String firstName,
     String lastName,
-    String email,
-    String password,
+    String phoneNumber,
   );
-  Future<User> loginWithGoogle(String idToken);
-  Future<void> sendEmailOtp(String email);
-  Future<void> verifyEmailOtp(String email, String otp);
-  Future<void> sendPhoneOtp(String countryCode, String phoneNumber);
-  Future<void> verifyPhoneOtp(String phoneNumber, String otp);
-  Future<void> forgotPassword(String email);
-  Future<void> resetPassword(String email, String newPassword);
+  Future<void> sendLoginOtp(String phoneNumber);
+  Future<User> verifyOtp(String phoneNumber, String otp);
   Future<void> logout(String token);
   Future<bool> isLoggedIn();
   Future<User?> getCurrentUser();
@@ -32,63 +25,43 @@ class AuthRepositoryImpl implements AuthRepository {
     : client = client ?? http.Client();
 
   @override
-  Future<User> loginWithEmail(
-    String email,
-    String password,
-    bool remember,
-  ) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl/auth/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-        'remember': remember,
-      }),
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final user = User.fromJson(data['user']);
-      if (data['token'] != null) saveToken(data['token']);
-      return user;
-    } else {
-      throw Exception('Login failed: ${response.statusCode}');
-    }
-  }
-
-  @override
-  Future<User> registerWithEmail(
+  Future<void> registerWithPhone(
     String firstName,
     String lastName,
-    String email,
-    String password,
+    String phoneNumber,
   ) async {
     final response = await client.post(
-      Uri.parse('$baseUrl/auth/register'),
+      Uri.parse('$baseUrl/auth/register-phone'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'first_name': firstName,
         'last_name': lastName,
-        'email': email,
-        'password': password,
+        'phone_number': phoneNumber,
       }),
     );
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final data = jsonDecode(response.body);
-      final user = User.fromJson(data['user']);
-      if (data['token'] != null) saveToken(data['token']);
-      return user;
-    } else {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Registration failed: ${response.statusCode}');
     }
   }
 
   @override
-  Future<User> loginWithGoogle(String idToken) async {
+  Future<void> sendLoginOtp(String phoneNumber) async {
     final response = await client.post(
-      Uri.parse('$baseUrl/auth/google'),
+      Uri.parse('$baseUrl/auth/send-otp'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'id_token': idToken}),
+      body: jsonEncode({'phone_number': phoneNumber}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to send OTP');
+    }
+  }
+
+  @override
+  Future<User> verifyOtp(String phoneNumber, String otp) async {
+    final response = await client.post(
+      Uri.parse('$baseUrl/auth/verify-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone_number': phoneNumber, 'otp': otp}),
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -96,72 +69,8 @@ class AuthRepositoryImpl implements AuthRepository {
       if (data['token'] != null) saveToken(data['token']);
       return user;
     } else {
-      throw Exception('Google login failed');
+      throw Exception('Invalid OTP');
     }
-  }
-
-  @override
-  Future<void> sendEmailOtp(String email) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl/auth/send-email-otp'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email}),
-    );
-    if (response.statusCode != 200) throw Exception('Failed to send OTP');
-  }
-
-  @override
-  Future<void> verifyEmailOtp(String email, String otp) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl/auth/verify-email'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'otp': otp}),
-    );
-    if (response.statusCode != 200) throw Exception('Invalid OTP');
-  }
-
-  @override
-  Future<void> sendPhoneOtp(String countryCode, String phoneNumber) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl/auth/send-phone-otp'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'country_code': countryCode,
-        'phone_number': phoneNumber,
-      }),
-    );
-    if (response.statusCode != 200) throw Exception('Failed to send SMS');
-  }
-
-  @override
-  Future<void> verifyPhoneOtp(String phoneNumber, String otp) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl/auth/verify-phone'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'phone_number': phoneNumber, 'otp': otp}),
-    );
-    if (response.statusCode != 200) throw Exception('Invalid OTP');
-  }
-
-  @override
-  Future<void> forgotPassword(String email) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl/auth/forgot-password'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email}),
-    );
-    if (response.statusCode != 200)
-      throw Exception('Failed to send reset email');
-  }
-
-  @override
-  Future<void> resetPassword(String email, String newPassword) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl/auth/reset-password'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'new_password': newPassword}),
-    );
-    if (response.statusCode != 200) throw Exception('Failed to reset password');
   }
 
   @override
@@ -175,20 +84,19 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<bool> isLoggedIn() async {
-    // Implement token check via shared_preferences or secure storage
-    // For now, just return false
+    // Implement with secure storage
     return false;
   }
 
   @override
   Future<User?> getCurrentUser() async {
-    // Implement retrieving current user from local storage
+    // Implement retrieval
     return null;
   }
 
   @override
   void saveToken(String token) {
-    // Save token securely (e.g., flutter_secure_storage)
+    // Save token securely
   }
 
   @override

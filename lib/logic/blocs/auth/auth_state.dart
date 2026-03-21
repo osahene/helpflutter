@@ -26,20 +26,12 @@ class AuthError extends AuthState {
   List<Object?> get props => [message];
 }
 
-class EmailOtpSent extends AuthState {
-  final String email;
-  const EmailOtpSent(this.email);
-}
-
-class EmailVerified extends AuthState {}
-
-class PhoneOtpSent extends AuthState {
+class OtpSent extends AuthState {
   final String phoneNumber;
-  const PhoneOtpSent(this.phoneNumber);
+  const OtpSent(this.phoneNumber);
 }
 
-class PhoneVerified extends AuthState {}
-
-class PasswordResetSent extends AuthState {}
-
-class PasswordResetSuccess extends AuthState {}
+class OtpVerified extends AuthState {
+  final User user;
+  const OtpVerified(this.user);
+}

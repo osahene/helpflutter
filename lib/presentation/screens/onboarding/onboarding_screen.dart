@@ -26,7 +26,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       title: 'Swift Info Sharing',
       icon: Icons.share,
       message:
-          'Share the most essential situation with your loved ones without doing much.',
+          'Share the most essential situation with your loved ones instantly.',
     ),
     OnboardingItem(
       title: 'Safety Tips',
@@ -43,79 +43,129 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
               theme.colorScheme.primaryContainer,
               theme.colorScheme.background,
             ],
           ),
         ),
-        child: Column(
+        child: Stack(
           children: [
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: _items.length,
-                onPageChanged: (index) => setState(() => _currentPage = index),
-                itemBuilder: (context, index) {
-                  final item = _items[index];
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.2,
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            item.icon,
-                            size: 80,
-                            color: theme.colorScheme.primary,
+            _buildBackgroundGlow(theme),
+            Column(
+              children: [
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: _items.length,
+                    onPageChanged: (index) =>
+                        setState(() => _currentPage = index),
+                    itemBuilder: (context, index) {
+                      final item = _items[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: TweenAnimationBuilder<double>(
+                          duration: const Duration(milliseconds: 600),
+                          tween: Tween(begin: 0, end: 1),
+                          builder: (context, value, child) {
+                            return Opacity(
+                              opacity: value,
+                              child: Transform.translate(
+                                offset: Offset(0, 30 * (1 - value)),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              AnimatedOnboardingIcon(
+                                icon: item.icon,
+                                color: theme.colorScheme.primary,
+                              ),
+                              const SizedBox(height: 50),
+
+                              if (item.title2 != null)
+                                Text(
+                                  item.title!,
+                                  style: theme.textTheme.headlineSmall,
+                                  textAlign: TextAlign.center,
+                                ),
+
+                              Text(
+                                item.title2 ?? item.title!,
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              Text(
+                                item.message,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  height: 1.5,
+                                  color: theme.colorScheme.onBackground
+                                      .withValues(alpha: 0.7),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 40),
-                        if (item.title2 != null)
-                          Text(
-                            item.title!,
-                            style: theme.textTheme.headlineSmall,
-                            textAlign: TextAlign.center,
-                          ),
-                        Text(
-                          item.title2 ?? item.title!,
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          item.message,
-                          style: theme.textTheme.bodyLarge,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                      );
+                    },
+                  ),
+                ),
+                _buildFooter(context),
+              ],
             ),
-            _buildFooter(context),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildBackgroundGlow(ThemeData theme) {
+    return Stack(
+      children: [
+        Positioned(
+          top: -100,
+          left: -50,
+          child: _glowCircle(
+            theme.colorScheme.primary.withValues(alpha: 0.15),
+            250,
+          ),
+        ),
+        Positioned(
+          bottom: -120,
+          right: -50,
+          child: _glowCircle(
+            theme.colorScheme.secondary.withValues(alpha: 0.1),
+            300,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _glowCircle(Color color, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+    );
+  }
+
   Widget _buildFooter(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -130,9 +180,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Row(
             children: List.generate(_items.length, (index) {
               return AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 300),
                 margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: _currentPage == index ? 20 : 8,
+                width: _currentPage == index ? 24 : 8,
                 height: 8,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(4),
@@ -149,8 +199,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 _completeOnboarding();
               } else {
                 _pageController.nextPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOutCubic,
                 );
               }
             },
@@ -158,6 +208,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: Text(
               _currentPage == _items.length - 1 ? 'Get Started' : 'Next',
@@ -171,9 +222,87 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_completed', true);
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+  }
+}
+
+class AnimatedOnboardingIcon extends StatefulWidget {
+  final IconData icon;
+  final Color color;
+
+  const AnimatedOnboardingIcon({
+    super.key,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  State<AnimatedOnboardingIcon> createState() => _AnimatedOnboardingIconState();
+}
+
+class _AnimatedOnboardingIconState extends State<AnimatedOnboardingIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scale;
+  late Animation<double> _rotation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    _scale = Tween<double>(
+      begin: 0.9,
+      end: 1.1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _rotation = Tween<double>(
+      begin: -0.05,
+      end: 0.05,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.rotate(
+          angle: _rotation.value,
+          child: Transform.scale(
+            scale: _scale.value,
+            child: Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.color.withValues(alpha: 0.15),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.color.withValues(alpha: 0.4),
+                    blurRadius: 30,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              child: Icon(widget.icon, size: 80, color: widget.color),
+            ),
+          ),
+        );
+      },
     );
   }
 }
