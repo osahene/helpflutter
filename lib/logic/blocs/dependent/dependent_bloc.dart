@@ -1,7 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:helpflutter/data/models/dependent.dart';
-import 'package:helpflutter/data/models/contact.dart'; // for ContactStatus
 import 'package:helpflutter/data/repositories/dependent_repository.dart';
 
 part 'dependent_event.dart';

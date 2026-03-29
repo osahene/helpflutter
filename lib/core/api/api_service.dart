@@ -14,23 +14,11 @@ class ApiService {
   Future<Response> register(Map<String, dynamic> data) =>
       _dio.post(ApiConstants.register, data: data);
 
-  Future<Response> verifyEmail(Map<String, dynamic> data) =>
-      _dio.post(ApiConstants.verifyEmail, data: data);
+  Future<Response> sendOtp(Map<String, dynamic> data) =>
+      _dio.post(ApiConstants.sendOtp, data: data);
 
-  Future<Response> verifyPhoneNumber(Map<String, dynamic> data) =>
-      _dio.post(ApiConstants.verifyPhoneNumber, data: data);
-
-  Future<Response> verifyPhoneNumberOTP(Map<String, dynamic> data) =>
-      _dio.post(ApiConstants.verifyPhoneNumberOTP, data: data);
-
-  Future<Response> forgottenEmail(Map<String, dynamic> data) =>
-      _dio.post(ApiConstants.forgottenEmail, data: data);
-
-  Future<Response> confirmPassword(Map<String, dynamic> data) =>
-      _dio.post(ApiConstants.confirmPassword, data: data);
-
-  Future<Response> generateRegisterOTP(Map<String, dynamic> data) =>
-      _dio.post(ApiConstants.generateRegister, data: data);
+  Future<Response> verifyOtp(Map<String, dynamic> data) =>
+      _dio.post(ApiConstants.verifyOtp, data: data);
 
   // Contacts & Relations
   Future<Response> getContactInfo(String contactId) =>

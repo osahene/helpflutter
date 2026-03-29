@@ -20,7 +20,7 @@ class DeleteDependent extends DependentsEvent {
 
 class UpdateDependentsStatus extends DependentsEvent {
   final String dependentId;
-  final ContactStatus status;
+  final DependentStatus status;
 
   const UpdateDependentsStatus({
     required this.dependentId,

@@ -287,13 +287,13 @@ class DependentCard extends StatelessWidget {
 
   const DependentCard({super.key, required this.dependent});
 
-  Color _getStatusColor(ContactStatus status) {
+  Color _getStatusColor(DependentStatus status) {
     switch (status) {
-      case ContactStatus.accepted:
+      case DependentStatus.approved:
         return Colors.green;
-      case ContactStatus.rejected:
+      case DependentStatus.rejected:
         return Colors.red;
-      case ContactStatus.pending:
+      case DependentStatus.pending:
         return Colors.orange;
     }
   }
@@ -374,7 +374,7 @@ class DependentCard extends StatelessWidget {
                             context.read<DependentsBloc>().add(
                               UpdateDependentsStatus(
                                 dependentId: dependent.id,
-                                status: ContactStatus.accepted,
+                                status: DependentStatus.approved,
                               ),
                             );
                           },
@@ -387,7 +387,7 @@ class DependentCard extends StatelessWidget {
                             context.read<DependentsBloc>().add(
                               UpdateDependentsStatus(
                                 dependentId: dependent.id,
-                                status: ContactStatus.rejected,
+                                status: DependentStatus.rejected,
                               ),
                             );
                           },

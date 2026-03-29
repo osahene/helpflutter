@@ -90,7 +90,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final currentUser = await repository.getCurrentUser();
       if (currentUser?.token != null) {
-        await repository.logout(currentUser!.token!);
+        await repository.logout();
       }
       emit(Unauthenticated());
     } catch (e) {

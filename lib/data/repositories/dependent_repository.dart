@@ -1,49 +1,57 @@
 import 'package:helpflutter/data/models/dependent.dart';
-import 'package:helpflutter/data/models/contact.dart';
+import 'package:helpflutter/core/api/api_service.dart';
+import 'package:dio/dio.dart';
 
 abstract class DependentRepository {
   Future<List<Dependent>> getDependents();
-  Future<void> updateDependentStatus(String dependentId, ContactStatus status);
+  Future<void> updateDependentStatus(
+    String dependentId,
+    DependentStatus status,
+  );
 }
 
-class MockDependentRepository implements DependentRepository {
-  final List<Dependent> _mockDependents = [
-    Dependent(
-      id: '101',
-      fullName: 'Alice Wonder',
-      phone: '+233501234569',
-      email: 'alice@example.com',
-      status: ContactStatus.pending,
-    ),
-    Dependent(
-      id: '102',
-      fullName: 'Bob Builder',
-      phone: '+233501234570',
-      email: 'bob@example.com',
-      status: ContactStatus.accepted,
-    ),
-  ];
+class DependentRepositoryImpl implements DependentRepository {
+  final ApiService apiService;
+
+  DependentRepositoryImpl({required this.apiService});
 
   @override
   Future<List<Dependent>> getDependents() async {
-    await Future.delayed(const Duration(seconds: 1));
-    return _mockDependents;
+    try {
+      final response = await apiService.getMyDependants();
+
+      if (response.data != null && response.data['data'] is List) {
+        final List<dynamic> rawList = response.data['data'];
+        return rawList.map((json) => Dependent.fromJson(json)).toList();
+      }
+
+      return [];
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return [];
+
+      throw Exception('Server Error: ${e.response?.statusCode}');
+    }
   }
 
   @override
   Future<void> updateDependentStatus(
     String dependentId,
-    ContactStatus status,
+    DependentStatus status,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final index = _mockDependents.indexWhere((d) => d.id == dependentId);
-    if (index != -1) {
-      _mockDependents[index] = Dependent(
-        id: _mockDependents[index].id,
-        fullName: _mockDependents[index].fullName,
-        phone: _mockDependents[index].phone,
-        email: _mockDependents[index].email,
-        status: status,
+    try {
+      final payload = {
+        'dependent_id': dependentId,
+        'status': status.name, // 'approved' or 'rejected'
+      };
+
+      if (status == DependentStatus.approved) {
+        await apiService.approveDependant(payload);
+      } else if (status == DependentStatus.rejected) {
+        await apiService.rejectDependant(payload);
+      }
+    } on DioException catch (e) {
+      throw Exception(
+        'Failed to update dependent status: ${e.response?.data ?? e.message}',
       );
     }
   }

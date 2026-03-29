@@ -1,6 +1,6 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:helpflutter/data/models/user.dart';
+import 'package:helpflutter/core/api/api_service.dart';
 
 abstract class AuthRepository {
   Future<void> registerWithPhone(
@@ -11,7 +11,7 @@ abstract class AuthRepository {
   );
   Future<void> sendLoginOtp(String countryCode, String phoneNumber);
   Future<User> verifyOtp(String countryCode, String phoneNumber, String otp);
-  Future<void> logout(String token);
+  Future<void> logout(); // Removed token requirement, Dio handles it!
   Future<bool> isLoggedIn();
   Future<User?> getCurrentUser();
   void saveToken(String token);
@@ -19,11 +19,10 @@ abstract class AuthRepository {
 }
 
 class AuthRepositoryImpl implements AuthRepository {
-  final String baseUrl;
-  final http.Client client;
+  final ApiService apiService;
 
-  AuthRepositoryImpl({required this.baseUrl, http.Client? client})
-    : client = client ?? http.Client();
+  // Inject ApiService through the constructor
+  AuthRepositoryImpl({required this.apiService});
 
   @override
   Future<void> registerWithPhone(
@@ -32,33 +31,30 @@ class AuthRepositoryImpl implements AuthRepository {
     String countryCode,
     String phoneNumber,
   ) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl/account/user-register'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
+    try {
+      await apiService.register({
         'first_name': firstName,
         'last_name': lastName,
         'country_code': countryCode,
         'phone_number': phoneNumber,
-      }),
-    );
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Registration failed: ${response.statusCode}');
+      });
+    } on DioException catch (e) {
+      // Dio throws an exception for non-2xx status codes.
+      throw Exception(
+        'Registration failed: ${e.response?.statusCode} - ${e.message}',
+      );
     }
   }
 
   @override
   Future<void> sendLoginOtp(String countryCode, String phoneNumber) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl/account/send-otp'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
+    try {
+      await apiService.sendOtp({
         'country_code': countryCode,
         'phone_number': phoneNumber,
-      }),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to send OTP');
+      });
+    } on DioException catch (e) {
+      throw Exception('Failed to send OTP: ${e.response?.data ?? e.message}');
     }
   }
 
@@ -68,32 +64,38 @@ class AuthRepositoryImpl implements AuthRepository {
     String phoneNumber,
     String otp,
   ) async {
-    final response = await client.post(
-      Uri.parse('$baseUrl/account/verify-otp'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
+    try {
+      final response = await apiService.verifyOtp({
         'country_code': countryCode,
         'phone_number': phoneNumber,
         'otp': otp,
-      }),
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+      });
+
+      // Dio automatically decodes JSON! Access it directly via response.data
+      final data = response.data;
       final user = User.fromJson(data['user']);
-      if (data['token'] != null) saveToken(data['token']);
+
+      if (data['token'] != null) {
+        saveToken(data['token']);
+      }
+
       return user;
-    } else {
+    } on DioException catch (_) {
       throw Exception('Invalid OTP');
     }
   }
 
   @override
-  Future<void> logout(String token) async {
-    await client.post(
-      Uri.parse('$baseUrl/account/logout'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    clearToken();
+  Future<void> logout() async {
+    try {
+      // You no longer need to pass the token manually!
+      // Your DioClient interceptor attaches it automatically.
+      await apiService.logout();
+    } catch (e) {
+      // Handle or log error
+    } finally {
+      clearToken();
+    }
   }
 
   @override
@@ -110,7 +112,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   void saveToken(String token) {
-    // Save token securely
+    // Save token securely (e.g., flutter_secure_storage)
   }
 
   @override

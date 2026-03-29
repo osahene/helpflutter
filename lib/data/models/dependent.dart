@@ -1,11 +1,11 @@
-import 'contact.dart';
+enum DependentStatus { approved, rejected, pending }
 
 class Dependent {
   final String id;
   final String fullName;
   final String phone;
   final String email;
-  final ContactStatus status; // pending, accepted, rejected
+  final DependentStatus status;
 
   Dependent({
     required this.id,
@@ -16,14 +16,16 @@ class Dependent {
   });
 
   factory Dependent.fromJson(Map<String, dynamic> json) {
+    final String countryCode = json['country_code'] ?? '';
+    final String phoneNumber = json['phone_number'] ?? '';
     return Dependent(
-      id: json['id'],
-      fullName: json['full_name'],
-      phone: json['phone'],
-      email: json['email'],
-      status: ContactStatus.values.firstWhere(
-        (e) => e.toString() == 'ContactStatus.${json['status']}',
-        orElse: () => ContactStatus.pending,
+      id: json['pk'].toString(),
+      fullName: '${json['first_name']} ${json['last_name']}',
+      phone: '$countryCode$phoneNumber'.trim(),
+      email: json['email'] ?? '',
+      status: DependentStatus.values.firstWhere(
+        (s) => s.name == json['status'],
+        orElse: () => DependentStatus.pending,
       ),
     );
   }

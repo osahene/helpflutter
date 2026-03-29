@@ -15,6 +15,7 @@ import 'package:helpflutter/presentation/screens/onboarding/onboarding_screen.da
 import 'package:helpflutter/presentation/screens/login/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:helpflutter/presentation/routes/app_router.dart';
+import 'package:helpflutter/core/api/api_service.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -32,8 +33,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late final ApiService _apiService;
+
   @override
   void initState() {
+    _apiService = ApiService();
     super.initState();
     initialization();
   }
@@ -47,18 +51,23 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<ContactRepository>(create: (_) => MockContactRepository()),
-        Provider<DependentRepository>(create: (_) => MockDependentRepository()),
+        Provider<ApiService>.value(value: _apiService),
+        Provider<ContactRepository>(
+          create: (_) => ContactRepositoryImpl(apiService: _apiService),
+        ),
+        Provider<DependentRepository>(
+          create: (_) => DependentRepositoryImpl(apiService: _apiService),
+        ),
         Provider<LiveReportRepository>(
           create: (_) => MockLiveReportRepository(),
         ),
         Provider<TutorialRepository>(create: (_) => MockTutorialRepository()),
         Provider<ProfileRepository>(create: (_) => MockProfileRepository()),
         Provider<AlertRepository>(
-          create: (_) => AlertRepositoryImpl(baseUrl: dotenv.get('BASE_URL')),
+          create: (_) => AlertRepositoryImpl(apiService: _apiService),
         ),
         Provider<AuthRepository>(
-          create: (_) => AuthRepositoryImpl(baseUrl: dotenv.get('BASE_URL')),
+          create: (_) => AuthRepositoryImpl(apiService: _apiService),
         ),
       ],
       child: MultiBlocProvider(
@@ -74,6 +83,7 @@ class _MyAppState extends State<MyApp> {
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system,
           home: const SplashScreen(),
+          onGenerateRoute: AppRouter.generateRoute,
           debugShowCheckedModeBanner: false,
         ),
       ),
@@ -103,10 +113,7 @@ class _SplashScreenState extends State<SplashScreen> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => HomeWrapper()),
-            );
+            Navigator.pushReplacementNamed(context, AppRouter.home);
           } else if (state is Unauthenticated) {
             _checkOnboardingAndNavigate();
           } else if (state is AuthError) {

@@ -1,12 +1,10 @@
-import 'dart:convert';
 import 'package:helpflutter/data/models/alert.dart';
-import 'package:http/http.dart' as http; // Add http to pubspec.yaml
-import 'package:geolocator/geolocator.dart'; // Add geolocator
+import 'package:geolocator/geolocator.dart';
+import 'package:helpflutter/core/api/api_service.dart';
+import 'package:dio/dio.dart';
 
 abstract class AlertRepository {
-  /// Send an alert to the specified contacts (or all accepted contacts if contactIds is null).
-  /// Optionally includes the current location.
-  /// Returns the created Alert object.
+  /// Send an alert with situation details and optional location data.
   Future<Alert> sendAlert({
     required String situation,
     required bool includeLocation,
@@ -14,49 +12,50 @@ abstract class AlertRepository {
 }
 
 class AlertRepositoryImpl implements AlertRepository {
-  final String baseUrl; // Your backend API base URL
-  final http.Client httpClient;
+  final ApiService apiService;
 
-  AlertRepositoryImpl({required this.baseUrl, http.Client? httpClient})
-    : httpClient = httpClient ?? http.Client();
+  AlertRepositoryImpl({required this.apiService});
+
   @override
   Future<Alert> sendAlert({
     required String situation,
     required bool includeLocation,
-    String? customMessage,
-    List<String>? contactIds,
   }) async {
     // 1. Get current location if requested
     Position? position;
     if (includeLocation) {
-      position = await _getCurrentLocation();
+      try {
+        position = await _getCurrentLocation();
+      } catch (e) {
+        // Log error but perhaps continue without location if the situation is dire
+        print('Location error: $e');
+      }
     }
 
     // 2. Prepare the request payload
+    // Note: Ensure these keys match what your Django EmergencyActionView expects!
     final Map<String, dynamic> payload = {
       'situation': situation,
-      'includeLocation': includeLocation,
-      'location': position != null
-          ? {'latitude': position.latitude, 'longitude': position.longitude}
-          : null,
+      'include_location': includeLocation,
+      'latitude': position?.latitude,
+      'longitude': position?.longitude,
       'timestamp': DateTime.now().toIso8601String(),
     };
 
-    // 3. Send to backend (adjust endpoint as needed)
-    final response = await httpClient.post(
-      Uri.parse('$baseUrl/alerts'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(payload),
-    );
+    // 3. Send to backend via ApiService (Dio)
+    try {
+      final response = await apiService.triggerAlert(payload);
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return Alert.fromJson(data);
-    } else {
-      throw Exception('Failed to send alert: ${response.statusCode}');
+      // Dio automatically decodes the JSON body into response.data
+      return Alert.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(
+        'Failed to trigger emergency alert: ${e.response?.statusCode} ${e.message}',
+      );
     }
   }
 
+  /// Helper to handle Location Permissions and Fetching
   Future<Position> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -75,6 +74,8 @@ class AlertRepositoryImpl implements AlertRepository {
       throw Exception('Location permissions are permanently denied.');
     }
 
-    return await Geolocator.getCurrentPosition();
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
   }
 }

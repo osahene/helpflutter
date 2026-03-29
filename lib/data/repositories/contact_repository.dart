@@ -1,76 +1,66 @@
 import 'package:helpflutter/data/models/contact.dart';
-// import 'package:helpflutter/core/api/api_service.dart';
+import 'package:helpflutter/core/api/api_service.dart';
+import 'package:dio/dio.dart';
 
 abstract class ContactRepository {
   Future<List<Contact>> getContacts();
   Future<void> addContact(Contact contact);
-  Future<void> updateContactStatus(String contactId, ContactStatus status);
+  Future<void> updateContactStatus(String contactId, String status);
   Future<void> deleteContact(String contactId);
 }
 
-class MockContactRepository implements ContactRepository {
-  final List<Contact> _mockContacts = [
-    Contact(
-      id: '1',
-      firstName: 'John',
-      lastName: 'Doe',
-      address: '123 Main St',
-      phone: '+233501234567',
-      email: 'john@example.com',
-      relation: 'Friend',
-      situations: ['Fire', 'Accident'],
-      status: ContactStatus.accepted,
-    ),
-    Contact(
-      id: '2',
-      firstName: 'Jane',
-      lastName: 'Smith',
-      address: '456 Oak Ave',
-      phone: '+233501234568',
-      email: 'jane@example.com',
-      relation: 'Sister',
-      situations: ['Health'],
-      status: ContactStatus.pending,
-    ),
-  ];
+class ContactRepositoryImpl implements ContactRepository {
+  final ApiService apiService;
+
+  ContactRepositoryImpl({required this.apiService});
 
   @override
   Future<List<Contact>> getContacts() async {
-    await Future.delayed(const Duration(seconds: 1));
-    return _mockContacts;
+    try {
+      final response = await apiService.getMyContacts();
+
+      // Assuming your Django API returns a list of contact objects
+      final List<dynamic> data = response.data;
+      return data.map((json) => Contact.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception('Failed to fetch contacts: ${e.message}');
+    }
   }
 
   @override
   Future<void> addContact(Contact contact) async {
-    await Future.delayed(const Duration(seconds: 1));
-    _mockContacts.add(contact);
-  }
-
-  @override
-  Future<void> updateContactStatus(
-    String contactId,
-    ContactStatus status,
-  ) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final index = _mockContacts.indexWhere((c) => c.id == contactId);
-    if (index != -1) {
-      _mockContacts[index] = Contact(
-        id: _mockContacts[index].id,
-        firstName: _mockContacts[index].firstName,
-        lastName: _mockContacts[index].lastName,
-        address: _mockContacts[index].address,
-        phone: _mockContacts[index].phone,
-        email: _mockContacts[index].email,
-        relation: _mockContacts[index].relation,
-        situations: _mockContacts[index].situations,
-        status: status,
+    try {
+      // Map the Contact model to the JSON structure your Django view expects
+      final payload = contact.toJson();
+      await apiService.createRelation(payload);
+    } on DioException catch (e) {
+      throw Exception(
+        'Failed to add contact: ${e.response?.data ?? e.message}',
       );
     }
   }
 
   @override
+  Future<void> updateContactStatus(String contactId, String status) async {
+    try {
+      // Based on your ApiService: updateInviteStatus handles status changes
+      final payload = {
+        'contact_id': contactId,
+        'status': status, // e.g., 'accepted' or 'rejected'
+      };
+      await apiService.updateInviteStatus(payload);
+    } on DioException catch (e) {
+      throw Exception('Failed to update status: ${e.message}');
+    }
+  }
+
+  @override
   Future<void> deleteContact(String contactId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _mockContacts.removeWhere((c) => c.id == contactId);
+    try {
+      // Your ApiService expects a Map for deleteContact
+      await apiService.deleteContact({'contact_id': contactId});
+    } on DioException catch (e) {
+      throw Exception('Failed to delete contact: ${e.message}');
+    }
   }
 }

@@ -45,7 +45,10 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     Emitter<ContactsState> emit,
   ) async {
     try {
-      await repository.updateContactStatus(event.contactId, event.status);
+      await repository.updateContactStatus(
+        event.contactId,
+        event.status.toString(),
+      );
       add(LoadContacts());
     } catch (e) {
       emit(ContactsError(e.toString()));
