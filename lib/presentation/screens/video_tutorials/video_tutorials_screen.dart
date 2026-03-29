@@ -69,7 +69,7 @@ class _VideoTutorialsScreenState extends State<VideoTutorialsScreen> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: categories.length + 1, // +1 for "All"
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         if (index == 0) {
                           // "All" chip

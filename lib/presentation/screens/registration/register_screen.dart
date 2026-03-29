@@ -32,6 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             context,
             MaterialPageRoute(
               builder: (_) => OtpVerificationScreen(
+                countryCode: _countryCode,
                 phoneNumber: state.phoneNumber,
                 isRegistration: true,
               ),
@@ -51,7 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               end: Alignment.bottomRight,
               colors: [
                 theme.colorScheme.primaryContainer,
-                theme.colorScheme.background,
+                theme.colorScheme.surface,
               ],
             ),
           ),
@@ -100,7 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   'Register to stay prepared for emergencies',
                                   textAlign: TextAlign.center,
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onBackground
+                                    color: theme.colorScheme.onSurface
                                         .withValues(alpha: 0.6),
                                   ),
                                 ),
@@ -172,13 +173,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ElevatedButton(
                                   onPressed: () {
                                     if (_formKey.currentState!.validate()) {
-                                      final fullPhone =
-                                          '$_countryCode${_phoneController.text}';
                                       context.read<AuthBloc>().add(
                                         RegisterWithPhone(
                                           firstName: _firstNameController.text,
                                           lastName: _lastNameController.text,
-                                          phoneNumber: fullPhone,
+                                          countryCode: _countryCode,
+                                          phoneNumber: _phoneController.text,
                                         ),
                                       );
                                     }

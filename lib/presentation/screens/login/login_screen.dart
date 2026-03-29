@@ -39,6 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
             context,
             MaterialPageRoute(
               builder: (_) => OtpVerificationScreen(
+                countryCode: _countryCode,
                 phoneNumber: state.phoneNumber,
                 isRegistration: false,
               ),
@@ -68,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
               end: Alignment.bottomRight,
               colors: [
                 theme.colorScheme.primaryContainer,
-                theme.colorScheme.background,
+                theme.colorScheme.surface,
               ],
             ),
           ),
@@ -121,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   'Login to continue and stay protected',
                                   textAlign: TextAlign.center,
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onBackground
+                                    color: theme.colorScheme.onSurface
                                         .withValues(alpha: 0.6),
                                   ),
                                 ),
@@ -172,10 +173,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ElevatedButton(
                                   onPressed: () {
                                     if (_formKey.currentState!.validate()) {
-                                      final fullPhone =
-                                          '$_countryCode${_phoneController.text}';
                                       context.read<AuthBloc>().add(
-                                        SendLoginOtp(fullPhone),
+                                        SendLoginOtp(
+                                          _countryCode,
+                                          _phoneController.text,
+                                        ),
                                       );
                                     }
                                   },

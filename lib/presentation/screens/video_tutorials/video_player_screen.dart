@@ -26,7 +26,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   void initState() {
     super.initState();
-    _videoController = VideoPlayerController.network(widget.videoUrl);
+    _videoController = VideoPlayerController.networkUrl(
+      Uri.parse(widget.videoUrl),
+    );
     _chewieController = ChewieController(
       videoPlayerController: _videoController,
       aspectRatio: 16 / 9,
@@ -38,8 +40,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           child: Image.network(
             widget.thumbnailUrl,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
-                const Icon(Icons.broken_image, color: Colors.white),
+            errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.broken_image, color: Colors.white),
           ),
         ),
       ),

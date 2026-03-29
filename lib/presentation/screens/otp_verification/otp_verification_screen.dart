@@ -9,11 +9,13 @@ import 'package:helpflutter/presentation/screens/login/login_screen.dart';
 import 'package:helpflutter/presentation/screens/home/home_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
+  final String countryCode;
   final String phoneNumber;
   final bool isRegistration;
 
   const OtpVerificationScreen({
     super.key,
+    required this.countryCode,
     required this.phoneNumber,
     required this.isRegistration,
   });
@@ -111,7 +113,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
               end: Alignment.bottomRight,
               colors: [
                 theme.colorScheme.primaryContainer,
-                theme.colorScheme.background,
+                theme.colorScheme.surface,
               ],
             ),
           ),
@@ -180,6 +182,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                                     onCompleted: (value) {
                                       context.read<AuthBloc>().add(
                                         VerifyOtp(
+                                          countryCode: widget.countryCode,
                                           phoneNumber: widget.phoneNumber,
                                           otp: value,
                                         ),
@@ -198,6 +201,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                                             onPressed: () {
                                               context.read<AuthBloc>().add(
                                                 SendLoginOtp(
+                                                  widget.countryCode,
                                                   widget.phoneNumber,
                                                 ),
                                               );

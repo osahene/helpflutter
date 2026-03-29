@@ -27,8 +27,9 @@ class AuthError extends AuthState {
 }
 
 class OtpSent extends AuthState {
+  final String countryCode;
   final String phoneNumber;
-  const OtpSent(this.phoneNumber);
+  const OtpSent(this.countryCode, this.phoneNumber);
 }
 
 class OtpVerified extends AuthState {

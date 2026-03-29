@@ -6,10 +6,11 @@ abstract class AuthRepository {
   Future<void> registerWithPhone(
     String firstName,
     String lastName,
+    String countryCode,
     String phoneNumber,
   );
-  Future<void> sendLoginOtp(String phoneNumber);
-  Future<User> verifyOtp(String phoneNumber, String otp);
+  Future<void> sendLoginOtp(String countryCode, String phoneNumber);
+  Future<User> verifyOtp(String countryCode, String phoneNumber, String otp);
   Future<void> logout(String token);
   Future<bool> isLoggedIn();
   Future<User?> getCurrentUser();
@@ -28,14 +29,16 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> registerWithPhone(
     String firstName,
     String lastName,
+    String countryCode,
     String phoneNumber,
   ) async {
     final response = await client.post(
-      Uri.parse('$baseUrl/auth/register-phone'),
+      Uri.parse('$baseUrl/account/user-register'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'first_name': firstName,
         'last_name': lastName,
+        'country_code': countryCode,
         'phone_number': phoneNumber,
       }),
     );
@@ -45,11 +48,14 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> sendLoginOtp(String phoneNumber) async {
+  Future<void> sendLoginOtp(String countryCode, String phoneNumber) async {
     final response = await client.post(
-      Uri.parse('$baseUrl/auth/send-otp'),
+      Uri.parse('$baseUrl/account/send-otp'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'phone_number': phoneNumber}),
+      body: jsonEncode({
+        'country_code': countryCode,
+        'phone_number': phoneNumber,
+      }),
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to send OTP');
@@ -57,11 +63,19 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<User> verifyOtp(String phoneNumber, String otp) async {
+  Future<User> verifyOtp(
+    String countryCode,
+    String phoneNumber,
+    String otp,
+  ) async {
     final response = await client.post(
-      Uri.parse('$baseUrl/auth/verify-otp'),
+      Uri.parse('$baseUrl/account/verify-otp'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'phone_number': phoneNumber, 'otp': otp}),
+      body: jsonEncode({
+        'country_code': countryCode,
+        'phone_number': phoneNumber,
+        'otp': otp,
+      }),
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -76,7 +90,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout(String token) async {
     await client.post(
-      Uri.parse('$baseUrl/auth/logout'),
+      Uri.parse('$baseUrl/account/logout'),
       headers: {'Authorization': 'Bearer $token'},
     );
     clearToken();

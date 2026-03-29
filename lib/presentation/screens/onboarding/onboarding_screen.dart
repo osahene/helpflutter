@@ -47,7 +47,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             end: Alignment.bottomRight,
             colors: [
               theme.colorScheme.primaryContainer,
-              theme.colorScheme.background,
+              theme.colorScheme.surface,
             ],
           ),
         ),
@@ -110,8 +110,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 item.message,
                                 style: theme.textTheme.bodyLarge?.copyWith(
                                   height: 1.5,
-                                  color: theme.colorScheme.onBackground
-                                      .withValues(alpha: 0.7),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.7,
+                                  ),
                                 ),
                                 textAlign: TextAlign.center,
                               ),

@@ -45,12 +45,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await repository.registerWithPhone(
         event.firstName,
         event.lastName,
+        event.countryCode,
         event.phoneNumber,
       );
       // After registration, send OTP for login? Actually we can go to login screen directly.
       // We'll just navigate to login screen, not send OTP automatically.
       emit(
-        OtpSent(event.phoneNumber),
+        OtpSent(event.countryCode, event.phoneNumber),
       ); // Or maybe we want to go to OTP screen now.
       // But registration doesn't automatically log you in; we send OTP to login later.
       // For simplicity, we'll just emit OtpSent to show OTP screen for registration flow.
@@ -63,8 +64,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   void _onSendLoginOtp(SendLoginOtp event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      await repository.sendLoginOtp(event.phoneNumber);
-      emit(OtpSent(event.phoneNumber));
+      await repository.sendLoginOtp(event.countryCode, event.phoneNumber);
+      emit(OtpSent(event.countryCode, event.phoneNumber));
     } catch (e) {
       emit(AuthError(e.toString()));
     }
@@ -73,7 +74,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   void _onVerifyOtp(VerifyOtp event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      final user = await repository.verifyOtp(event.phoneNumber, event.otp);
+      final user = await repository.verifyOtp(
+        event.countryCode,
+        event.phoneNumber,
+        event.otp,
+      );
       emit(Authenticated(user));
     } catch (e) {
       emit(AuthError(e.toString()));

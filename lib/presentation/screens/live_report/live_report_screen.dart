@@ -209,12 +209,12 @@ class _LiveReportScreenState extends State<LiveReportScreen> {
 
                 // Preview of selected media
                 if (_mediaAttachments.isNotEmpty)
-                  Container(
+                  SizedBox(
                     height: 100,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: _mediaAttachments.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      separatorBuilder: (context, index) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         final media = _mediaAttachments[index];
                         return Stack(

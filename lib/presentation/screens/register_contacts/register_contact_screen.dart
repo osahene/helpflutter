@@ -145,7 +145,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
-                        value: _selectedRelation,
+                        initialValue: _selectedRelation,
                         items: AppConstants.relations.map((relation) {
                           return DropdownMenuItem(
                             value: relation,

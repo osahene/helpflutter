@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:helpflutter/core/theme/theme.dart';
@@ -16,9 +17,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:helpflutter/presentation/routes/app_router.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
@@ -53,14 +55,10 @@ class _MyAppState extends State<MyApp> {
         Provider<TutorialRepository>(create: (_) => MockTutorialRepository()),
         Provider<ProfileRepository>(create: (_) => MockProfileRepository()),
         Provider<AlertRepository>(
-          create: (_) => AlertRepositoryImpl(
-            baseUrl: 'https://your-production-backend.com/api',
-          ),
+          create: (_) => AlertRepositoryImpl(baseUrl: dotenv.get('BASE_URL')),
         ),
         Provider<AuthRepository>(
-          create: (_) => AuthRepositoryImpl(
-            baseUrl: 'https://your-production-backend.com/api',
-          ),
+          create: (_) => AuthRepositoryImpl(baseUrl: dotenv.get('BASE_URL')),
         ),
       ],
       child: MultiBlocProvider(
