@@ -28,10 +28,19 @@ class _SplashScreenState extends State<SplashScreen> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
-            Navigator.pushReplacementNamed(context, AppRouter.home);
-          } else if (state is Unauthenticated) {
-            _checkOnboardingAndNavigate();
-          } else if (state is AuthError) {
+            Future.microtask(() {
+              if (mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  AppRouter.home,
+                  (route) => false,
+                );
+              } else {
+                // Handle the case where the widget is not mounted
+                print("Widget not mounted, cannot navigate");
+              }
+            });
+          } else if (state is Unauthenticated || state is AuthError) {
             _checkOnboardingAndNavigate();
           }
         },

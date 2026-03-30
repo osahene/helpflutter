@@ -9,8 +9,8 @@ import 'package:helpflutter/core/widgets/suspended_button_nav_bar.dart';
 import 'package:helpflutter/presentation/screens/splashscreen/splash_screen.dart';
 
 class AppRouter {
-  static const String splash = '/'; // Added explicit splash route
-  static const String home = '/home'; // Changed from '/' to '/home'
+  static const String splash = '/';
+  static const String home = '/home';
   static const String register = '/register';
   static const String contacts = '/contacts';
   static const String emergency = '/emergency';
@@ -48,7 +48,6 @@ class AppRouter {
 // Wrapper to handle bottom navigation
 class HomeWrapper extends StatefulWidget {
   const HomeWrapper({super.key});
-
   @override
   State<HomeWrapper> createState() => _HomeWrapperState();
 }
@@ -66,40 +65,42 @@ class _HomeWrapperState extends State<HomeWrapper> {
   void _openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
   }
-
-  // FIXED: Build screens dynamically rather than modifying a list inside build()
-  Widget _buildCurrentScreen() {
-    switch (_currentIndex) {
-      case 0:
-        return HomeScreen(
-          currentIndex: _currentIndex,
-          onTabTapped: _onTabTapped,
-          onMenuTap: _openDrawer,
-        );
-      case 1:
-        return const RegisterContactScreen();
-      case 2:
-        return const ContactsScreen();
-      case 3:
-        return const EmergencyContactsScreen();
-      default:
-        return HomeScreen(
-          currentIndex: 0,
-          onTabTapped: _onTabTapped,
-          onMenuTap: _openDrawer,
-        );
-    }
-  }
+  // final List<Widget> _screens = [
+  //  HomeScreen(
+  //       currentIndex: _currentIndex,
+  //       onTabTapped: _onTabTapped,
+  //       onMenuTap: _openDrawer,
+  //     ),
+  //   const RegisterContactScreen(),
+  //   const ContactsScreen(),
+  //   const EmergencyContactsScreen(),
+  // ];
 
   @override
   Widget build(BuildContext context) {
+    // Update the home screen with current index and the drawer opener
+    final List<Widget> screens = [
+      HomeScreen(
+        currentIndex: _currentIndex,
+        onTabTapped: _onTabTapped,
+        onMenuTap: _openDrawer,
+      ),
+      const RegisterContactScreen(),
+      const ContactsScreen(),
+      const EmergencyContactsScreen(),
+    ];
+
     return Scaffold(
-      key: _scaffoldKey,
-      extendBody: true,
-      body: _buildCurrentScreen(), // Shows the screen based on index
+      key: _scaffoldKey, // needed to open drawer
+      extendBody: true, // allows body to go under the floating bottom nav
+      body: IndexedStack(index: _currentIndex, children: screens),
       bottomNavigationBar: SuspendedBottomNavBar(
         currentIndex: _currentIndex,
-        onTap: _onTabTapped,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
       ),
       drawer: Drawer(
         child: SafeArea(
@@ -121,8 +122,11 @@ class _HomeWrapperState extends State<HomeWrapper> {
                 leading: const Icon(Icons.report),
                 title: const Text('Live Report'),
                 onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, AppRouter.liveReport);
+                  Navigator.pop(context); // close drawer
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LiveReportScreen()),
+                  );
                 },
               ),
               ListTile(
@@ -130,7 +134,12 @@ class _HomeWrapperState extends State<HomeWrapper> {
                 title: const Text('Video Tutorials'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.pushNamed(context, AppRouter.tutorials);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const VideoTutorialsScreen(),
+                    ),
+                  );
                 },
               ),
             ],

@@ -23,8 +23,7 @@ class TopNavBar extends StatelessWidget implements PreferredSizeWidget {
           child: CircleAvatar(
             backgroundImage: profileImageUrl != null
                 ? NetworkImage(profileImageUrl!)
-                : const AssetImage('assets/default_profile.png')
-                      as ImageProvider,
+                : const AssetImage('assets/logo/logo.png') as ImageProvider,
             radius: 18,
           ),
         ),

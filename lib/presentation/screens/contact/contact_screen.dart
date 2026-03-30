@@ -28,44 +28,40 @@ class ContactsScreen extends StatelessWidget {
       ],
       child: DefaultTabController(
         length: 2,
-        child: Column(
-          children: [
-            AppBar(
-              title: const Text('Contacts'),
-              bottom: TabBar(
-                indicatorColor: Theme.of(context).colorScheme.primary,
-                indicatorWeight: 3,
-                labelColor: Theme.of(context).colorScheme.primary,
-                unselectedLabelColor: Colors.grey,
-                tabs: const [
-                  Tab(text: 'Emergency Contacts'),
-                  Tab(text: 'Dependents'),
-                ],
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Contacts'),
+            bottom: TabBar(
+              indicatorColor: Theme.of(context).colorScheme.primary,
+              indicatorWeight: 3,
+              labelColor: Theme.of(context).colorScheme.primary,
+              unselectedLabelColor: Colors.grey,
+              tabs: const [
+                Tab(text: 'Emergency Contacts'),
+                Tab(text: 'Dependents'),
+              ],
+            ),
+          ),
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.grey.shade50, Colors.white],
               ),
             ),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.grey.shade50, Colors.white],
-                  ),
-                ),
-                child: const TabBarView(
-                  children: [EmergencyContactsTab(), DependentsTab()],
-                ),
-              ),
+            child: const TabBarView(
+              children: [EmergencyContactsTab(), DependentsTab()],
             ),
-            FloatingActionButton.extended(
-              onPressed: () {
-                // Navigate to register contact
-                Navigator.pushNamed(context, '/register-contact');
-              },
-              icon: const Icon(Icons.person_add),
-              label: const Text('Add Contact'),
-            ),
-          ],
+          ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {
+              // Navigate to register contact
+              Navigator.pushNamed(context, '/register-contact');
+            },
+            icon: const Icon(Icons.person_add),
+            label: const Text('Add Contact'),
+          ),
         ),
       ),
     );

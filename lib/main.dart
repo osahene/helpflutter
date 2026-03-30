@@ -48,6 +48,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // Provide repositories
         Provider<ApiService>.value(value: _apiService),
         Provider<ContactRepository>(
           create: (_) => ContactRepositoryImpl(apiService: _apiService),
@@ -55,11 +56,14 @@ class _MyAppState extends State<MyApp> {
         Provider<DependentRepository>(
           create: (_) => DependentRepositoryImpl(apiService: _apiService),
         ),
+
         Provider<LiveReportRepository>(
           create: (_) => MockLiveReportRepository(),
         ),
         Provider<TutorialRepository>(create: (_) => MockTutorialRepository()),
         Provider<ProfileRepository>(create: (_) => MockProfileRepository()),
+
+        // FIXED: Replaced constructor signature with actual instantiation
         Provider<AlertRepository>(
           create: (_) => AlertRepositoryImpl(apiService: _apiService),
         ),
@@ -71,7 +75,8 @@ class _MyAppState extends State<MyApp> {
         providers: [
           BlocProvider<AuthBloc>(
             create: (context) =>
-                AuthBloc(repository: context.read<AuthRepository>()),
+                AuthBloc(repository: context.read<AuthRepository>())
+                  ..add(CheckAuthStatus()),
           ),
         ],
         child: MaterialApp(
@@ -79,8 +84,8 @@ class _MyAppState extends State<MyApp> {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system,
-          initialRoute: AppRouter.splash, // Start with the splash screen
-          onGenerateRoute: AppRouter.generateRoute,
+          initialRoute: AppRouter.splash,
+          onGenerateRoute: AppRouter.generateRoute, // Delegate all routing here
           debugShowCheckedModeBanner: false,
         ),
       ),

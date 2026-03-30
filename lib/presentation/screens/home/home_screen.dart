@@ -39,90 +39,86 @@ class HomeScreen extends StatelessWidget {
       const Color(0xFFCC8E65),
     ];
 
-    return Column(
-      children: [
-        TopNavBar(
-          onProfileTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
-            );
-          },
-          onMenuTap: onMenuTap, // pass the drawer opener
-        ),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Theme.of(context).colorScheme.surface,
-                  Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
-                ],
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 2),
-                  Text(
-                    'What’s the emergency?',
-                    style: Theme.of(context).textTheme.displaySmall,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Select the situation to alert your trusted contacts',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                        bottom:
-                            80, // extra padding to prevent content behind bottom nav
-                      ), // avoid content behind bottom nav
-                      child: GridView.builder(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount:
-                              SizeConfig.orientation == Orientation.portrait
-                              ? 2
-                              : 3,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 1.1,
-                        ),
-                        itemCount: situations.length,
-                        itemBuilder: (context, index) {
-                          return EmergencyTile(
-                            title: situations[index],
-                            icon: icons[index],
-                            color: colors[index],
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => AlertConfirmationScreen(
-                                    situation: situations[index],
-                                    situationIcon: icons[index],
-                                    situationColor: colors[index],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+    return Scaffold(
+      extendBody: true,
+      appBar: TopNavBar(
+        onProfileTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          );
+        },
+        onMenuTap: onMenuTap, // pass the drawer opener
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+            ],
           ),
         ),
-      ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 8),
+              Text(
+                'What’s the emergency?',
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Select the situation to alert your trusted contacts',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 80,
+                  ), // avoid content behind bottom nav
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount:
+                          SizeConfig.orientation == Orientation.portrait
+                          ? 2
+                          : 3,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 1.2,
+                    ),
+                    itemCount: situations.length,
+                    itemBuilder: (context, index) {
+                      return EmergencyTile(
+                        title: situations[index],
+                        icon: icons[index],
+                        color: colors[index],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => AlertConfirmationScreen(
+                                situation: situations[index],
+                                situationIcon: icons[index],
+                                situationColor: colors[index],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
