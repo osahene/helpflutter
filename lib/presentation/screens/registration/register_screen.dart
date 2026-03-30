@@ -44,193 +44,209 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
         }
       },
-      child: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                theme.colorScheme.primaryContainer,
-                theme.colorScheme.surface,
-              ],
-            ),
-          ),
-          child: Stack(
-            children: [
-              _buildBackgroundGlow(theme),
-              SafeArea(
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(32),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Container(
-                          padding: const EdgeInsets.all(28),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(32),
-                            color: theme.colorScheme.surface.withValues(
-                              alpha: 0.7,
-                            ),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.2),
-                            ),
-                          ),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const SizedBox(height: 10),
-                                Icon(
-                                  Icons.person_add_alt_1,
-                                  size: 60,
-                                  color: theme.colorScheme.primary,
+      child: Column(
+        children: [
+          const SizedBox(height: 30),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    theme.colorScheme.primaryContainer,
+                    theme.colorScheme.surface,
+                  ],
+                ),
+              ),
+              child: Stack(
+                children: [
+                  _buildBackgroundGlow(theme),
+                  SafeArea(
+                    child: Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(32),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              padding: const EdgeInsets.all(28),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(32),
+                                color: theme.colorScheme.surface.withValues(
+                                  alpha: 0.7,
                                 ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Create Account',
-                                  textAlign: TextAlign.center,
-                                  style: theme.textTheme.headlineMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.2),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Register to stay prepared for emergencies',
-                                  textAlign: TextAlign.center,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.6),
-                                  ),
-                                ),
-                                const SizedBox(height: 30),
-
-                                CustomTextField(
-                                  controller: _firstNameController,
-                                  label: 'First Name',
-                                  prefixIcon: Icons.person_outline,
-                                  validator: (value) =>
-                                      value == null || value.isEmpty
-                                      ? 'Required'
-                                      : null,
-                                ),
-                                const SizedBox(height: 18),
-
-                                CustomTextField(
-                                  controller: _lastNameController,
-                                  label: 'Last Name',
-                                  prefixIcon: Icons.person_outline,
-                                  validator: (value) =>
-                                      value == null || value.isEmpty
-                                      ? 'Required'
-                                      : null,
-                                ),
-                                const SizedBox(height: 18),
-
-                                /// 🔥 IMPROVED PHONE INPUT
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: theme.colorScheme.primary
-                                          .withValues(alpha: 0.3),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      CountryCodePicker(
-                                        padding: EdgeInsets.zero,
-                                        onChanged: (code) =>
-                                            _countryCode = code.dialCode!,
-                                        initialSelection: 'GH',
-                                        showFlag: true,
-                                        showDropDownButton: true,
-                                      ),
-                                      Expanded(
-                                        flex: 9,
-                                        child: CustomTextField(
-                                          controller: _phoneController,
-                                          label: 'Phone Number',
-                                          keyboardType: TextInputType.phone,
-                                          validator: (value) =>
-                                              value == null || value.isEmpty
-                                              ? 'Required'
-                                              : null,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                const SizedBox(height: 30),
-
-                                /// 🔥 BUTTON WITH DEPTH
-                                ElevatedButton(
-                                  onPressed: () {
-                                    if (_formKey.currentState!.validate()) {
-                                      context.read<AuthBloc>().add(
-                                        RegisterWithPhone(
-                                          firstName: _firstNameController.text,
-                                          lastName: _lastNameController.text,
-                                          countryCode: _countryCode,
-                                          phoneNumber: _phoneController.text,
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    elevation: 8,
-                                    shadowColor: theme.colorScheme.primary
-                                        .withValues(alpha: 0.5),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Register',
-                                    style: TextStyle(fontSize: 18),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 20),
-
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                              ),
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
-                                    const Text('Already have an account?'),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => const LoginScreen(),
+                                    const SizedBox(height: 10),
+                                    Icon(
+                                      Icons.person_add_alt_1,
+                                      size: 60,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Create Account',
+                                      textAlign: TextAlign.center,
+                                      style: theme.textTheme.headlineMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                        );
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Register to stay prepared for emergencies',
+                                      textAlign: TextAlign.center,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme.colorScheme.onSurface
+                                                .withValues(alpha: 0.6),
+                                          ),
+                                    ),
+                                    const SizedBox(height: 30),
+
+                                    CustomTextField(
+                                      controller: _firstNameController,
+                                      label: 'First Name',
+                                      prefixIcon: Icons.person_outline,
+                                      validator: (value) =>
+                                          value == null || value.isEmpty
+                                          ? 'Required'
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 18),
+
+                                    CustomTextField(
+                                      controller: _lastNameController,
+                                      label: 'Last Name',
+                                      prefixIcon: Icons.person_outline,
+                                      validator: (value) =>
+                                          value == null || value.isEmpty
+                                          ? 'Required'
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 18),
+
+                                    /// 🔥 IMPROVED PHONE INPUT
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: theme.colorScheme.primary
+                                              .withValues(alpha: 0.3),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          CountryCodePicker(
+                                            padding: EdgeInsets.zero,
+                                            onChanged: (code) =>
+                                                _countryCode = code.dialCode!,
+                                            initialSelection: 'GH',
+                                            showFlag: true,
+                                            showDropDownButton: true,
+                                          ),
+                                          Expanded(
+                                            flex: 9,
+                                            child: CustomTextField(
+                                              controller: _phoneController,
+                                              label: 'Phone Number',
+                                              keyboardType: TextInputType.phone,
+                                              validator: (value) =>
+                                                  value == null || value.isEmpty
+                                                  ? 'Required'
+                                                  : null,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 30),
+
+                                    /// 🔥 BUTTON WITH DEPTH
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        if (_formKey.currentState!.validate()) {
+                                          context.read<AuthBloc>().add(
+                                            RegisterWithPhone(
+                                              firstName:
+                                                  _firstNameController.text,
+                                              lastName:
+                                                  _lastNameController.text,
+                                              countryCode: _countryCode,
+                                              phoneNumber:
+                                                  _phoneController.text,
+                                            ),
+                                          );
+                                        }
                                       },
-                                      child: const Text('Sign In'),
+                                      style: ElevatedButton.styleFrom(
+                                        elevation: 8,
+                                        shadowColor: theme.colorScheme.primary
+                                            .withValues(alpha: 0.5),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 16,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            30,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Register',
+                                        style: TextStyle(fontSize: 18),
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 20),
+
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Text('Already have an account?'),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const LoginScreen(),
+                                              ),
+                                            );
+                                          },
+                                          child: const Text('Sign In'),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

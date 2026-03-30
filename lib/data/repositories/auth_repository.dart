@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:helpflutter/data/models/user.dart';
 import 'package:helpflutter/core/api/api_service.dart';
+import 'package:helpflutter/core/api/token_manager.dart';
 
 abstract class AuthRepository {
   Future<void> registerWithPhone(
@@ -20,9 +23,15 @@ abstract class AuthRepository {
 
 class AuthRepositoryImpl implements AuthRepository {
   final ApiService apiService;
+  final TokenManager tokenManager = TokenManager();
 
   // Inject ApiService through the constructor
   AuthRepositoryImpl({required this.apiService});
+  static const String _tokenKey = 'auth_token';
+  static const String _userKey = 'auth_user';
+
+  Future<SharedPreferences> get _prefs async =>
+      await SharedPreferences.getInstance();
 
   @override
   Future<void> registerWithPhone(
@@ -74,10 +83,17 @@ class AuthRepositoryImpl implements AuthRepository {
       // Dio automatically decodes JSON! Access it directly via response.data
       final data = response.data;
       final user = User.fromJson(data['user']);
+      final token = data['token'];
+      final refreshToken = data['refresh'];
 
-      if (data['token'] != null) {
-        saveToken(data['token']);
+      if (token != null && refreshToken != null) {
+        await tokenManager.setTokens(token, refreshToken); // Save both tokens
+      } else {
+        throw Exception('Token not found in response');
       }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_userKey, jsonEncode(user.toJson()));
 
       return user;
     } on DioException catch (_) {
@@ -88,35 +104,43 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout() async {
     try {
-      // You no longer need to pass the token manually!
-      // Your DioClient interceptor attaches it automatically.
       await apiService.logout();
-    } catch (e) {
-      // Handle or log error
     } finally {
-      clearToken();
+      await tokenManager.clearTokens();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_userKey);
     }
   }
 
   @override
   Future<bool> isLoggedIn() async {
-    // Implement with secure storage
-    return false;
+    await tokenManager.loadTokens();
+    final token = tokenManager.accessToken;
+    return token != null && token.isNotEmpty;
   }
 
   @override
   Future<User?> getCurrentUser() async {
-    // Implement retrieval
-    return null;
+    final prefs = await SharedPreferences.getInstance();
+    final userString = prefs.getString(_userKey);
+    if (userString == null) return null;
+    try {
+      return User.fromJson(jsonDecode(userString));
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
-  void saveToken(String token) {
-    // Save token securely (e.g., flutter_secure_storage)
+  Future<void> saveToken(String token) async {
+    final prefs = await _prefs;
+    await prefs.setString(_tokenKey, token);
   }
 
   @override
-  void clearToken() {
-    // Clear token
+  Future<void> clearToken() async {
+    final prefs = await _prefs;
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_userKey);
   }
 }

@@ -6,9 +6,11 @@ import 'package:helpflutter/presentation/screens/live_report/live_report_screen.
 import 'package:helpflutter/presentation/screens/register_contacts/register_contact_screen.dart';
 import 'package:helpflutter/presentation/screens/video_tutorials/video_tutorials_screen.dart';
 import 'package:helpflutter/core/widgets/suspended_button_nav_bar.dart';
+import 'package:helpflutter/presentation/screens/splashscreen/splash_screen.dart';
 
 class AppRouter {
-  static const String home = '/';
+  static const String splash = '/'; // Added explicit splash route
+  static const String home = '/home'; // Changed from '/' to '/home'
   static const String register = '/register';
   static const String contacts = '/contacts';
   static const String emergency = '/emergency';
@@ -17,6 +19,8 @@ class AppRouter {
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case splash:
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
       case home:
         return MaterialPageRoute(builder: (_) => const HomeWrapper());
       case register:
@@ -53,17 +57,6 @@ class _HomeWrapperState extends State<HomeWrapper> {
   int _currentIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final List<Widget> _screens = [
-    HomeScreen(
-      currentIndex: 0,
-      onTabTapped: (index) {},
-      onMenuTap: null, // placeholder, will be replaced later
-    ),
-    const RegisterContactScreen(),
-    const ContactsScreen(),
-    const EmergencyContactsScreen(),
-  ];
-
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
@@ -74,20 +67,36 @@ class _HomeWrapperState extends State<HomeWrapper> {
     _scaffoldKey.currentState?.openDrawer();
   }
 
+  // FIXED: Build screens dynamically rather than modifying a list inside build()
+  Widget _buildCurrentScreen() {
+    switch (_currentIndex) {
+      case 0:
+        return HomeScreen(
+          currentIndex: _currentIndex,
+          onTabTapped: _onTabTapped,
+          onMenuTap: _openDrawer,
+        );
+      case 1:
+        return const RegisterContactScreen();
+      case 2:
+        return const ContactsScreen();
+      case 3:
+        return const EmergencyContactsScreen();
+      default:
+        return HomeScreen(
+          currentIndex: 0,
+          onTabTapped: _onTabTapped,
+          onMenuTap: _openDrawer,
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Update the home screen with current index and the drawer opener
-    final homeScreen = HomeScreen(
-      currentIndex: _currentIndex,
-      onTabTapped: _onTabTapped,
-      onMenuTap: _openDrawer,
-    );
-    _screens[0] = homeScreen;
-
     return Scaffold(
-      key: _scaffoldKey, // needed to open drawer
-      extendBody: true, // allows body to go under the floating bottom nav
-      body: _screens[_currentIndex],
+      key: _scaffoldKey,
+      extendBody: true,
+      body: _buildCurrentScreen(), // Shows the screen based on index
       bottomNavigationBar: SuspendedBottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
@@ -112,11 +121,8 @@ class _HomeWrapperState extends State<HomeWrapper> {
                 leading: const Icon(Icons.report),
                 title: const Text('Live Report'),
                 onTap: () {
-                  Navigator.pop(context); // close drawer
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const LiveReportScreen()),
-                  );
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, AppRouter.liveReport);
                 },
               ),
               ListTile(
@@ -124,12 +130,7 @@ class _HomeWrapperState extends State<HomeWrapper> {
                 title: const Text('Video Tutorials'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const VideoTutorialsScreen(),
-                    ),
-                  );
+                  Navigator.pushNamed(context, AppRouter.tutorials);
                 },
               ),
             ],

@@ -45,11 +45,11 @@ class EmergencyTile extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, size: 65, color: Colors.white),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 25,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),

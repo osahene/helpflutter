@@ -45,7 +45,7 @@ class TopNavBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: onMenuTap ?? () => Scaffold.of(context).openDrawer(),
         ),
       ],
-      backgroundColor: Colors.transparent,
+      backgroundColor: const Color.fromARGB(166, 188, 33, 33),
       elevation: 0,
     );
   }
