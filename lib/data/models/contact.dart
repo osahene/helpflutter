@@ -1,56 +1,31 @@
-enum ContactStatus { accepted, rejected, pending }
-
 class Contact {
   final String id;
   final String firstName;
   final String lastName;
-  final String address;
-  final String phone;
   final String email;
+  final String phoneNumber;
   final String relation;
-  final List<String> situations; // e.g., ['Robbery', 'Fire']
-  final ContactStatus status;
+  final String status; // pending, approved, rejected
 
   Contact({
     required this.id,
     required this.firstName,
     required this.lastName,
-    required this.address,
-    required this.phone,
     required this.email,
+    required this.phoneNumber,
     required this.relation,
-    required this.situations,
     required this.status,
   });
 
-  String get fullName => '$firstName $lastName';
-
   factory Contact.fromJson(Map<String, dynamic> json) {
     return Contact(
-      id: json['id'],
+      id: json['pk'].toString(),
       firstName: json['first_name'],
       lastName: json['last_name'],
-      address: json['address'],
-      phone: json['phone'],
-      email: json['email'],
+      email: json['email_address'] ?? '',
+      phoneNumber: json['full_phone_number'] ?? json['phone_number'],
       relation: json['relation'],
-      situations: List<String>.from(json['situations']),
-      status: ContactStatus.values.firstWhere(
-        (e) => e.toString() == 'ContactStatus.${json['status']}',
-        orElse: () => ContactStatus.pending,
-      ),
+      status: json['status'],
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'first_name': firstName,
-      'last_name': lastName,
-      'address': address,
-      'phone': phone,
-      'email': email,
-      'relation': relation,
-      'situations': situations,
-    };
   }
 }

@@ -1,146 +1,93 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:helpflutter/core/constants/constants.dart';
+import 'package:helpflutter/core/constants/api_client.dart';
+import 'package:helpflutter/core/constants/secure_storage.dart';
 import 'package:helpflutter/data/models/user.dart';
-import 'package:helpflutter/core/api/api_service.dart';
-import 'package:helpflutter/core/api/token_manager.dart';
 
-abstract class AuthRepository {
-  Future<void> registerWithPhone(
-    String firstName,
-    String lastName,
-    String countryCode,
-    String phoneNumber,
-  );
-  Future<void> sendLoginOtp(String countryCode, String phoneNumber);
-  Future<User> verifyOtp(String countryCode, String phoneNumber, String otp);
-  Future<void> logout(); // Removed token requirement, Dio handles it!
-  Future<bool> isLoggedIn();
-  Future<User?> getCurrentUser();
-  void saveToken(String token);
-  void clearToken();
-}
+class AuthRepository {
+  final Dio _dio = ApiClient.dio;
 
-class AuthRepositoryImpl implements AuthRepository {
-  final ApiService apiService;
-  final TokenManager tokenManager = TokenManager();
-
-  // Inject ApiService through the constructor
-  AuthRepositoryImpl({required this.apiService});
-  static const String _tokenKey = 'auth_token';
-  static const String _userKey = 'auth_user';
-
-  Future<SharedPreferences> get _prefs async =>
-      await SharedPreferences.getInstance();
-
-  @override
-  Future<void> registerWithPhone(
-    String firstName,
-    String lastName,
-    String countryCode,
-    String phoneNumber,
-  ) async {
+  Future<void> register({
+    required String firstName,
+    required String lastName,
+    required String countryCode,
+    required String phoneNumber,
+  }) async {
     try {
-      await apiService.register({
-        'first_name': firstName,
-        'last_name': lastName,
-        'country_code': countryCode,
-        'phone_number': phoneNumber,
-      });
-    } on DioException catch (e) {
-      // Dio throws an exception for non-2xx status codes.
-      throw Exception(
-        'Registration failed: ${e.response?.statusCode} - ${e.message}',
+      await _dio.post(
+        AppConstants.register,
+        data: {
+          'first_name': firstName,
+          'last_name': lastName,
+          'country_code': countryCode,
+          'phone_number': phoneNumber,
+        },
       );
-    }
-  }
-
-  @override
-  Future<void> sendLoginOtp(String countryCode, String phoneNumber) async {
-    try {
-      await apiService.sendOtp({
-        'country_code': countryCode,
-        'phone_number': phoneNumber,
-      });
     } on DioException catch (e) {
-      throw Exception('Failed to send OTP: ${e.response?.data ?? e.message}');
+      throw _handleError(e);
     }
   }
 
-  @override
-  Future<User> verifyOtp(
-    String countryCode,
-    String phoneNumber,
-    String otp,
-  ) async {
+  Future<void> sendOtp({
+    required String countryCode,
+    required String phoneNumber,
+  }) async {
     try {
-      final response = await apiService.verifyOtp({
-        'country_code': countryCode,
-        'phone_number': phoneNumber,
-        'otp': otp,
-      });
+      await _dio.post(
+        AppConstants.sendOtp,
+        data: {'country_code': countryCode, 'phone_number': phoneNumber},
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 
-      // Dio automatically decodes JSON! Access it directly via response.data
+  Future<({User user, String accessToken, String refreshToken})> verifyOtp({
+    required String countryCode,
+    required String phoneNumber,
+    required String otp,
+  }) async {
+    try {
+      final response = await _dio.post(
+        AppConstants.verifyOtp,
+        data: {
+          'country_code': countryCode,
+          'phone_number': phoneNumber,
+          'otp': otp,
+        },
+      );
       final data = response.data;
       final user = User.fromJson(data['user']);
-      final token = data['token'];
-      final refreshToken = data['refresh'];
+      final accessToken = data['token'] as String;
+      final refreshToken = data['refresh'] as String;
+      return (user: user, accessToken: accessToken, refreshToken: refreshToken);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 
-      if (token != null && refreshToken != null) {
-        await tokenManager.setTokens(token, refreshToken); // Save both tokens
-      } else {
-        throw Exception('Token not found in response');
+  Future<void> logout(String refreshToken) async {
+    try {
+      await _dio.post(AppConstants.logout, data: {'refresh': refreshToken});
+      await SecureStorage.clearTokens();
+    } on DioException catch (e) {
+      // Even if logout fails, clear tokens locally
+      await SecureStorage.clearTokens();
+      throw _handleError(e);
+    }
+  }
+
+  String _handleError(DioException e) {
+    if (e.response != null) {
+      final data = e.response!.data;
+      if (data is Map && data.containsKey('error')) {
+        return data['error'];
       }
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_userKey, jsonEncode(user.toJson()));
-
-      return user;
-    } on DioException catch (_) {
-      throw Exception('Invalid OTP');
+      if (data is Map && data.containsKey('message')) {
+        return data['message'];
+      }
+      return 'Something went wrong';
     }
-  }
-
-  @override
-  Future<void> logout() async {
-    try {
-      await apiService.logout();
-    } finally {
-      await tokenManager.clearTokens();
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_userKey);
-    }
-  }
-
-  @override
-  Future<bool> isLoggedIn() async {
-    await tokenManager.loadTokens();
-    final token = tokenManager.accessToken;
-    return token != null && token.isNotEmpty;
-  }
-
-  @override
-  Future<User?> getCurrentUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userString = prefs.getString(_userKey);
-    if (userString == null) return null;
-    try {
-      return User.fromJson(jsonDecode(userString));
-    } catch (_) {
-      return null;
-    }
-  }
-
-  @override
-  Future<void> saveToken(String token) async {
-    final prefs = await _prefs;
-    await prefs.setString(_tokenKey, token);
-  }
-
-  @override
-  Future<void> clearToken() async {
-    final prefs = await _prefs;
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userKey);
+    return e.message ?? 'Network error';
   }
 }
