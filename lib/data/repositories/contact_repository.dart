@@ -1,60 +1,77 @@
 import 'package:dio/dio.dart';
-import 'package:helpflutter/core/constants/constants.dart';
-import 'package:helpflutter/core/constants/api_client.dart';
 import 'package:helpflutter/data/models/contact.dart';
+import 'package:helpflutter/core/constants/api_service.dart';
 
-class ContactsRepository {
-  final Dio _dio = ApiClient.dio;
+abstract class ContactRepository {
+  Future<List<Contact>> getContacts();
+  Future<void> addContact(Contact contact);
+  Future<void> updateContactStatus(String contactId, String status);
+  Future<void> deleteContact(String contactId);
+}
 
-  Future<List<Contact>> getContacts() async {
+class ContactRepositoryImpl implements ContactRepository {
+  final ApiService apiService;
+
+  ContactRepositoryImpl({required this.apiService});
+
+  @override
+  Future<void> addContact(Contact contact) async {
     try {
-      final response = await _dio.get(AppConstants.myContacts);
-      final List<dynamic> data = response.data;
-      return data.map((json) => Contact.fromJson(json)).toList();
+      // Map the Contact model to the JSON structure your Django view expects
+      await apiService.createRelation(contact.toJson());
     } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  Future<void> createContact({
-    required String firstName,
-    required String lastName,
-    required String phoneNumber,
-    required String email,
-    required String relation,
-    required List<String> situations, // though backend may not use it in create
-  }) async {
-    try {
-      await _dio.post(
-        AppConstants.createContact,
-        data: {
-          'first_name': firstName,
-          'last_name': lastName,
-          'phone_number': phoneNumber,
-          'email_address': email,
-          'relation': relation,
-          // 'situations': situations, // uncomment if backend expects
-        },
+      throw Exception(
+        'Failed to add contact: ${e.response?.data ?? e.message}',
       );
-    } on DioException catch (e) {
-      throw _handleError(e);
     }
   }
 
+  @override
   Future<void> deleteContact(String contactId) async {
     try {
-      await _dio.post(AppConstants.deleteContact, data: {'pk': contactId});
+      await apiService.deleteContact(contactId);
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw Exception(
+        'Failed to delete contact: ${e.response?.data ?? e.message}',
+      );
     }
   }
 
-  String _handleError(DioException e) {
-    if (e.response != null) {
-      final data = e.response!.data;
-      if (data is Map && data.containsKey('error')) return data['error'];
-      if (data is Map && data.containsKey('message')) return data['message'];
+  @override
+  Future<List<Contact>> getContacts() async {
+    try {
+      final response = await apiService.getMyContacts();
+
+      if (response.data != null && response.data['data'] is List) {
+        final List<dynamic> rawList = response.data['data'];
+        return rawList.map((json) => Contact.fromJson(json)).toList();
+      }
+
+      return [];
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return [];
+
+      throw Exception('Server Error: ${e.response?.statusCode}');
     }
-    return e.message ?? 'Network error';
+  }
+
+  @override
+  Future<void> updateContactStatus(String contactId, String status) async {
+    try {
+      final payload = {
+        'contact_id': contactId,
+        'status': status, // 'approved' or 'rejected'
+      };
+
+      if (status == 'approved') {
+        await apiService.approveDependant(payload);
+      } else if (status == 'rejected') {
+        await apiService.rejectDependant(payload);
+      }
+    } on DioException catch (e) {
+      throw Exception(
+        'Failed to update contact status: ${e.response?.data ?? e.message}',
+      );
+    }
   }
 }

@@ -7,9 +7,9 @@ part 'contacts_event.dart';
 part 'contacts_state.dart';
 
 class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
-  final ContactsRepository repository;
+  final ContactRepository repository;
 
-  ContactsBloc(this.repository) : super(ContactsInitial()) {
+  ContactsBloc({required this.repository}) : super(ContactsInitial()) {
     on<LoadContacts>(_onLoad);
     on<AddContact>(_onAdd);
     on<DeleteContact>(_onDelete);
@@ -28,14 +28,20 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
   Future<void> _onAdd(AddContact event, Emitter<ContactsState> emit) async {
     emit(ContactsLoading());
     try {
-      await repository.createContact(
+      // Create the Contact object here
+      final newContact = Contact(
+        id: '',
         firstName: event.firstName,
         lastName: event.lastName,
         phoneNumber: event.phoneNumber,
         email: event.email,
         relation: event.relation,
-        situations: event.situations,
+        situation: event.situation,
+        status: ContactStatus.pending, // Default status for a new request
       );
+
+      await repository.addContact(newContact);
+
       final contacts = await repository.getContacts();
       emit(ContactsLoaded(contacts));
     } catch (e) {

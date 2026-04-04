@@ -14,23 +14,23 @@ class AddContact extends ContactsEvent {
   final String phoneNumber;
   final String email;
   final String relation;
-  final List<String> situations;
+  final Map<String, dynamic>? situation;
   const AddContact(
     this.firstName,
     this.lastName,
     this.phoneNumber,
     this.email,
     this.relation,
-    this.situations,
+    this.situation,
   );
   @override
-  List<Object> get props => [
+  List<Object?> get props => [
     firstName,
     lastName,
     phoneNumber,
     email,
     relation,
-    situations,
+    situation,
   ];
 }
 

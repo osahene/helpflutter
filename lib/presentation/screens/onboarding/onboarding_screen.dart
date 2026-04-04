@@ -62,6 +62,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Positioned(
             bottom: 30,
             right: 20,
+            left: 20,
             child: ElevatedButton(
               onPressed: _next,
               child: Text(_currentPage == 2 ? 'Get Started' : 'Next'),
@@ -82,7 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(image, height: 200),
+          // Image.asset(image, height: 200),
           const SizedBox(height: 40),
           Text(
             title,
@@ -127,6 +128,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _skip() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.hasSeenOnboarding, true);
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),

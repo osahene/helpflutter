@@ -56,22 +56,34 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    if (formKey.currentState!.validate()) {
-                      context.read<AuthBloc>().add(
-                        AuthVerifyOtpRequested(
-                          '+233',
-                          widget.phoneNumber,
-                          otpController.text,
-                        ),
-                      );
-                    }
+                    // if (formKey.currentState!.validate()) {
+                    //   context.read<AuthBloc>().add(
+                    //     AuthVerifyOtpRequested(
+                    //       '+233',
+                    //       widget.phoneNumber,
+                    //       otpController.text,
+                    //     ),
+                    //   );
+                    // }
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const DashboardScreen(),
+                      ),
+                    );
                   },
                   child: const Text('Verify'),
                 ),
                 TextButton(
                   onPressed: () {
-                    context.read<AuthBloc>().add(
-                      AuthSendOtpRequested('+233', widget.phoneNumber),
+                    // context.read<AuthBloc>().add(
+                    //   AuthSendOtpRequested('+233', widget.phoneNumber),
+                    // );
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const DashboardScreen(),
+                      ),
                     );
                   },
                   child: const Text('Resend OTP'),

@@ -15,7 +15,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
   final List<Widget> _screens = [
-    const HomeScreen(),
+    HomeScreen(onTabTapped: (int index) {}),
     const ContactsScreen(),
     const RegisterContactScreen(),
     const EmergencyContactsScreen(),

@@ -10,7 +10,7 @@ part 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository repository;
 
-  AuthBloc(this.repository) : super(AuthInitial()) {
+  AuthBloc({required this.repository}) : super(AuthInitial()) {
     on<AuthRegisterRequested>(_onRegister);
     on<AuthSendOtpRequested>(_onSendOtp);
     on<AuthVerifyOtpRequested>(_onVerifyOtp);
