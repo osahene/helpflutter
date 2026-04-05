@@ -133,68 +133,50 @@ class _EmergencyTileState extends State<EmergencyTile>
                   ),
                 ),
                 // Content
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Icon in frosted circle
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.2),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.35),
-                            width: 1.5,
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Icon in frosted circle
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.2),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.35),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return Icon(
+                                widget.icon,
+                                size: 70,
+                                color: Colors.white,
+                              );
+                            },
                           ),
                         ),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            return Icon(
-                              widget.icon,
-                              size: 36,
-                              color: Colors.white,
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        widget.title,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      // "Tap to alert" micro-label
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          'TAP TO ALERT',
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white70,
-                            letterSpacing: 1.0,
+                        const SizedBox(height: 12),
+                        Text(
+                          widget.title,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 0.2,
+                            height: 1.3,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 6),
+                      ],
+                    ),
                   ),
                 ),
               ],

@@ -17,7 +17,6 @@ class ContactRepositoryImpl implements ContactRepository {
   @override
   Future<void> addContact(Contact contact) async {
     try {
-      // Map the Contact model to the JSON structure your Django view expects
       await apiService.createRelation(contact.toJson());
     } on DioException catch (e) {
       throw Exception(
@@ -41,27 +40,34 @@ class ContactRepositoryImpl implements ContactRepository {
   Future<List<Contact>> getContacts() async {
     try {
       final response = await apiService.getMyContacts();
+      final dynamic data = response.data;
 
-      if (response.data != null && response.data['data'] is List) {
-        final List<dynamic> rawList = response.data['data'];
+      // 1. If the response is a Map and contains a 'data' key
+      if (data is Map<String, dynamic> && data['data'] is List) {
+        final List<dynamic> rawList = data['data'];
         return rawList.map((json) => Contact.fromJson(json)).toList();
       }
 
+      // 2. If the response is the List itself (common in some Django REST setups)
+      if (data is List) {
+        return data.map((json) => Contact.fromJson(json)).toList();
+      }
+
+      // Default to empty if structure is unknown or null
       return [];
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) return [];
-
       throw Exception('Server Error: ${e.response?.statusCode}');
+    } catch (e) {
+      // Catch parsing errors and return empty to trigger your UI empty state
+      return [];
     }
   }
 
   @override
   Future<void> updateContactStatus(String contactId, String status) async {
     try {
-      final payload = {
-        'contact_id': contactId,
-        'status': status, // 'approved' or 'rejected'
-      };
+      final payload = {'contact_id': contactId, 'status': status};
 
       if (status == 'approved') {
         await apiService.approveDependant(payload);

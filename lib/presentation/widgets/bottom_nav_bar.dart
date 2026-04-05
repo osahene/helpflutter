@@ -15,7 +15,7 @@ class BottomNavBar extends StatelessWidget {
     _NavItem(icon: Icons.home_rounded, label: 'Home'),
     _NavItem(icon: Icons.contacts_rounded, label: 'Contacts'),
     _NavItem(icon: Icons.person_add_alt_1_rounded, label: 'Register'),
-    _NavItem(icon: Icons.sos_rounded, label: 'Emergency'),
+    _NavItem(icon: Icons.phone_in_talk, label: 'Emergency'),
   ];
 
   @override
@@ -36,11 +36,9 @@ class BottomNavBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(_items.length, (index) {
               final bool isSelected = currentIndex == index;
-              final bool isEmergency = index == _items.length - 1;
               return _NavTile(
                 item: _items[index],
                 isSelected: isSelected,
-                isEmergency: isEmergency,
                 onTap: () {
                   HapticFeedback.selectionClick();
                   onTap(index);
@@ -67,13 +65,11 @@ class _NavItem {
 class _NavTile extends StatefulWidget {
   final _NavItem item;
   final bool isSelected;
-  final bool isEmergency;
   final VoidCallback onTap;
 
   const _NavTile({
     required this.item,
     required this.isSelected,
-    required this.isEmergency,
     required this.onTap,
   });
 
@@ -108,12 +104,14 @@ class _NavTileState extends State<_NavTile>
   @override
   Widget build(BuildContext context) {
     // Emergency tab gets a red pill treatment; others use a neutral glow
-    final Color activeColor = widget.isEmergency
-        ? const Color(0xFFFF3B3B)
-        : const Color(0xFFFF6B6B);
-    final Color activeBg = widget.isEmergency
-        ? const Color(0xFF3D0000)
-        : const Color(0xFF2A1A1A);
+    const Color activeColor = Color.fromARGB(255, 250, 250, 250);
+    const Color activeBg = Color.fromARGB(
+      255,
+      47,
+      79,
+      118,
+    ); // Neutral dark gray
+    const Color inactiveTextColor = Color.fromARGB(255, 177, 175, 175);
 
     return GestureDetector(
       onTapDown: (_) => _ctrl.forward(),
@@ -128,9 +126,7 @@ class _NavTileState extends State<_NavTile>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOutCubic,
-          padding: widget.isSelected
-              ? const EdgeInsets.symmetric(horizontal: 16, vertical: 8)
-              : const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: widget.isSelected
               ? BoxDecoration(
                   color: activeBg,
@@ -155,7 +151,7 @@ class _NavTileState extends State<_NavTile>
                       widget.item.label,
                       style: TextStyle(
                         color: activeColor,
-                        fontSize: 13,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.2,
                       ),
@@ -166,18 +162,12 @@ class _NavTileState extends State<_NavTile>
               : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      widget.item.icon,
-                      color: widget.isEmergency
-                          ? const Color(0xFF993333)
-                          : const Color(0xFF555555),
-                      size: 22,
-                    ),
+                    Icon(widget.item.icon, color: inactiveTextColor, size: 22),
                     const SizedBox(height: 4),
                     Text(
                       widget.item.label,
                       style: const TextStyle(
-                        color: Color(0xFF444444),
+                        color: Color.fromARGB(255, 177, 175, 175),
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
                         letterSpacing: 0.1,

@@ -3,6 +3,8 @@ import 'package:helpflutter/presentation/screens/dashboard/home_screen.dart';
 import 'package:helpflutter/presentation/screens/dashboard/contact_screen.dart';
 import 'package:helpflutter/presentation/screens/dashboard/register_contact_screen.dart';
 import 'package:helpflutter/presentation/screens/dashboard/emergency_contacts_screen.dart';
+import 'package:helpflutter/presentation/screens/extra/video_tutorials_screen.dart';
+import 'package:helpflutter/presentation/screens/extra/live_report_screen.dart';
 import 'package:helpflutter/presentation/widgets/bottom_nav_bar.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -14,8 +16,13 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
-  final List<Widget> _screens = [
-    HomeScreen(onTabTapped: (int index) {}),
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  List<Widget> get _screens => [
+    HomeScreen(
+      onTabTapped: (int index) {},
+      onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+    ),
     const ContactsScreen(),
     const RegisterContactScreen(),
     const EmergencyContactsScreen(),
@@ -24,10 +31,94 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: _buildAppDrawer(context),
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
+      ),
+    );
+  }
+
+  Widget _buildAppDrawer(BuildContext context) {
+    return Drawer(
+      child: Column(
+        children: [
+          // Custom Header to match your TopNavBar gradient
+          DrawerHeader(
+            padding: EdgeInsets.zero,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF1A0A0A), Color(0xFF6B0F0F)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+            ),
+            child: Container(
+              alignment: Alignment.bottomLeft,
+              padding: const EdgeInsets.all(16.0),
+              child: const Text(
+                'Help Oo Help',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+          ),
+
+          // Live Report Menu Item
+          ListTile(
+            leading: Icon(
+              Icons.report_problem_rounded,
+              color: Colors.red.shade400,
+            ),
+            title: const Text(
+              'Live Report',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            onTap: () {
+              // Close the drawer first
+              Navigator.pop(context);
+              // Navigate to Live Report Screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LiveReportScreen(),
+                ),
+              );
+            },
+          ),
+
+          // Tutorial Menu Item
+          ListTile(
+            leading: const Icon(Icons.school_rounded, color: Colors.blue),
+            title: const Text(
+              'Tutorial',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            onTap: () {
+              // Close the drawer first
+              Navigator.pop(context);
+              // Navigate to Tutorial Screen (Replace Placeholder with your actual screen)
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const VideoTutorialsScreen(),
+                ),
+              );
+
+              // Temporary visual feedback until screen is created
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Tutorial screen coming soon!')),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

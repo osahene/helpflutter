@@ -2,36 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:helpflutter/logic/profile/profile_bloc.dart';
-import 'package:helpflutter/data/repositories/profile_repository.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          ProfileBloc(repository: context.read<ProfileRepository>())
-            ..add(LoadProfile()),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF2F2F7),
-        body: BlocBuilder<ProfileBloc, ProfileState>(
-          builder: (context, state) {
-            if (state is ProfileLoading) {
-              return const _LoadingView();
-            } else if (state is ProfileLoaded) {
-              return _LoadedView(state: state);
-            } else if (state is ProfileError) {
-              return _ErrorView(message: state.message);
-            }
-            return const SizedBox.shrink();
-          },
-        ),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF2F2F7),
+      body: BlocBuilder<ProfileBloc, ProfileState>(
+        builder: (context, state) {
+          if (state is ProfileLoading) {
+            return const _LoadingView();
+          } else if (state is ProfileLoaded) {
+            return _LoadedView(state: state);
+          } else if (state is ProfileError) {
+            return _ErrorView(message: state.message);
+          }
+          return const SizedBox.shrink();
+        },
       ),
     );
   }
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Loading View
 // ─────────────────────────────────────────────────────────────────────────────
@@ -127,15 +120,8 @@ class _LoadedView extends StatelessWidget {
             collapseMode: CollapseMode.pin,
             background: _ProfileHero(state: state),
           ),
+
           // Collapsed title (shows only when scrolled up)
-          title: Text(
-            state.user.fullName,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.w700,
-              fontSize: 17,
-            ),
-          ),
           titleSpacing: 0,
         ),
 

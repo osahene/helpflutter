@@ -105,6 +105,11 @@ class _MyAppState extends State<MyApp> {
                 AuthBloc(repository: context.read<AuthRepository>()),
           ),
           BlocProvider(
+            create: (context) =>
+                ProfileBloc(repository: context.read<ProfileRepository>())
+                  ..add(LoadProfile()),
+          ),
+          BlocProvider(
             // 3. Fixed positional to named parameter `repository:`
             create: (context) =>
                 ContactsBloc(repository: context.read<ContactRepository>()),
@@ -112,10 +117,6 @@ class _MyAppState extends State<MyApp> {
           BlocProvider(
             create: (context) =>
                 AlertBloc(repository: context.read<AlertRepository>()),
-          ),
-          BlocProvider(
-            create: (context) =>
-                ProfileBloc(repository: context.read<ProfileRepository>()),
           ),
         ],
         child: MaterialApp(

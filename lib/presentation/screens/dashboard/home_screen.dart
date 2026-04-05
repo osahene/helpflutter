@@ -11,20 +11,20 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, this.onMenuTap, required this.onTabTapped});
 
   static const _situations = [
+    'Robbery',
+    'Health',
     'Fire',
-    'Medical',
-    'Security',
-    'Legal',
     'Flood',
-    'General SOS',
+    'Accident',
+    'Call Emergency',
   ];
 
   static const _icons = [
-    Icons.local_fire_department_rounded,
+    Icons.security_outlined,
     Icons.health_and_safety_rounded,
-    Icons.security_rounded,
-    Icons.gavel_rounded,
-    Icons.water_damage_rounded,
+    Icons.fire_truck_rounded,
+    Icons.flood_rounded,
+    Icons.car_crash_rounded,
     Icons.sos_rounded,
   ];
 
@@ -32,15 +32,15 @@ class HomeScreen extends StatelessWidget {
     Color(0xFFE8500A),
     Color(0xFF1A9E5C),
     Color(0xFFCC2222),
-    Color(0xFF8B5C00),
     Color(0xFF0A72C4),
+    Color(0xFF8B5C00),
     Color(0xFF7B22CE),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: const Color.fromARGB(255, 247, 244, 244),
       appBar: TopNavBar(
         onProfileTap: () {
           Navigator.push(
@@ -72,35 +72,6 @@ class HomeScreen extends StatelessWidget {
             slivers: [
               // ─── Header Banner ─────────────────────────────────────────
               SliverToBoxAdapter(child: _HeaderBanner(paddingH: headerPadH)),
-
-              // ─── "Select Emergency" label ───────────────────────────────
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(headerPadH, 24, headerPadH, 12),
-                sliver: SliverToBoxAdapter(
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 4,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade600,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'SELECT EMERGENCY TYPE',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.6,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
 
               // ─── Emergency Grid ─────────────────────────────────────────
               SliverPadding(
@@ -198,8 +169,8 @@ class _HeaderBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.fromLTRB(paddingH, 20, paddingH, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      margin: EdgeInsets.fromLTRB(paddingH, 10, paddingH, 10),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: const LinearGradient(
@@ -226,7 +197,7 @@ class _HeaderBanner extends StatelessWidget {
                   "What's your emergency?",
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.3,
                     height: 1.2,
@@ -236,8 +207,8 @@ class _HeaderBanner extends StatelessWidget {
                 Text(
                   'Tap a situation below to instantly\nalert your emergency contacts.',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.65),
-                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 16,
                     height: 1.5,
                   ),
                 ),

@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:helpflutter/core/constants/constants.dart';
+import 'package:helpflutter/logic/profile/profile_bloc.dart';
 
 class TopNavBar extends StatelessWidget implements PreferredSizeWidget {
-  final String? profileImageUrl;
   final VoidCallback? onProfileTap;
   final VoidCallback? onMenuTap;
 
-  const TopNavBar({
-    super.key,
-    this.profileImageUrl,
-    this.onProfileTap,
-    this.onMenuTap,
-  });
+  const TopNavBar({super.key, this.onProfileTap, this.onMenuTap});
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +20,9 @@ class TopNavBar extends StatelessWidget implements PreferredSizeWidget {
       flexibleSpace: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF1A0A0A), Color(0xFF6B0F0F)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
+            colors: [Color.fromARGB(255, 102, 114, 153), Color(0xFF1A3A8F)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
       ),
@@ -46,12 +42,24 @@ class TopNavBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ],
             ),
-            child: CircleAvatar(
-              backgroundImage: profileImageUrl != null
-                  ? NetworkImage(profileImageUrl!)
-                  : const AssetImage('assets/logo/logo.png') as ImageProvider,
-              radius: 18,
-              backgroundColor: const Color(0xFF3D0000),
+            child: BlocBuilder<ProfileBloc, ProfileState>(
+              builder: (context, state) {
+                String? imageUrl;
+
+                // Extract image URL only if state is ProfileLoaded
+                if (state is ProfileLoaded) {
+                  imageUrl = state.user.profileImageUrl;
+                }
+
+                return CircleAvatar(
+                  backgroundImage: (imageUrl != null)
+                      ? NetworkImage(imageUrl)
+                      : const AssetImage('assets/logo/logo.png')
+                            as ImageProvider,
+                  radius: 18,
+                  backgroundColor: const Color(0xFF3D0000),
+                );
+              },
             ),
           ),
         ),
