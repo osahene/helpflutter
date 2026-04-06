@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 
 class AppConstants {
   static const String appName = 'Help Oo Help';
-  static const String baseUrl =
-      'https://your-backend-url.com/api'; // Change to your backend
-  static const String apiKey = 'your-api-key'; // If needed
   static const String logoPath = 'assets/logo/logo.png';
 
   // Endpoints

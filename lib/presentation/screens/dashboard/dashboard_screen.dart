@@ -16,6 +16,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
+  final List<int> _history = [0];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   List<Widget> get _screens => [
@@ -30,13 +31,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      drawer: _buildAppDrawer(context),
-      body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+    return PopScope(
+      canPop:
+          _history.length <=
+          1, // Only allow "Exit" if we are already on the Home tab
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return; // If the app actually popped, do nothing
+
+        // If we are on Contacts, Register, or Emergency, go back to Home instead of exiting
+        if (_history.length > 1) {
+          setState(() {
+            _history.removeLast(); // Remove the current page from history
+            _currentIndex =
+                _history.last; // Go to the page we visited previously
+          });
+        } else {
+          // If we are on Home and the user tries to pop, allow the app to exit
+          Navigator.of(context).maybePop();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        drawer: _buildAppDrawer(context),
+        body: _screens[_currentIndex],
+        bottomNavigationBar: BottomNavBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            if (_currentIndex != index) {
+              setState(() {
+                _currentIndex = index;
+                _history.remove(
+                  index,
+                ); // Remove the page if it's already in history to avoid duplicates
+                _history.add(index); // Add the new page to our history stack
+              });
+            }
+          },
+        ),
       ),
     );
   }

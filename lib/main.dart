@@ -125,21 +125,42 @@ class _MyAppState extends State<MyApp> {
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system,
           debugShowCheckedModeBanner: false,
-          home: _getInitialScreen(),
+          home: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              // If the Bloc explicitly says unauthenticated (Logged Out)
+              if (state is AuthUnauthenticated) {
+                return const LoginScreen();
+              }
+
+              // If the Bloc explicitly says authenticated (Logged In)
+              if (state is AuthAuthenticated) {
+                return const DashboardScreen();
+              }
+
+              // Default startup logic (Checks SharedPreferences / SecureStorage)
+              if (!widget.hasSeenOnboarding) {
+                return const OnboardingScreen();
+              } else if (!widget.isLoggedIn) {
+                return const LoginScreen();
+              } else {
+                return const DashboardScreen();
+              }
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _getInitialScreen() {
-    if (!widget.hasSeenOnboarding) {
-      // Added 'widget.' prefix to access properties
-      return const OnboardingScreen();
-    } else if (!widget.isLoggedIn) {
-      // Added 'widget.' prefix
-      return const LoginScreen();
-    } else {
-      return const DashboardScreen();
-    }
-  }
+  // Widget _getInitialScreen() {
+  //   if (!widget.hasSeenOnboarding) {
+  //     // Added 'widget.' prefix to access properties
+  //     return const OnboardingScreen();
+  //   } else if (!widget.isLoggedIn) {
+  //     // Added 'widget.' prefix
+  //     return const LoginScreen();
+  //   } else {
+  //     return const DashboardScreen();
+  //   }
+  // }
 }

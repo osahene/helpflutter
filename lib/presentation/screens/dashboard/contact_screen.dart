@@ -47,40 +47,60 @@ class ContactsScreen extends StatelessWidget {
             headerSliverBuilder: (context, _) => [
               // ── Hero SliverAppBar ──────────────────────────────────────
               SliverAppBar(
+                expandedHeight: 130,
                 pinned: true,
-                expandedHeight: 148,
+                centerTitle: true, // 1. Centers the entire title block
                 backgroundColor: _kPrimary,
                 surfaceTintColor: Colors.transparent,
                 elevation: 0,
-                leading: Padding(
-                  padding: const EdgeInsets.only(left: 12, top: 6, bottom: 6),
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
+                automaticallyImplyLeading: false,
+
+                // 2. Move your header content here
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(11),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.25),
-                          width: 1,
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1.5,
                         ),
                       ),
                       child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
+                        Icons.contacts_rounded,
                         color: Colors.white,
-                        size: 18,
+                        size: 22,
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 14),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'My Contacts',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 21,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                        Text(
+                          'Manage your trusted people',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.65),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                title: const Text(
-                  'Contacts',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 17,
-                  ),
-                ),
+
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.pin,
                   background: Stack(
@@ -125,81 +145,22 @@ class ContactsScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Header content
-                      SafeArea(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 48, 20, 50),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(11),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.3),
-                                    width: 1.5,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.contacts_rounded,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'My Contacts',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 21,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: -0.4,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Manage your trusted people',
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.65,
-                                      ),
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      // NOTE: The SafeArea and its children were removed from here
+                      // to avoid duplicating the text.
                     ],
                   ),
                 ),
-                // ── TabBar pinned inside the AppBar ───────────────────
                 bottom: PreferredSize(
                   preferredSize: const Size.fromHeight(52),
                   child: Container(
                     color: _kSurface,
-                    child: TabBar(
+                    child: const TabBar(
                       indicatorColor: _kPrimary,
                       indicatorWeight: 3,
                       indicatorSize: TabBarIndicatorSize.label,
                       labelColor: _kPrimary,
                       unselectedLabelColor: _kMuted,
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13.5,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13.5,
-                      ),
-                      tabs: const [
+                      tabs: [
                         Tab(text: 'Emergency Contacts'),
                         Tab(text: 'Dependents'),
                       ],
@@ -250,7 +211,7 @@ class _AddContactFAB extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         HapticFeedback.mediumImpact();
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const RegisterContactScreen()),
         );

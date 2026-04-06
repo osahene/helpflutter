@@ -131,7 +131,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen>
     // context.read<AuthBloc>().add(
     //   AuthVerifyOtpRequested('+233', widget.phoneNumber, _otpValue),
     // );
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const DashboardScreen()),
     );
@@ -164,7 +164,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen>
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
-          Navigator.pushReplacement(
+          Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const DashboardScreen()),
           );

@@ -1,30 +1,31 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:helpflutter/main.dart';
+import 'package:helpflutter/presentation/screens/auth/login_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App displays LoginScreen when not logged in', (
+    WidgetTester tester,
+  ) async {
+    // 1. Create a dummy WidgetsBinding for the test
+    final widgetsBinding = TestWidgetsFlutterBinding.ensureInitialized();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // 2. Build our app with the required parameters
+    // We simulate a user who has seen onboarding but is NOT logged in
+    await tester.pumpWidget(
+      MyApp(
+        hasSeenOnboarding: true,
+        isLoggedIn: false,
+        widgetsBinding: widgetsBinding,
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // 3. Wait for the splash delay and animations to settle
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // 4. Verify that the LoginScreen is present
+    expect(find.byType(LoginScreen), findsOneWidget);
+
+    // 5. You can also check for specific text unique to your login screen
+    // Example: expect(find.text('Login'), findsOneWidget);
   });
 }

@@ -158,39 +158,61 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
               // ── Hero SliverAppBar ──────────────────────────────────────
               SliverAppBar(
                 pinned: true,
-                expandedHeight: 148,
+                expandedHeight: 100,
                 backgroundColor: _kPrimary,
                 surfaceTintColor: Colors.transparent,
+                automaticallyImplyLeading: false,
                 elevation: 0,
-                leading: Padding(
-                  padding: const EdgeInsets.only(left: 12, top: 6, bottom: 6),
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
+
+                // 1. Set centerTitle to true
+                centerTitle: true,
+
+                // 2. Replace the old title with your custom Row
+                title: Row(
+                  mainAxisSize: MainAxisSize.min, // Essential for centering
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(11),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.25),
-                          width: 1,
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1.5,
                         ),
                       ),
                       child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
+                        Icons.person_add_alt_1_rounded,
                         color: Colors.white,
-                        size: 18,
+                        size: 22,
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 14),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Add Contact',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 21,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                        Text(
+                          'Who should we notify?',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.65),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                title: const Text(
-                  'Add Contact',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 17,
-                  ),
-                ),
+
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.pin,
                   background: Stack(
@@ -236,58 +258,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                           ),
                         ),
                       ),
-                      // Header content
-                      SafeArea(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 48, 20, 36),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(11),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.3),
-                                    width: 1.5,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.person_add_alt_1_rounded,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Add Contact',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 21,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: -0.4,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Who should we notify?',
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.65,
-                                      ),
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      // 3. Removed the SafeArea/Header content from here!
                     ],
                   ),
                 ),

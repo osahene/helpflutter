@@ -10,7 +10,6 @@ class AppTheme {
       primary: primaryColor,
       secondary: secondaryColor,
       surface: Colors.white,
-      background: Color(0xFFF5F5F5),
     ),
     fontFamily: 'Poppins',
     appBarTheme: const AppBarTheme(
@@ -47,7 +46,6 @@ class AppTheme {
       primary: primaryColor,
       secondary: secondaryColor,
       surface: Color(0xFF1E1E1E),
-      background: Color(0xFF121212),
     ),
     fontFamily: 'Poppins',
     appBarTheme: const AppBarTheme(

@@ -34,33 +34,59 @@ class EmergencyContactsScreen extends StatelessWidget {
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // ── Hero AppBar ────────────────────────────────────────────────
           SliverAppBar(
-            expandedHeight: 160,
+            expandedHeight: 100,
             pinned: true,
+            centerTitle: true,
             backgroundColor: const Color(0xFF0D1B4B),
             surfaceTintColor: Colors.transparent,
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 12, top: 6, bottom: 6),
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
+            automaticallyImplyLeading: false,
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.2),
                       width: 1,
                     ),
                   ),
                   child: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
+                    Icons.contact_phone_rounded,
                     color: Colors.white,
-                    size: 18,
+                    size: 22,
                   ),
                 ),
-              ),
+                const SizedBox(width: 14),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Emergency Contacts',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    Text(
+                      'Call for help instantly',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.55),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
+
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.pin,
               background: Stack(
@@ -90,6 +116,7 @@ class EmergencyContactsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+
                   // Decorative circle bottom-left
                   Positioned(
                     bottom: 10,
@@ -119,65 +146,8 @@ class EmergencyContactsScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // Header text
-                  SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 44, 20, 36),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                width: 1,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.contact_phone_rounded,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Emergency Contacts',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 21,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.4,
-                                ),
-                              ),
-                              Text(
-                                'Call for help instantly',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.55),
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  // 2. The SafeArea containing the old text has been removed from here!
                 ],
-              ),
-            ),
-            title: const Text(
-              'Emergency Contacts',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 17,
               ),
             ),
           ),

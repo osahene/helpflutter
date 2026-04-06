@@ -348,7 +348,7 @@ class _RegisterScreenState extends State<RegisterScreen>
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthOtpSent) {
-          Navigator.pushReplacement(
+          Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => VerifyOtpScreen(

@@ -3,7 +3,7 @@ import 'package:helpflutter/core/constants/api_client.dart';
 import 'package:helpflutter/core/constants/constants.dart';
 
 class ApiService {
-  final Dio _dio = ApiClient.dio;
+  final Dio _dio = ApiClient.instance;
 
   // Authentication
   Future<Response> login(Map<String, dynamic> data) =>
