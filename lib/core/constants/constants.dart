@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class AppConstants {
   static const String appName = 'Help Oo Help';
@@ -97,28 +97,43 @@ class AppConstants {
     {
       'id': 1,
       'name': 'WhatsApp',
-      'icon': Icons.message, // we'll use Material Icons for simplicity
+      'icon': FontAwesomeIcons.whatsapp, // ✅ Real WhatsApp icon
       'actions': ['+233506053020'],
       'link': 'https://wa.me/233506053020',
     },
     {
       'id': 2,
       'name': 'Facebook',
-      'icon': Icons.facebook,
+      'icon':
+          FontAwesomeIcons.facebook, // ✅ Real Facebook icon (optional upgrade)
       'actions': 'Visit Facebook',
       'link': 'https://facebook.com/home',
     },
     {
       'id': 3,
       'name': 'Twitter',
-      'icon': Icons.help_center, // using generic; you can use custom icons
+      'icon': FontAwesomeIcons.xTwitter, // ✅ Real X (Twitter) icon
       'actions': 'Visit Twitter',
       'link': 'https://twitter.com/home',
     },
     {
       'id': 4,
+      'name': 'Snapchat',
+      'icon': FontAwesomeIcons.snapchat, // ✅ Real Snapchat icon
+      'actions': 'Visit Snapchat',
+      'link': 'https://snapchat.com/home',
+    },
+    {
+      'id': 5,
+      'name': 'TikTok',
+      'icon': FontAwesomeIcons.tiktok, // ✅ Real TikTok icon
+      'actions': 'Visit TikTok',
+      'link': 'https://tiktok.com/home',
+    },
+    {
+      'id': 6,
       'name': 'Call',
-      'icon': Icons.phone,
+      'icon': FontAwesomeIcons.phone, // optional upgrade too
       'actions': ['+233546045726'],
     },
   ];

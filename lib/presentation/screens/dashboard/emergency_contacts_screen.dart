@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:helpflutter/core/constants/constants.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class EmergencyContactsScreen extends StatelessWidget {
@@ -246,7 +247,7 @@ class EmergencyContactsScreen extends StatelessWidget {
                     runSpacing: 12,
                     children: contactUs.map((contact) {
                       final name = contact['name'] as String;
-                      final icon = contact['icon'] as IconData;
+                      final icon = contact['icon'];
                       final actions = contact['actions'];
                       final link = contact['link'] as String?;
 
@@ -617,7 +618,7 @@ class _PhoneRowState extends State<_PhoneRow>
 
 class _ContactUsCard extends StatefulWidget {
   final String name;
-  final IconData icon;
+  final dynamic icon;
   final String displayText;
   final double width;
   final VoidCallback? onTap;
@@ -718,6 +719,7 @@ class _ContactUsCardState extends State<_ContactUsCard>
                 Container(
                   width: 52,
                   height: 52,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [color.withValues(alpha: 0.8), color],
@@ -733,7 +735,7 @@ class _ContactUsCardState extends State<_ContactUsCard>
                       ),
                     ],
                   ),
-                  child: Icon(widget.icon, size: 26, color: Colors.white),
+                  child: FaIcon(widget.icon, size: 24, color: Colors.white),
                 ),
                 const SizedBox(height: 12),
                 Text(
