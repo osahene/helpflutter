@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<key>NSContactsUsageDescription</key>
+    	<string>We need access to your contacts so you can easily add emergency contacts</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>We need access to your microphone so you can record voice messages and send to the emergency response center.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>Used to capture and send visual evidence to emergency services during an active incident.</string>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
 		<key>CFBundleDevelopmentRegion</key>

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:helpflutter/core/constants/constants.dart';
 import 'package:helpflutter/logic/contacts/contacts_bloc.dart';
 
@@ -12,6 +13,42 @@ const _kCard = Colors.white;
 const _kBorder = Color(0xFFDDE3F5);
 const _kText = Color(0xFF0F1B3E);
 const _kMuted = Color(0xFF8B94B2);
+
+// ── Country Code Model ────────────────────────────────────────────────────────
+class CountryCode {
+  final String name;
+  final String flag;
+  final String code;
+  const CountryCode({
+    required this.name,
+    required this.flag,
+    required this.code,
+  });
+}
+
+// List of available country codes (same as login_screen)
+const List<CountryCode> _countryCodes = [
+  CountryCode(name: 'Ghana', flag: '🇬🇭', code: '+233'),
+  CountryCode(name: 'Nigeria', flag: '🇳🇬', code: '+234'),
+  CountryCode(name: 'Kenya', flag: '🇰🇪', code: '+254'),
+  CountryCode(name: 'South Africa', flag: '🇿🇦', code: '+27'),
+  CountryCode(name: 'United States', flag: '🇺🇸', code: '+1'),
+  CountryCode(name: 'United Kingdom', flag: '🇬🇧', code: '+44'),
+  CountryCode(name: 'Canada', flag: '🇨🇦', code: '+1'),
+  CountryCode(name: 'India', flag: '🇮🇳', code: '+91'),
+  CountryCode(name: 'Germany', flag: '🇩🇪', code: '+49'),
+  CountryCode(name: 'France', flag: '🇫🇷', code: '+33'),
+  CountryCode(name: 'Australia', flag: '🇦🇺', code: '+61'),
+  CountryCode(name: 'Brazil', flag: '🇧🇷', code: '+55'),
+  CountryCode(name: 'Senegal', flag: '🇸🇳', code: '+221'),
+  CountryCode(name: "Côte d'Ivoire", flag: '🇨🇮', code: '+225'),
+  CountryCode(name: 'Tanzania', flag: '🇹🇿', code: '+255'),
+  CountryCode(name: 'Uganda', flag: '🇺🇬', code: '+256'),
+  CountryCode(name: 'Rwanda', flag: '🇷🇼', code: '+250'),
+  CountryCode(name: 'Ethiopia', flag: '🇪🇹', code: '+251'),
+  CountryCode(name: 'Egypt', flag: '🇪🇬', code: '+20'),
+  CountryCode(name: 'Morocco', flag: '🇲🇦', code: '+212'),
+];
 
 class RegisterContactScreen extends StatefulWidget {
   const RegisterContactScreen({super.key});
@@ -25,10 +62,13 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
   final _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final _phoneController = TextEditingController(); // local number only
   final _emailController = TextEditingController();
   String? _selectedRelation;
   List<String> _selectedSituations = [];
+  bool _isPicking = false;
+
+  CountryCode _selectedCountry = _countryCodes.first; // country code state
 
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeAnim;
@@ -71,14 +111,158 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
     super.dispose();
   }
 
+  Future<void> _pickContact() async {
+    if (_isPicking) return;
+    setState(() => _isPicking = true);
+
+    try {
+      // 1. Request permission
+      final status = await FlutterContacts.permissions.request(
+        PermissionType.read,
+      );
+      if (status != PermissionStatus.granted) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Permission denied to read contacts')),
+        );
+        return;
+      }
+
+      // 2. showPicker() returns String? (contact ID) in v2 — NOT Contact?
+      final String? contactId = await FlutterContacts.native.showPicker();
+      if (contactId == null) return; // User cancelled the picker
+
+      // 3. Fetch full contact details using the returned ID
+      final Contact? fullContact = await FlutterContacts.get(
+        contactId,
+        properties: ContactProperties.all,
+      );
+      if (fullContact == null) return;
+
+      if (!mounted) return;
+
+      // 4. Populate name fields
+      final firstName = fullContact.name?.first ?? '';
+      final lastName = fullContact.name?.last ?? '';
+
+      if (firstName.isNotEmpty) {
+        _firstNameController.text = firstName;
+      }
+
+      if (lastName.isNotEmpty) {
+        _lastNameController.text = lastName;
+      } else {
+        // displayName is String? in v2 — must null-check before calling isNotEmpty
+        final displayName = fullContact.displayName ?? '';
+        if (displayName.isNotEmpty && _firstNameController.text.isEmpty) {
+          _firstNameController.text = displayName;
+        }
+      }
+
+      // 5. Get the first phone number (prefer mobile)
+      String rawNumber = '';
+      final phones = fullContact.phones;
+
+      if (phones.isNotEmpty) {
+        final mobilePhone = phones.firstWhere(
+          (p) => p.label == Label(PhoneLabel.mobile),
+          orElse: () => phones.first,
+        );
+        rawNumber = mobilePhone.number.trim();
+      }
+
+      if (rawNumber.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Selected contact has no phone number')),
+        );
+        return;
+      }
+
+      // 6. Parse and set phone number (splits country code + local number)
+      _parseAndSetPhoneNumber(rawNumber);
+
+      // 7. Auto-fill email if present and field is empty
+      if (fullContact.emails.isNotEmpty && _emailController.text.isEmpty) {
+        _emailController.text = fullContact.emails.first.address;
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to pick contact: $e')));
+    } finally {
+      if (mounted) {
+        setState(() => _isPicking = false);
+      }
+    }
+  }
+
+  /// Takes a raw phone number (may contain spaces, dashes, parentheses, '+')
+  /// and tries to match it against known country codes.
+  /// If found, updates _selectedCountry and _phoneController with local number.
+  /// Otherwise keeps current country code and sets full number as local.
+  void _parseAndSetPhoneNumber(String rawNumber) {
+    // Normalize: remove all non-digit characters except leading '+'
+    String normalized = rawNumber.replaceAll(RegExp(r'[^\d+]'), '');
+    if (!normalized.startsWith('+')) {
+      // No plus -> treat as local number with current selected country
+      _phoneController.text = normalized;
+      return;
+    }
+
+    // Try to match against country codes (sorted by length descending)
+    final sortedCodes = List<CountryCode>.from(_countryCodes)
+      ..sort((a, b) => b.code.length.compareTo(a.code.length));
+
+    CountryCode? matchedCode;
+    String localPart = '';
+
+    for (final code in sortedCodes) {
+      if (normalized.startsWith(code.code)) {
+        matchedCode = code;
+        localPart = normalized.substring(code.code.length);
+        break;
+      }
+    }
+
+    if (matchedCode != null && localPart.isNotEmpty) {
+      setState(() {
+        _selectedCountry = matchedCode!;
+        _phoneController.text = localPart;
+      });
+    } else {
+      // No match: keep current country code, use full number as local
+      _phoneController.text = normalized;
+    }
+  }
+
+  void _showCountryPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _CountryPickerSheet(
+        countryCodes: _countryCodes,
+        selectedCountry: _selectedCountry,
+        onSelected: (c) {
+          setState(() => _selectedCountry = c);
+          Navigator.pop(ctx);
+        },
+      ),
+    );
+  }
+
   void _submit() {
     if (_formKey.currentState!.validate() && _selectedRelation != null) {
       HapticFeedback.mediumImpact();
+      final fullPhoneNumber =
+          '${_selectedCountry.code}${_phoneController.text.trim()}';
       context.read<ContactsBloc>().add(
         AddContact(
           _firstNameController.text,
           _lastNameController.text,
-          _phoneController.text,
+          fullPhoneNumber, // full number with country code
           _emailController.text,
           _selectedRelation!,
           _selectedSituations.isEmpty
@@ -155,7 +339,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // ── Hero SliverAppBar ──────────────────────────────────────
+              // SliverAppBar (unchanged)
               SliverAppBar(
                 pinned: true,
                 expandedHeight: 100,
@@ -163,13 +347,9 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                 surfaceTintColor: Colors.transparent,
                 automaticallyImplyLeading: false,
                 elevation: 0,
-
-                // 1. Set centerTitle to true
                 centerTitle: true,
-
-                // 2. Replace the old title with your custom Row
                 title: Row(
-                  mainAxisSize: MainAxisSize.min, // Essential for centering
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(11),
@@ -212,13 +392,11 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                     ),
                   ],
                 ),
-
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.pin,
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // Blue → indigo gradient
                       Container(
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
@@ -228,7 +406,6 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                           ),
                         ),
                       ),
-                      // Decorative bubbles
                       Positioned(
                         top: -28,
                         right: -28,
@@ -244,7 +421,6 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                         left: -20,
                         child: _Bubble(size: 100, opacity: 0.08),
                       ),
-                      // Bottom white curve
                       Align(
                         alignment: Alignment.bottomCenter,
                         child: Container(
@@ -258,13 +434,12 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                           ),
                         ),
                       ),
-                      // 3. Removed the SafeArea/Header content from here!
                     ],
                   ),
                 ),
               ),
 
-              // ── Form Body ────────────────────────────────────────────
+              // Form Body
               SliverToBoxAdapter(
                 child: Form(
                   key: _formKey,
@@ -304,15 +479,90 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                           color: _kAccent,
                         ),
                         const SizedBox(height: 12),
-                        _LightTextField(
-                          controller: _phoneController,
-                          label: 'Phone Number',
-                          icon: Icons.phone_rounded,
-                          keyboardType: TextInputType.phone,
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Required' : null,
+
+                        // ── Phone number row with country code picker ──
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Country code pill (same as before)
+                            GestureDetector(
+                              onTap: _showCountryPicker,
+                              child: Container(
+                                height: 56,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _kCard,
+                                  border: Border.all(color: _kBorder, width: 1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      _selectedCountry.flag,
+                                      style: const TextStyle(fontSize: 22),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _selectedCountry.code,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: _kText,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      color: _kMuted,
+                                      size: 18,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+
+                            // Phone number field with a contact picker button inside
+                            Expanded(
+                              child: Stack(
+                                alignment: Alignment.centerRight,
+                                children: [
+                                  _LightTextField(
+                                    controller: _phoneController,
+                                    label: 'Phone Number',
+                                    icon: Icons.phone_rounded,
+                                    keyboardType: TextInputType.phone,
+                                    validator: (v) =>
+                                        v == null || v.trim().isEmpty
+                                        ? 'Required'
+                                        : null,
+                                  ),
+                                  Positioned(
+                                    right: 8,
+                                    top: 0,
+                                    bottom: 0,
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.contacts_rounded,
+                                        color: _kPrimary,
+                                      ),
+                                      onPressed: _isPicking
+                                          ? null
+                                          : _pickContact,
+                                      tooltip: 'Pick from contacts',
+                                      splashRadius: 20,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 10),
+
+                        // Email field (unchanged)
                         _LightTextField(
                           controller: _emailController,
                           label: 'Email (optional)',
@@ -324,7 +574,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                         ),
                         const SizedBox(height: 24),
 
-                        // Relation
+                        // Relation (unchanged)
                         _SectionLabel(
                           icon: Icons.people_alt_rounded,
                           label: 'Relation',
@@ -341,7 +591,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                         ),
                         const SizedBox(height: 24),
 
-                        // Notify For
+                        // Notify For (unchanged)
                         _SectionLabel(
                           icon: Icons.warning_amber_rounded,
                           label: 'Notify For',
@@ -382,15 +632,11 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Decorative Bubble
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ── Decorative Bubble (unchanged) ──────────────────────────────────────────
 class _Bubble extends StatelessWidget {
   final double size;
   final double opacity;
   const _Bubble({required this.size, required this.opacity});
-
   @override
   Widget build(BuildContext context) => Container(
     width: size,
@@ -402,10 +648,7 @@ class _Bubble extends StatelessWidget {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Section Label
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ── Section Label (unchanged) ──────────────────────────────────────────────
 class _SectionLabel extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -415,7 +658,6 @@ class _SectionLabel extends StatelessWidget {
     required this.label,
     required this.color,
   });
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -445,17 +687,13 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Light Text Field
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ── Light Text Field (unchanged) ───────────────────────────────────────────
 class _LightTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final IconData icon;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
-
   const _LightTextField({
     required this.controller,
     required this.label,
@@ -463,7 +701,6 @@ class _LightTextField extends StatelessWidget {
     this.keyboardType,
     this.validator,
   });
-
   @override
   Widget build(BuildContext context) {
     return TextFormField(
@@ -513,17 +750,13 @@ class _LightTextField extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Relation Picker
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ── Relation Picker (unchanged) ────────────────────────────────────────────
 class _RelationPicker extends StatelessWidget {
   final List<String> relations;
   final Map<String, IconData> icons;
   final Map<String, Color> colors;
   final String? selected;
   final ValueChanged<String> onSelect;
-
   const _RelationPicker({
     required this.relations,
     required this.icons,
@@ -531,7 +764,6 @@ class _RelationPicker extends StatelessWidget {
     required this.selected,
     required this.onSelect,
   });
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -545,7 +777,6 @@ class _RelationPicker extends StatelessWidget {
           final rel = relations[index];
           final isSelected = selected == rel;
           final color = colors[rel] ?? _kPrimary;
-
           return GestureDetector(
             onTap: () {
               HapticFeedback.selectionClick();
@@ -617,30 +848,24 @@ class _RelationPicker extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Situation Chips
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ── Situation Chips (unchanged) ────────────────────────────────────────────
 class _SituationChips extends StatelessWidget {
   final List<String> situations;
   final List<String> selected;
   final void Function(String, bool) onToggle;
-
   const _SituationChips({
     required this.situations,
     required this.selected,
     required this.onToggle,
   });
-
   static const _chipColors = [
-    Color(0xFFE8500A), // Fire
-    Color(0xFF1A9E5C), // Medical
-    Color(0xFF2C5FD4), // Security
-    Color(0xFF8B5C00), // Legal
-    Color(0xFF0A72C4), // Flood
-    Color(0xFF5B3FE8), // General SOS
+    Color(0xFFE8500A),
+    Color(0xFF1A9E5C),
+    Color(0xFF2C5FD4),
+    Color(0xFF8B5C00),
+    Color(0xFF0A72C4),
+    Color(0xFF5B3FE8),
   ];
-
   @override
   Widget build(BuildContext context) {
     return Wrap(
@@ -651,7 +876,6 @@ class _SituationChips extends StatelessWidget {
         final s = entry.value;
         final isSelected = selected.contains(s);
         final color = _chipColors[index % _chipColors.length];
-
         return GestureDetector(
           onTap: () {
             HapticFeedback.selectionClick();
@@ -714,14 +938,10 @@ class _SituationChips extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Submit Button
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ── Submit Button (unchanged) ──────────────────────────────────────────────
 class _SubmitButton extends StatefulWidget {
   final VoidCallback onTap;
   const _SubmitButton({required this.onTap});
-
   @override
   State<_SubmitButton> createState() => _SubmitButtonState();
 }
@@ -730,7 +950,6 @@ class _SubmitButtonState extends State<_SubmitButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _scale;
-
   @override
   void initState() {
     super.initState();
@@ -805,6 +1024,182 @@ class _SubmitButtonState extends State<_SubmitButton>
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Country Picker Bottom Sheet (copied from login_screen) ─────────────────
+class _CountryPickerSheet extends StatefulWidget {
+  final List<CountryCode> countryCodes;
+  final CountryCode selectedCountry;
+  final ValueChanged<CountryCode> onSelected;
+  const _CountryPickerSheet({
+    required this.countryCodes,
+    required this.selectedCountry,
+    required this.onSelected,
+  });
+  @override
+  State<_CountryPickerSheet> createState() => _CountryPickerSheetState();
+}
+
+class _CountryPickerSheetState extends State<_CountryPickerSheet> {
+  String _search = '';
+  static const Color _accent = Color(0xFF4F8EF7);
+  static const Color _accentLight = Color(0xFFEAF1FE);
+  static const Color _border = Color(0xFFE2E8F0);
+  static const Color _textPrimary = Color(0xFF0F172A);
+  static const Color _textSecondary = Color(0xFF64748B);
+  static const Color _surface = Color(0xFFF7F9FC);
+  List<CountryCode> get _filtered => widget.countryCodes
+      .where(
+        (c) =>
+            c.name.toLowerCase().contains(_search.toLowerCase()) ||
+            c.code.contains(_search),
+      )
+      .toList();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.72,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: _border,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Text(
+                  'Select Country Code',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: _textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextField(
+              onChanged: (v) => setState(() => _search = v),
+              style: const TextStyle(fontSize: 14, color: _textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Search country or code...',
+                hintStyle: TextStyle(
+                  color: _textSecondary.withValues(alpha: 0.6),
+                  fontSize: 14,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: _accent,
+                  size: 20,
+                ),
+                filled: true,
+                fillColor: _surface,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _accent, width: 1.5),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(height: 1, color: _border),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _filtered.length,
+              separatorBuilder: (_, __) => Divider(
+                height: 1,
+                color: _border.withValues(alpha: 0.6),
+                indent: 20,
+                endIndent: 20,
+              ),
+              itemBuilder: (ctx, i) {
+                final country = _filtered[i];
+                final isSelected =
+                    country.code == widget.selectedCountry.code &&
+                    country.name == widget.selectedCountry.name;
+                return InkWell(
+                  onTap: () => widget.onSelected(country),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
+                    color: isSelected ? _accentLight : Colors.transparent,
+                    child: Row(
+                      children: [
+                        Text(
+                          country.flag,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            country.name,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: isSelected ? _accent : _textPrimary,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          country.code,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected ? _accent : _textSecondary,
+                          ),
+                        ),
+                        if (isSelected) ...[
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            color: _accent,
+                            size: 18,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
