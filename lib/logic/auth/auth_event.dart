@@ -24,7 +24,10 @@ class AuthRegisterRequested extends AuthEvent {
 class AuthSendOtpRequested extends AuthEvent {
   final String countryCode;
   final String phoneNumber;
-  const AuthSendOtpRequested(this.countryCode, this.phoneNumber);
+  const AuthSendOtpRequested({
+    required this.countryCode,
+    required this.phoneNumber,
+  });
   @override
   List<Object> get props => [countryCode, phoneNumber];
 }
@@ -33,7 +36,11 @@ class AuthVerifyOtpRequested extends AuthEvent {
   final String countryCode;
   final String phoneNumber;
   final String otp;
-  const AuthVerifyOtpRequested(this.countryCode, this.phoneNumber, this.otp);
+  const AuthVerifyOtpRequested({
+    required this.countryCode,
+    required this.phoneNumber,
+    required this.otp,
+  });
   @override
   List<Object> get props => [countryCode, phoneNumber, otp];
 }

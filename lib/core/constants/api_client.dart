@@ -25,12 +25,16 @@ class ApiClient {
         baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': apiKey, // if required by backend
-        },
+        headers: {'Content-Type': 'application/json', 'X-API-Key': apiKey},
+        extra: {
+          'withCredentials': true,
+        }, // Ensure cookies are sent with requests
       ),
     );
+    // final cookieJar = PersistCookieJar(
+    //   storage: FileStorage(AppConstants.refreshToken), // Provide a path
+    // );
+    // dio.interceptors.add(CookieManager(cookieJar));
     dio.interceptors.add(AuthInterceptor());
     return dio;
   }

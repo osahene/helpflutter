@@ -38,12 +38,16 @@ class AuthRepositoryImpl implements AuthRepository {
     required String phoneNumber,
   }) async {
     try {
-      await apiService.register({
+      print(
+        'Attempting registration with: $firstName $lastName, $countryCode$phoneNumber',
+      );
+      final response = await apiService.register({
         'first_name': firstName,
         'last_name': lastName,
         'country_code': countryCode,
         'phone_number': phoneNumber,
       });
+      print('Registration successful: ${response.data}');
     } on DioException catch (e) {
       throw _handleError(e);
     }

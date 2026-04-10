@@ -14,50 +14,51 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   ProfileRepositoryImpl({required this.apiService});
 
-  @override
-  Future<User> getUserProfile() async {
-    // Simulate a slight network delay
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    // Dummy JSON matching your User model's expected keys
-    final Map<String, dynamic> dummyUserJson = {
-      'id': 'user_2026_001',
-      'first_name': 'David',
-      'last_name': 'Adu-Tenkorang',
-      'country_code': '+233',
-      'phone': '241234567',
-      'profile_image_url':
-          'https://ui-avatars.com/api/?name=David+Adu&background=CC2222&color=fff',
-      'is_verified': true,
-    };
-
-    try {
-      // This will test your User.fromJson mapping logic
-      return User.fromJson(dummyUserJson);
-    } catch (e) {
-      // If you made a typo in the model, this will catch it
-      throw 'Local Mapping Error: $e';
-    }
-  }
+  // @override
   // Future<User> getUserProfile() async {
+  //   // Simulate a slight network delay
+  //   await Future.delayed(const Duration(milliseconds: 800));
+
+  //   // Dummy JSON matching your User model's expected keys
+  //   final Map<String, dynamic> dummyUserJson = {
+  //     'id': 'user_2026_001',
+  //     'first_name': 'David',
+  //     'last_name': 'Adu-Tenkorang',
+  //     'country_code': '+233',
+  //     'phone': '241234567',
+  //     'profile_image_url':
+  //         'https://ui-avatars.com/api/?name=David+Adu&background=CC2222&color=fff',
+  //     'is_verified': true,
+  //   };
+
   //   try {
-  //     final response = await apiService.getUserProfile();
-
-  //     dynamic responseData = response.data;
-
-  //     // If the backend returns a raw string, decode it into a Map
-  //     if (responseData is String) {
-  //       responseData = jsonDecode(responseData);
-  //     }
-
-  //     return User.fromJson(responseData as Map<String, dynamic>);
-  //   } on DioException catch (e) {
-  //     throw _handleError(e);
+  //     // This will test your User.fromJson mapping logic
+  //     return User.fromJson(dummyUserJson);
   //   } catch (e) {
-  //     // Catching standard exceptions prevents raw type errors from leaking to the UI
-  //     throw 'Failed to load profile data.';
+  //     // If you made a typo in the model, this will catch it
+  //     throw 'Local Mapping Error: $e';
   //   }
   // }
+  @override
+  Future<User> getUserProfile() async {
+    try {
+      final response = await apiService.getUserProfile();
+
+      dynamic responseData = response.data;
+
+      // If the backend returns a raw string, decode it into a Map
+      if (responseData is String) {
+        responseData = jsonDecode(responseData);
+      }
+
+      return User.fromJson(responseData as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    } catch (e) {
+      // Catching standard exceptions prevents raw type errors from leaking to the UI
+      throw 'Failed to load profile data.';
+    }
+  }
 
   @override
   Future<List<RequestHistory>> getRequestHistory() async {

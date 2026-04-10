@@ -5,30 +5,32 @@ class AppConstants {
   static const String logoPath = 'assets/logo/logo.png';
 
   // Endpoints
-  static const String register = '/user-register/';
-  static const String login = '/user-login/';
-  static const String sendOtp = '/send-otp/';
-  static const String verifyOtp = '/verify-otp/';
-  static const String inviteStatus = '/invite-status/';
-  static const String createContact = '/create-relation/';
-  static const String myContacts = '/my-contacts/';
-  static const String myDependents = '/my-dependents/';
-  static const String approveDependant = '/approve-dependant/';
-  static const String rejectDependant = '/reject-dependant/';
-  static const String deleteContact = '/delete-contact/';
-  static const String updateContact = '/update-contact/';
-  static const String verifyEmergency = '/verify-emergency/';
-  static const String decodeEmergencyToken = '/decode-emergency-token/';
+  static const String register = '/account/user-register/';
+  static const String login = '/account/user-login/';
+  static const String sendOtp = '/account/send-otp/';
+  static const String verifyOtp = '/account/verify-otp/';
+  static const String getHistory = '/account/user-history/';
+  static const String inviteStatus = '/account/invite-status/';
+  static const String createContact = '/account/create-relation/';
+  static const String myContacts = '/account/my-contacts/';
+  static const String myDependents = '/account/my-dependents/';
+  static const String approveDependant = '/account/approve-dependant/';
+  static const String rejectDependant = '/account/reject-dependant/';
+  static const String deleteContact = '/account/delete-contact/';
+  static const String updateContact = '/account/update-contact/';
+  static const String verifyEmergency = '/account/verify-emergency/';
+  static const String decodeEmergencyToken = '/account/decode-emergency-token/';
 
-  static const String triggerAlert = '/trigger-alert/';
-  static const String refreshToken = '/token/refresh/';
-  static const String logout = '/user-logout/';
+  static const String triggerAlert = '/account/trigger-alert/';
+  static const String refreshToken = '/account/token/refresh/';
+  static const String logout = '/account/user-logout/';
 
   // Storage keys
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
   static const String isLoggedInKey = 'is_logged_in';
   static const String hasSeenOnboarding = 'has_seen_onboarding';
+  static const String cookieStorageDir = 'help_oo_help_cookies';
 
   // Emergency situations (matches backend)
   static const List<String> situations = [

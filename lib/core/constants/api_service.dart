@@ -22,7 +22,7 @@ class ApiService {
 
   Future<Response> getUserProfile() =>
       _dio.get('/auth/profile/'); // Adjust path to your API
-  Future<Response> getRequestHistory() => _dio.get('/alerts/history/');
+  Future<Response> getRequestHistory() => _dio.get(AppConstants.getHistory);
 
   // Contacts & Relations
   Future<Response> getContactInfo(String contactId) =>

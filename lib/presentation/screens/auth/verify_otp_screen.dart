@@ -6,8 +6,13 @@ import 'package:helpflutter/logic/auth/auth_bloc.dart';
 import 'package:helpflutter/presentation/screens/dashboard/dashboard_screen.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
+  final String countryCode;
   final String phoneNumber;
-  const VerifyOtpScreen({super.key, required this.phoneNumber});
+  const VerifyOtpScreen({
+    super.key,
+    required this.countryCode,
+    required this.phoneNumber,
+  });
 
   @override
   State<VerifyOtpScreen> createState() => _VerifyOtpScreenState();
@@ -128,12 +133,12 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen>
 
   void _handleVerify() {
     if (!_otpComplete) return;
-    // context.read<AuthBloc>().add(
-    //   AuthVerifyOtpRequested('+233', widget.phoneNumber, _otpValue),
-    // );
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const DashboardScreen()),
+    context.read<AuthBloc>().add(
+      AuthVerifyOtpRequested(
+        countryCode: widget.countryCode,
+        phoneNumber: widget.phoneNumber,
+        otp: _otpValue,
+      ),
     );
   }
 
@@ -144,9 +149,12 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen>
     }
     _focusNodes[0].requestFocus();
     _startCountdown();
-    // context.read<AuthBloc>().add(
-    //   AuthSendOtpRequested('+233', widget.phoneNumber),
-    // );
+    context.read<AuthBloc>().add(
+      AuthSendOtpRequested(
+        countryCode: widget.countryCode,
+        phoneNumber: widget.phoneNumber,
+      ),
+    );
   }
 
   String _formatPhone(String raw) {

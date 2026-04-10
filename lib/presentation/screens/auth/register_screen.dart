@@ -352,8 +352,8 @@ class _RegisterScreenState extends State<RegisterScreen>
             context,
             MaterialPageRoute(
               builder: (_) => VerifyOtpScreen(
-                phoneNumber:
-                    '${_selectedCountry.code}${_phoneController.text.trim()}',
+                countryCode: _selectedCountry.code,
+                phoneNumber: _phoneController.text.trim(),
               ),
             ),
           );
