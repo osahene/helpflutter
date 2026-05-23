@@ -11,6 +11,7 @@ class LoadContacts extends ContactsEvent {}
 class AddContact extends ContactsEvent {
   final String firstName;
   final String lastName;
+  final String countryCode;
   final String phoneNumber;
   final String email;
   final String relation;
@@ -18,6 +19,7 @@ class AddContact extends ContactsEvent {
   const AddContact(
     this.firstName,
     this.lastName,
+    this.countryCode,
     this.phoneNumber,
     this.email,
     this.relation,
@@ -27,6 +29,7 @@ class AddContact extends ContactsEvent {
   List<Object?> get props => [
     firstName,
     lastName,
+    countryCode,
     phoneNumber,
     email,
     relation,

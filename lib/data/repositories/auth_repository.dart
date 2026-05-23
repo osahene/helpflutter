@@ -16,7 +16,7 @@ abstract class AuthRepository {
     required String phoneNumber,
   });
 
-  Future<({User user, String accessToken, String refreshToken})> verifyOtp({
+  Future<({User user, String token, String refresh})> verifyOtp({
     required String countryCode,
     required String phoneNumber,
     required String otp,
@@ -69,7 +69,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<({User user, String accessToken, String refreshToken})> verifyOtp({
+  Future<({User user, String token, String refresh})> verifyOtp({
     required String countryCode,
     required String phoneNumber,
     required String otp,
@@ -87,8 +87,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return (
         user: User.fromJson(actualData['user']),
-        accessToken: actualData['token'] as String,
-        refreshToken: actualData['refresh'] as String,
+        token: actualData['token'] as String,
+        refresh: actualData['refresh'] as String,
       );
     } on DioException catch (e) {
       throw _handleError(e);

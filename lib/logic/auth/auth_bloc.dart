@@ -77,8 +77,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         phoneNumber: event.phoneNumber,
         otp: event.otp,
       );
-      await SecureStorage.saveAccessToken(result.accessToken);
-      await SecureStorage.saveRefreshToken(result.refreshToken);
+      await SecureStorage.saveAccessToken(result.token);
+      await SecureStorage.saveRefreshToken(result.refresh);
       await SecureStorage.setLoggedIn(true);
       emit(AuthAuthenticated(result.user));
     } catch (e) {

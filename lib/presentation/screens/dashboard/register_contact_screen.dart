@@ -254,15 +254,18 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
   }
 
   void _submit() {
+    print(
+      'Submitting contact with country code: ${_selectedCountry.code} and local number: ${_phoneController.text}',
+    );
     if (_formKey.currentState!.validate() && _selectedRelation != null) {
       HapticFeedback.mediumImpact();
-      final fullPhoneNumber =
-          '${_selectedCountry.code}${_phoneController.text.trim()}';
+
       context.read<ContactsBloc>().add(
         AddContact(
           _firstNameController.text,
           _lastNameController.text,
-          fullPhoneNumber, // full number with country code
+          _selectedCountry.code,
+          _phoneController.text.trim(), // local number only
           _emailController.text,
           _selectedRelation!,
           _selectedSituations.isEmpty

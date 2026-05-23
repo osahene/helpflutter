@@ -17,10 +17,16 @@ class ContactRepositoryImpl implements ContactRepository {
   @override
   Future<void> addContact(Contact contact) async {
     try {
-      await apiService.createRelation(contact.toJson());
+      print('Adding contact prrrr: ${contact.toJson()}');
+      final res = apiService.createRelation(contact.toJson());
+      print(res);
     } on DioException catch (e) {
+      print('DioException type: ${e.type}');
+      print('Response data: ${e.response?.data}');
+      print('Response status: ${e.response?.statusCode}');
+      print('Message: ${e.message}');
       throw Exception(
-        'Failed to add contact: ${e.response?.data ?? e.message}',
+        'Failed to add contactzzz: ${e.response?.data ?? e.message}',
       );
     }
   }

@@ -5,8 +5,9 @@ class Contact {
   final String firstName;
   final String lastName;
   final String? fullName;
-  final String email;
+  final String countryCode;
   final String phoneNumber;
+  final String email;
   final String relation;
   final Map<String, dynamic>? situation;
   final ContactStatus status;
@@ -16,8 +17,9 @@ class Contact {
     required this.firstName,
     required this.lastName,
     this.fullName,
-    required this.email,
+    required this.countryCode,
     required this.phoneNumber,
+    required this.email,
     required this.relation,
     this.situation,
     required this.status,
@@ -30,6 +32,7 @@ class Contact {
       lastName: json['last_name'],
       fullName: '${json['first_name']} ${json['last_name']}',
       email: json['email_address'] ?? '',
+      countryCode: json['country_code'] ?? '',
       phoneNumber: json['full_phone_number'] ?? json['phone_number'],
       relation: json['relation'],
       status: ContactStatus.values.firstWhere(
@@ -45,10 +48,11 @@ class Contact {
       'last_name': lastName,
       'full_name': fullName,
       'email_address': email,
+      'countryCode': countryCode,
       'phone_number': phoneNumber,
       'relation': relation,
       'situation': situation,
-      'status': status,
+      'status': status.toString().split('.').last,
     };
   }
 }

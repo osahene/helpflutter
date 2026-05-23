@@ -14,15 +14,31 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<LoadProfile>(_onLoadProfile);
   }
 
+  // profile_bloc.dart
   Future<void> _onLoadProfile(
     LoadProfile event,
     Emitter<ProfileState> emit,
   ) async {
     emit(ProfileLoading());
     try {
-      final user = await repository.getUserProfile();
+      User? user;
+
+      if (event.user != null) {
+        // Use the user data passed from AuthBloc
+        user = event.user;
+      } else {
+        // Fallback: Fetch from repository if no user was passed
+        user = await repository.getUserProfile();
+      }
+
       final history = await repository.getRequestHistory();
-      emit(ProfileLoaded(user: user, history: history));
+
+      // Safety check: ensure user is not null
+      if (user != null) {
+        emit(ProfileLoaded(user: user, history: history));
+      } else {
+        emit(const ProfileError("Failed to load user data"));
+      }
     } catch (e) {
       emit(ProfileError(e.toString()));
     }

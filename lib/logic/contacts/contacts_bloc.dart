@@ -33,6 +33,7 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
         id: '',
         firstName: event.firstName,
         lastName: event.lastName,
+        countryCode: event.countryCode,
         phoneNumber: event.phoneNumber,
         email: event.email,
         relation: event.relation,

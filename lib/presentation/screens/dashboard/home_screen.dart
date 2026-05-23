@@ -11,11 +11,11 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, this.onMenuTap, required this.onTabTapped});
 
   static const _situations = [
-    'Robbery',
-    'Health',
-    'Fire',
-    'Flood',
-    'Accident',
+    'Robbery Attack',
+    'Health Crisis',
+    'Fire Outbreak',
+    'Flood Alert',
+    'Accident Alert',
     'Call Emergency',
   ];
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:helpflutter/logic/auth/auth_bloc.dart';
+import 'package:helpflutter/logic/profile/profile_bloc.dart';
 import 'package:helpflutter/presentation/screens/dashboard/dashboard_screen.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
@@ -172,6 +173,8 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen>
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
+          final userData = state.user;
+          context.read<ProfileBloc>().add(LoadProfile(user: userData));
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const DashboardScreen()),
