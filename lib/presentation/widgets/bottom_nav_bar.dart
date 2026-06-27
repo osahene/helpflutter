@@ -13,8 +13,8 @@ class BottomNavBar extends StatelessWidget {
 
   static const _items = [
     _NavItem(icon: Icons.home_rounded, label: 'Home'),
-    _NavItem(icon: Icons.contacts_rounded, label: 'Contacts'),
     _NavItem(icon: Icons.person_add_alt_1_rounded, label: 'Register'),
+    _NavItem(icon: Icons.contacts_rounded, label: 'Contacts'),
     _NavItem(icon: Icons.phone_in_talk, label: 'Emergency'),
   ];
 

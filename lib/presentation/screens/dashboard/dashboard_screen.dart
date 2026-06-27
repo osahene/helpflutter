@@ -24,8 +24,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       onTabTapped: (int index) {},
       onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
     ),
-    const ContactsScreen(),
     const RegisterContactScreen(),
+    const ContactsScreen(),
     const EmergencyContactsScreen(),
   ];
 

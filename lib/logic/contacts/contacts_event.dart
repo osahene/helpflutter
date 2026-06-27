@@ -15,7 +15,7 @@ class AddContact extends ContactsEvent {
   final String phoneNumber;
   final String email;
   final String relation;
-  final Map<String, dynamic>? situation;
+  final List<String> situation;
   const AddContact(
     this.firstName,
     this.lastName,

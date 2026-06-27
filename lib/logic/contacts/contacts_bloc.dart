@@ -35,7 +35,7 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
         lastName: event.lastName,
         countryCode: event.countryCode,
         phoneNumber: event.phoneNumber,
-        email: event.email,
+        emailAddress: event.email,
         relation: event.relation,
         situation: event.situation,
         status: ContactStatus.pending, // Default status for a new request

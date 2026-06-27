@@ -5,7 +5,7 @@ import 'package:helpflutter/data/models/contact.dart';
 import 'package:helpflutter/data/models/dependent.dart';
 import 'package:helpflutter/data/repositories/contact_repository.dart';
 import 'package:helpflutter/data/repositories/dependent_repository.dart';
-import 'package:helpflutter/presentation/screens/dashboard/register_contact_screen.dart';
+// import 'package:helpflutter/presentation/screens/dashboard/register_contact_screen.dart';
 import 'package:helpflutter/logic/contacts/contacts_bloc.dart';
 import 'package:helpflutter/logic/dependents/dependent_bloc.dart';
 import 'package:flutter_swipe_action_cell/flutter_swipe_action_cell.dart';
@@ -174,7 +174,7 @@ class ContactsScreen extends StatelessWidget {
             ),
           ),
           // ── FAB ───────────────────────────────────────────────────────
-          floatingActionButton: _AddContactFAB(),
+          // floatingActionButton: _AddContactFAB(),
         ),
       ),
     );
@@ -205,54 +205,54 @@ class _Bubble extends StatelessWidget {
 // FAB
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _AddContactFAB extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.mediumImpact();
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const RegisterContactScreen()),
-        );
-      },
-      child: Container(
-        height: 52,
-        padding: const EdgeInsets.symmetric(horizontal: 22),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [_kPrimary, _kAccent],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: BorderRadius.circular(26),
-          boxShadow: [
-            BoxShadow(
-              color: _kAccent.withValues(alpha: 0.38),
-              blurRadius: 18,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.person_add_rounded, color: Colors.white, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'Add Contact',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// class _AddContactFAB extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return GestureDetector(
+//       onTap: () {
+//         HapticFeedback.mediumImpact();
+//         Navigator.push(
+//           context,
+//           MaterialPageRoute(builder: (_) => const RegisterContactScreen()),
+//         );
+//       },
+//       child: Container(
+//         height: 52,
+//         padding: const EdgeInsets.symmetric(horizontal: 22),
+//         decoration: BoxDecoration(
+//           gradient: const LinearGradient(
+//             colors: [_kPrimary, _kAccent],
+//             begin: Alignment.centerLeft,
+//             end: Alignment.centerRight,
+//           ),
+//           borderRadius: BorderRadius.circular(26),
+//           boxShadow: [
+//             BoxShadow(
+//               color: _kAccent.withValues(alpha: 0.38),
+//               blurRadius: 18,
+//               offset: const Offset(0, 6),
+//             ),
+//           ],
+//         ),
+//         child: const Row(
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             Icon(Icons.person_add_rounded, color: Colors.white, size: 20),
+//             SizedBox(width: 8),
+//             Text(
+//               'Add Contact',
+//               style: TextStyle(
+//                 color: Colors.white,
+//                 fontWeight: FontWeight.w700,
+//                 fontSize: 15,
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Emergency Contacts Tab
@@ -485,8 +485,7 @@ class ContactCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String displayName =
-        contact.fullName ?? '${contact.firstName} ${contact.lastName}';
+    final String displayName ='${contact.firstName} ${contact.lastName}';
     final style = _statusStyle(contact.status);
     final avatarColor = _avatarColor(displayName);
 
@@ -612,7 +611,7 @@ class ContactCard extends StatelessWidget {
                   children: [
                     _DetailRow(
                       icon: Icons.mail_outline_rounded,
-                      text: contact.email,
+                      text: contact.emailAddress,
                       color: _kPrimary,
                     ),
                     const SizedBox(height: 8),
@@ -621,15 +620,12 @@ class ContactCard extends StatelessWidget {
                       text: contact.phoneNumber,
                       color: const Color(0xFF1A9E5C),
                     ),
-                    if (contact.situation != null) ...[
-                      const SizedBox(height: 8),
-                      _DetailRow(
-                        icon: Icons.warning_amber_rounded,
-                        text:
-                            'Situations: ${contact.situation!.values.join(', ')}',
-                        color: const Color(0xFFE07A1A),
-                      ),
-                    ],
+                    const SizedBox(height: 8),
+                    _DetailRow(
+                      icon: Icons.warning_amber_rounded,
+                      text: 'Situations: ${contact.situation.join(', ')}',
+                      color: const Color(0xFFE07A1A),
+                    ),
                   ],
                 ),
               ),

@@ -55,21 +55,24 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
   /// Returns contacts that are [approved] AND whose situation map
   /// contains a key matching [widget.emergencyType] (case-insensitive)
   /// with a truthy value (true / 1 / "true").
+
   List<Contact> _filterEligibleContacts(List<Contact> contacts) {
     final String targetKey = widget.emergencyType.toLowerCase().trim();
 
     return contacts.where((contact) {
       if (contact.status != ContactStatus.approved) return false;
 
-      final Map<String, dynamic>? situation = contact.situation;
+      final Map<String, dynamic>? situation =
+          contact.situation as Map<String, dynamic>?;
       if (situation == null || situation.isEmpty) return false;
 
-      // Match any key in the situation map against the emergency type
       for (final entry in situation.entries) {
+        final String currentKey = entry.key.toLowerCase().trim();
+
         final bool keyMatches =
-            entry.key.toLowerCase().trim() == targetKey ||
-            entry.key.toLowerCase().trim() == targetKey.replaceAll(' ', '_') ||
-            entry.key.toLowerCase().trim() == targetKey.replaceAll(' ', '');
+            currentKey == targetKey ||
+            currentKey == targetKey.replaceAll(' ', '_') ||
+            currentKey == targetKey.replaceAll(' ', '');
 
         if (keyMatches) {
           final dynamic val = entry.value;
@@ -664,8 +667,7 @@ class _ContactCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  contact.fullName ??
-                      '${contact.firstName} ${contact.lastName}',
+                  '${contact.firstName} ${contact.lastName}',
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w700,

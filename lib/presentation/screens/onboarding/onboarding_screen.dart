@@ -319,129 +319,133 @@ class _PageContent extends StatelessWidget {
         position: slideAnim,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // ── Icon Display ───────────────────────────────────────
-              ScaleTransition(
-                scale: iconBounceAnim,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Outer glow ring
-                    Container(
-                      width: size.width * 0.52,
-                      height: size.width * 0.52,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.05),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          width: 1.5,
-                        ),
-                      ),
-                    ),
-                    // Mid ring
-                    Container(
-                      width: size.width * 0.40,
-                      height: size.width * 0.40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
-                    ),
-                    // Icon container
-                    Container(
-                      width: size.width * 0.28,
-                      height: size.width * 0.28,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.white.withValues(alpha: 0.25),
-                            Colors.white.withValues(alpha: 0.1),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.35),
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: data.iconGradient[0].withValues(alpha: 0.4),
-                            blurRadius: 40,
-                            spreadRadius: 5,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // ── Icon Display ───────────────────────────────────────
+                ScaleTransition(
+                  scale: iconBounceAnim,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Outer glow ring
+                      Container(
+                        width: size.width * 0.52,
+                        height: size.width * 0.52,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.05),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            width: 1.5,
                           ),
-                        ],
+                        ),
                       ),
-                      child: Icon(
-                        data.icon,
-                        size: size.width * 0.12,
-                        color: Colors.white,
+                      // Mid ring
+                      Container(
+                        width: size.width * 0.40,
+                        height: size.width * 0.40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
                       ),
+                      // Icon container
+                      Container(
+                        width: size.width * 0.28,
+                        height: size.width * 0.28,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withValues(alpha: 0.25),
+                              Colors.white.withValues(alpha: 0.1),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.35),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: data.iconGradient[0].withValues(
+                                alpha: 0.4,
+                              ),
+                              blurRadius: 40,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          data.icon,
+                          size: size.width * 0.12,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: size.height * 0.055),
+
+                // ── Badge label ────────────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.25),
+                      width: 1,
                     ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: size.height * 0.055),
-
-              // ── Badge label ────────────────────────────────────────
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    width: 1,
+                  ),
+                  child: Text(
+                    data.badge,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.6,
+                    ),
                   ),
                 ),
-                child: Text(
-                  data.badge,
-                  style: const TextStyle(
+
+                SizedBox(height: size.height * 0.025),
+
+                // ── Title ──────────────────────────────────────────────
+                Text(
+                  data.title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.6,
+                    fontSize: size.width * 0.082,
+                    fontWeight: FontWeight.w800,
+                    height: 1.15,
+                    letterSpacing: -0.8,
                   ),
                 ),
-              ),
 
-              SizedBox(height: size.height * 0.025),
+                SizedBox(height: size.height * 0.022),
 
-              // ── Title ──────────────────────────────────────────────
-              Text(
-                data.title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: size.width * 0.082,
-                  fontWeight: FontWeight.w800,
-                  height: 1.15,
-                  letterSpacing: -0.8,
+                // ── Description ────────────────────────────────────────
+                Text(
+                  data.description,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.65),
+                    fontSize: 15.5,
+                    height: 1.6,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
-              ),
-
-              SizedBox(height: size.height * 0.022),
-
-              // ── Description ────────────────────────────────────────
-              Text(
-                data.description,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.65),
-                  fontSize: 15.5,
-                  height: 1.6,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

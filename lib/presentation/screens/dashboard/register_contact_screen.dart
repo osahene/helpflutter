@@ -64,7 +64,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
   final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController(); // local number only
   final _emailController = TextEditingController();
-  String? _selectedRelation;
+  final _relationController = TextEditingController();
   List<String> _selectedSituations = [];
   bool _isPicking = false;
 
@@ -72,24 +72,6 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
 
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeAnim;
-
-  static const _relations = ['Father', 'Mother', 'Son', 'Daughter', 'Relative'];
-
-  static const _relationIcons = {
-    'Father': Icons.man_rounded,
-    'Mother': Icons.woman_rounded,
-    'Son': Icons.male,
-    'Daughter': Icons.female,
-    'Relative': Icons.family_restroom_rounded,
-  };
-
-  static const _relationColors = {
-    'Father': Color(0xFF2C5FD4),
-    'Mother': Color(0xFFD4368A),
-    'Son': Color(0xFF1AAE87),
-    'Daughter': Color(0xFFE07A1A),
-    'Relative': Color(0xFF5B3FE8),
-  };
 
   @override
   void initState() {
@@ -99,16 +81,32 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
       duration: const Duration(milliseconds: 500),
     )..forward();
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+
+    // ── Add listeners to required fields ──────────────────────────────────
+    _firstNameController.addListener(_updateValidity);
+    _lastNameController.addListener(_updateValidity);
+    _phoneController.addListener(_updateValidity);
+    _relationController.addListener(_updateValidity);
   }
 
   @override
   void dispose() {
     _fadeCtrl.dispose();
+    _firstNameController.removeListener(_updateValidity);
+    _lastNameController.removeListener(_updateValidity);
+    _phoneController.removeListener(_updateValidity);
+    _relationController.removeListener(_updateValidity);
     _firstNameController.dispose();
     _lastNameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _relationController.dispose();
     super.dispose();
+  }
+
+  // ── Trigger rebuild when any required field changes ──────────────────
+  void _updateValidity() {
+    setState(() {});
   }
 
   Future<void> _pickContact() async {
@@ -116,7 +114,6 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
     setState(() => _isPicking = true);
 
     try {
-      // 1. Request permission
       final status = await FlutterContacts.permissions.request(
         PermissionType.read,
       );
@@ -128,11 +125,9 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
         return;
       }
 
-      // 2. showPicker() returns String? (contact ID) in v2 — NOT Contact?
       final String? contactId = await FlutterContacts.native.showPicker();
-      if (contactId == null) return; // User cancelled the picker
+      if (contactId == null) return;
 
-      // 3. Fetch full contact details using the returned ID
       final Contact? fullContact = await FlutterContacts.get(
         contactId,
         properties: ContactProperties.all,
@@ -141,7 +136,6 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
 
       if (!mounted) return;
 
-      // 4. Populate name fields
       final firstName = fullContact.name?.first ?? '';
       final lastName = fullContact.name?.last ?? '';
 
@@ -152,14 +146,12 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
       if (lastName.isNotEmpty) {
         _lastNameController.text = lastName;
       } else {
-        // displayName is String? in v2 — must null-check before calling isNotEmpty
         final displayName = fullContact.displayName ?? '';
         if (displayName.isNotEmpty && _firstNameController.text.isEmpty) {
           _firstNameController.text = displayName;
         }
       }
 
-      // 5. Get the first phone number (prefer mobile)
       String rawNumber = '';
       final phones = fullContact.phones;
 
@@ -179,10 +171,8 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
         return;
       }
 
-      // 6. Parse and set phone number (splits country code + local number)
       _parseAndSetPhoneNumber(rawNumber);
 
-      // 7. Auto-fill email if present and field is empty
       if (fullContact.emails.isNotEmpty && _emailController.text.isEmpty) {
         _emailController.text = fullContact.emails.first.address;
       }
@@ -198,20 +188,13 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
     }
   }
 
-  /// Takes a raw phone number (may contain spaces, dashes, parentheses, '+')
-  /// and tries to match it against known country codes.
-  /// If found, updates _selectedCountry and _phoneController with local number.
-  /// Otherwise keeps current country code and sets full number as local.
   void _parseAndSetPhoneNumber(String rawNumber) {
-    // Normalize: remove all non-digit characters except leading '+'
     String normalized = rawNumber.replaceAll(RegExp(r'[^\d+]'), '');
     if (!normalized.startsWith('+')) {
-      // No plus -> treat as local number with current selected country
       _phoneController.text = normalized;
       return;
     }
 
-    // Try to match against country codes (sorted by length descending)
     final sortedCodes = List<CountryCode>.from(_countryCodes)
       ..sort((a, b) => b.code.length.compareTo(a.code.length));
 
@@ -232,7 +215,6 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
         _phoneController.text = localPart;
       });
     } else {
-      // No match: keep current country code, use full number as local
       _phoneController.text = normalized;
     }
   }
@@ -254,26 +236,25 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
   }
 
   void _submit() {
-    print(
-      'Submitting contact with country code: ${_selectedCountry.code} and local number: ${_phoneController.text}',
-    );
-    if (_formKey.currentState!.validate() && _selectedRelation != null) {
+    // The button is disabled when invalid, but we keep the check for safety
+    if (_formKey.currentState!.validate() &&
+        _relationController.text.trim().isNotEmpty &&
+        _selectedSituations.isNotEmpty) {
       HapticFeedback.mediumImpact();
 
       context.read<ContactsBloc>().add(
         AddContact(
-          _firstNameController.text,
-          _lastNameController.text,
-          _selectedCountry.code,
-          _phoneController.text.trim(), // local number only
-          _emailController.text,
-          _selectedRelation!,
-          _selectedSituations.isEmpty
-              ? null
-              : {'situations': _selectedSituations},
+          _firstNameController.text.trim(),
+          _lastNameController.text.trim(),
+          _selectedCountry
+              .code, // Make sure this provides the value (e.g. "+233")
+          _phoneController.text.trim(),
+          _emailController.text.trim(),
+          _relationController.text.trim(),
+          _selectedSituations, // Send the raw array list directly!
         ),
       );
-    } else if (_selectedRelation == null) {
+    } else {
       HapticFeedback.vibrate();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -281,7 +262,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
             children: [
               Icon(Icons.info_outline_rounded, color: Colors.white, size: 18),
               SizedBox(width: 10),
-              Text('Please select a relation'),
+              Text('Please fill all required fields and select a situation'),
             ],
           ),
           backgroundColor: Colors.red.shade700,
@@ -297,6 +278,14 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+
+    // ── Compute validity ────────────────────────────────────────────────
+    final bool isFormValid =
+        _firstNameController.text.trim().isNotEmpty &&
+        _lastNameController.text.trim().isNotEmpty &&
+        _phoneController.text.trim().isNotEmpty &&
+        _relationController.text.trim().isNotEmpty &&
+        _selectedSituations.isNotEmpty;
 
     return BlocListener<ContactsBloc, ContactsState>(
       listener: (context, state) {
@@ -463,7 +452,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                           label: 'First Name',
                           icon: Icons.person_outline_rounded,
                           validator: (v) =>
-                              v == null || v.isEmpty ? 'Required' : null,
+                              v == null || v.trim().isEmpty ? 'Required' : null,
                         ),
                         const SizedBox(height: 10),
                         _LightTextField(
@@ -471,7 +460,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                           label: 'Last Name',
                           icon: Icons.person_outline_rounded,
                           validator: (v) =>
-                              v == null || v.isEmpty ? 'Required' : null,
+                              v == null || v.trim().isEmpty ? 'Required' : null,
                         ),
                         const SizedBox(height: 24),
 
@@ -483,11 +472,20 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                         ),
                         const SizedBox(height: 12),
 
+                        _LightTextField(
+                          controller: _emailController,
+                          label: 'Email (optional)',
+                          icon: Icons.mail_outline_rounded,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) => v == null || v.isEmpty
+                              ? null
+                              : (v.contains('@') ? null : 'Invalid email'),
+                        ),
+                        const SizedBox(height: 10),
                         // ── Phone number row with country code picker ──
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Country code pill (same as before)
                             GestureDetector(
                               onTap: _showCountryPicker,
                               child: Container(
@@ -526,8 +524,6 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                               ),
                             ),
                             const SizedBox(width: 10),
-
-                            // Phone number field with a contact picker button inside
                             Expanded(
                               child: Stack(
                                 alignment: Alignment.centerRight,
@@ -563,38 +559,25 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
-
-                        // Email field (unchanged)
-                        _LightTextField(
-                          controller: _emailController,
-                          label: 'Email (optional)',
-                          icon: Icons.mail_outline_rounded,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (v) => v == null || v.isEmpty
-                              ? null
-                              : (v.contains('@') ? null : 'Invalid email'),
-                        ),
                         const SizedBox(height: 24),
 
-                        // Relation (unchanged)
+                        // Relation
                         _SectionLabel(
                           icon: Icons.people_alt_rounded,
                           label: 'Relation',
                           color: const Color(0xFF1AAE87),
                         ),
                         const SizedBox(height: 12),
-                        _RelationPicker(
-                          relations: _relations,
-                          icons: _relationIcons,
-                          colors: _relationColors,
-                          selected: _selectedRelation,
-                          onSelect: (val) =>
-                              setState(() => _selectedRelation = val),
+                        _LightTextField(
+                          controller: _relationController,
+                          label: 'Relation',
+                          icon: Icons.people_alt_rounded,
+                          validator: (v) =>
+                              v == null || v.trim().isEmpty ? 'Required' : null,
                         ),
                         const SizedBox(height: 24),
 
-                        // Notify For (unchanged)
+                        // Notify For
                         _SectionLabel(
                           icon: Icons.warning_amber_rounded,
                           label: 'Notify For',
@@ -621,7 +604,8 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                         ),
                         const SizedBox(height: 36),
 
-                        _SubmitButton(onTap: _submit),
+                        // ── Submit Button (now receives `enabled`) ────
+                        _SubmitButton(onTap: _submit, enabled: isFormValid),
                       ],
                     ),
                   ),
@@ -635,7 +619,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
   }
 }
 
-// ── Decorative Bubble (unchanged) ──────────────────────────────────────────
+// ── Decorative Bubble ────────────────────────────────────────────────────────
 class _Bubble extends StatelessWidget {
   final double size;
   final double opacity;
@@ -651,7 +635,7 @@ class _Bubble extends StatelessWidget {
   );
 }
 
-// ── Section Label (unchanged) ──────────────────────────────────────────────
+// ── Section Label ────────────────────────────────────────────────────────────
 class _SectionLabel extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -690,7 +674,7 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ── Light Text Field (unchanged) ───────────────────────────────────────────
+// ── Light Text Field ──────────────────────────────────────────────────────
 class _LightTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
@@ -753,105 +737,7 @@ class _LightTextField extends StatelessWidget {
   }
 }
 
-// ── Relation Picker (unchanged) ────────────────────────────────────────────
-class _RelationPicker extends StatelessWidget {
-  final List<String> relations;
-  final Map<String, IconData> icons;
-  final Map<String, Color> colors;
-  final String? selected;
-  final ValueChanged<String> onSelect;
-  const _RelationPicker({
-    required this.relations,
-    required this.icons,
-    required this.colors,
-    required this.selected,
-    required this.onSelect,
-  });
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 92,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: relations.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final rel = relations[index];
-          final isSelected = selected == rel;
-          final color = colors[rel] ?? _kPrimary;
-          return GestureDetector(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onSelect(rel);
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              width: 82,
-              decoration: BoxDecoration(
-                color: isSelected ? color.withValues(alpha: 0.1) : _kCard,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: isSelected ? color : _kBorder,
-                  width: isSelected ? 2 : 1,
-                ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: color.withValues(alpha: 0.22),
-                          blurRadius: 14,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? color.withValues(alpha: 0.15)
-                          : _kSurface,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      icons[rel] ?? Icons.person_rounded,
-                      color: isSelected ? color : _kMuted,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    rel,
-                    style: TextStyle(
-                      color: isSelected ? color : _kMuted,
-                      fontSize: 11.5,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ── Situation Chips (unchanged) ────────────────────────────────────────────
+// ── Situation Chips ──────────────────────────────────────────────────────────
 class _SituationChips extends StatelessWidget {
   final List<String> situations;
   final List<String> selected;
@@ -941,10 +827,13 @@ class _SituationChips extends StatelessWidget {
   }
 }
 
-// ── Submit Button (unchanged) ──────────────────────────────────────────────
+// ── Submit Button (updated to support `enabled`) ──────────────────────────
 class _SubmitButton extends StatefulWidget {
   final VoidCallback onTap;
-  const _SubmitButton({required this.onTap});
+  final bool enabled; // <-- new parameter
+
+  const _SubmitButton({required this.onTap, required this.enabled});
+
   @override
   State<_SubmitButton> createState() => _SubmitButtonState();
 }
@@ -953,6 +842,7 @@ class _SubmitButtonState extends State<_SubmitButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _scale;
+
   @override
   void initState() {
     super.initState();
@@ -974,51 +864,65 @@ class _SubmitButtonState extends State<_SubmitButton>
 
   @override
   Widget build(BuildContext context) {
+    final bool isEnabled = widget.enabled;
+
     return ScaleTransition(
       scale: _scale,
       child: GestureDetector(
-        onTapDown: (_) => _ctrl.forward(),
-        onTapUp: (_) {
-          _ctrl.reverse();
-          widget.onTap();
-        },
-        onTapCancel: () => _ctrl.reverse(),
+        onTapDown: isEnabled ? (_) => _ctrl.forward() : null,
+        onTapUp: isEnabled
+            ? (_) {
+                _ctrl.reverse();
+                widget.onTap();
+              }
+            : null,
+        onTapCancel: isEnabled ? () => _ctrl.reverse() : null,
         child: Container(
           width: double.infinity,
           height: 58,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [_kPrimary, _kAccent],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
+            gradient: isEnabled
+                ? const LinearGradient(
+                    colors: [_kPrimary, _kAccent],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  )
+                : const LinearGradient(
+                    colors: [Color(0xFFB0B8C8), Color(0xFF9AA2B5)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: _kAccent.withValues(alpha: 0.38),
-                blurRadius: 22,
-                offset: const Offset(0, 8),
-              ),
-              BoxShadow(
-                color: _kPrimary.withValues(alpha: 0.2),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
+            boxShadow: isEnabled
+                ? [
+                    BoxShadow(
+                      color: _kAccent.withValues(alpha: 0.38),
+                      blurRadius: 22,
+                      offset: const Offset(0, 8),
+                    ),
+                    BoxShadow(
+                      color: _kPrimary.withValues(alpha: 0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null, // no shadow when disabled
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.person_add_alt_1_rounded,
-                color: Colors.white,
+                color: isEnabled ? Colors.white : Colors.white.withOpacity(0.6),
                 size: 20,
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Text(
                 'Add Contact',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: isEnabled
+                      ? Colors.white
+                      : Colors.white.withOpacity(0.6),
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.3,
@@ -1032,7 +936,8 @@ class _SubmitButtonState extends State<_SubmitButton>
   }
 }
 
-// ── Country Picker Bottom Sheet (copied from login_screen) ─────────────────
+// ── Country Picker Bottom Sheet ──────────────────────────────────────────────
+// (unchanged – keep your existing implementation)
 class _CountryPickerSheet extends StatefulWidget {
   final List<CountryCode> countryCodes;
   final CountryCode selectedCountry;
