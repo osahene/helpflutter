@@ -40,7 +40,9 @@ class Contact {
   // Also adjust your fromJson to match incoming values safely
   factory Contact.fromJson(Map<String, dynamic> json) {
     return Contact(
-      id: json['id']?.toString() ?? '',
+      // Look for 'pk' from Django, fallback to 'id', fallback to empty string
+      id: json['pk']?.toString() ?? json['id']?.toString() ?? '',
+
       firstName: json['first_name'] ?? '',
       lastName: json['last_name'] ?? '',
       countryCode: json['country_code'] ?? json['countryCode'] ?? '',

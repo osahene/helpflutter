@@ -67,6 +67,7 @@ class AuthInterceptor extends Interceptor {
             BaseOptions(
               baseUrl: ApiClient.baseUrl,
               headers: {'X-API-Key': ApiClient.apiKey},
+              extra: {'withCredentials': true},
             ),
           );
 

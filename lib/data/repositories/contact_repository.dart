@@ -18,7 +18,7 @@ class ContactRepositoryImpl implements ContactRepository {
   Future<void> addContact(Contact contact) async {
     try {
       print('Adding contact prrrr: ${contact.toJson()}');
-      final res = apiService.createRelation(contact.toJson());
+      final res = await apiService.createRelation(contact.toJson());
       print(res);
     } on DioException catch (e) {
       print('DioException type: ${e.type}');
@@ -48,10 +48,17 @@ class ContactRepositoryImpl implements ContactRepository {
       final response = await apiService.getMyContacts();
       final dynamic data = response.data;
 
-      // 1. If the response is a Map and contains a 'data' key
-      if (data is Map<String, dynamic> && data['data'] is List) {
-        final List<dynamic> rawList = data['data'];
-        return rawList.map((json) => Contact.fromJson(json)).toList();
+      // 1. If the response is a Map and contains a 'results' or 'data' key
+      if (data is Map<String, dynamic>) {
+        final List<dynamic>? rawList = data['results'] is List
+            ? data['results']
+            : data['data'] is List
+            ? data['data']
+            : null;
+
+        if (rawList != null) {
+          return rawList.map((json) => Contact.fromJson(json)).toList();
+        }
       }
 
       // 2. If the response is the List itself (common in some Django REST setups)

@@ -29,25 +29,25 @@ class CountryCode {
 // List of available country codes (same as login_screen)
 const List<CountryCode> _countryCodes = [
   CountryCode(name: 'Ghana', flag: '🇬🇭', code: '+233'),
-  CountryCode(name: 'Nigeria', flag: '🇳🇬', code: '+234'),
-  CountryCode(name: 'Kenya', flag: '🇰🇪', code: '+254'),
-  CountryCode(name: 'South Africa', flag: '🇿🇦', code: '+27'),
-  CountryCode(name: 'United States', flag: '🇺🇸', code: '+1'),
-  CountryCode(name: 'United Kingdom', flag: '🇬🇧', code: '+44'),
-  CountryCode(name: 'Canada', flag: '🇨🇦', code: '+1'),
-  CountryCode(name: 'India', flag: '🇮🇳', code: '+91'),
-  CountryCode(name: 'Germany', flag: '🇩🇪', code: '+49'),
-  CountryCode(name: 'France', flag: '🇫🇷', code: '+33'),
-  CountryCode(name: 'Australia', flag: '🇦🇺', code: '+61'),
-  CountryCode(name: 'Brazil', flag: '🇧🇷', code: '+55'),
-  CountryCode(name: 'Senegal', flag: '🇸🇳', code: '+221'),
-  CountryCode(name: "Côte d'Ivoire", flag: '🇨🇮', code: '+225'),
-  CountryCode(name: 'Tanzania', flag: '🇹🇿', code: '+255'),
-  CountryCode(name: 'Uganda', flag: '🇺🇬', code: '+256'),
-  CountryCode(name: 'Rwanda', flag: '🇷🇼', code: '+250'),
-  CountryCode(name: 'Ethiopia', flag: '🇪🇹', code: '+251'),
-  CountryCode(name: 'Egypt', flag: '🇪🇬', code: '+20'),
-  CountryCode(name: 'Morocco', flag: '🇲🇦', code: '+212'),
+  // CountryCode(name: 'Nigeria', flag: '🇳🇬', code: '+234'),
+  // CountryCode(name: 'Kenya', flag: '🇰🇪', code: '+254'),
+  // CountryCode(name: 'South Africa', flag: '🇿🇦', code: '+27'),
+  // CountryCode(name: 'United States', flag: '🇺🇸', code: '+1'),
+  // CountryCode(name: 'United Kingdom', flag: '🇬🇧', code: '+44'),
+  // CountryCode(name: 'Canada', flag: '🇨🇦', code: '+1'),
+  // CountryCode(name: 'India', flag: '🇮🇳', code: '+91'),
+  // CountryCode(name: 'Germany', flag: '🇩🇪', code: '+49'),
+  // CountryCode(name: 'France', flag: '🇫🇷', code: '+33'),
+  // CountryCode(name: 'Australia', flag: '🇦🇺', code: '+61'),
+  // CountryCode(name: 'Brazil', flag: '🇧🇷', code: '+55'),
+  // CountryCode(name: 'Senegal', flag: '🇸🇳', code: '+221'),
+  // CountryCode(name: "Côte d'Ivoire", flag: '🇨🇮', code: '+225'),
+  // CountryCode(name: 'Tanzania', flag: '🇹🇿', code: '+255'),
+  // CountryCode(name: 'Uganda', flag: '🇺🇬', code: '+256'),
+  // CountryCode(name: 'Rwanda', flag: '🇷🇼', code: '+250'),
+  // CountryCode(name: 'Ethiopia', flag: '🇪🇹', code: '+251'),
+  // CountryCode(name: 'Egypt', flag: '🇪🇬', code: '+20'),
+  // CountryCode(name: 'Morocco', flag: '🇲🇦', code: '+212'),
 ];
 
 class RegisterContactScreen extends StatefulWidget {
@@ -310,7 +310,14 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
               ),
             ),
           );
-          Navigator.pop(context);
+          _firstNameController.clear();
+          _lastNameController.clear();
+          _phoneController.clear();
+          _emailController.clear();
+          _relationController.clear();
+          setState(() {
+            _selectedSituations.clear();
+          });
         } else if (state is ContactsError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
