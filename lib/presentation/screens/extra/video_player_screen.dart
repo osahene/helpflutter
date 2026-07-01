@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-import 'package:chewie/chewie.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final String videoUrl;
@@ -19,64 +18,65 @@ class VideoPlayerScreen extends StatefulWidget {
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  late VideoPlayerController _videoController;
-  late ChewieController _chewieController;
-  bool _isInitialized = false;
+  late YoutubePlayerController _youtubeController;
+  bool _isValidUrl = true;
 
   @override
   void initState() {
     super.initState();
-    _videoController = VideoPlayerController.networkUrl(
-      Uri.parse(widget.videoUrl),
-    );
-    _chewieController = ChewieController(
-      videoPlayerController: _videoController,
-      aspectRatio: 16 / 9,
-      autoPlay: true,
-      looping: false,
-      placeholder: Container(
-        color: Colors.black,
-        child: Center(
-          child: Image.network(
-            widget.thumbnailUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.broken_image, color: Colors.white),
-          ),
+
+    // 1. FIX: convertUrlToId is now a static method on YoutubePlayerController
+    final videoId = YoutubePlayerController.convertUrlToId(widget.videoUrl);
+
+    if (videoId != null) {
+      // 2. FIX: Initialize using the new factory constructor and YoutubePlayerParams
+      _youtubeController = YoutubePlayerController.fromVideoId(
+        videoId: videoId,
+        autoPlay: true,
+        params: const YoutubePlayerParams(
+          showControls: true,
+          showFullscreenButton: true,
+          mute: false,
         ),
-      ),
-      errorBuilder: (context, errorMessage) {
-        return Center(
-          child: Text(
-            'Error loading video',
-            style: const TextStyle(color: Colors.white),
-          ),
-        );
-      },
-    );
-    _videoController.initialize().then((_) {
-      setState(() => _isInitialized = true);
-    });
+      );
+    } else {
+      _isValidUrl = false;
+    }
   }
 
   @override
   void dispose() {
-    _videoController.dispose();
-    _chewieController.dispose();
+    // 3. FIX: The controller is now freed using .close() instead of .dispose()
+    if (_isValidUrl) {
+      _youtubeController.close();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_isValidUrl) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.title)),
+        body: const Center(child: Text('Invalid YouTube URL provided.')),
+      );
+    }
+
+    // 4. FIX: YoutubePlayerBuilder is gone! The new player natively handles
+    // resizing, rotation, and fullscreen overlays automatically.
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
-      body: _isInitialized
-          ? Center(child: Chewie(controller: _chewieController))
-          : const Center(child: CircularProgressIndicator()),
+      backgroundColor: Colors.black,
+      body: Center(
+        child: YoutubePlayer(
+          controller: _youtubeController,
+          aspectRatio: 16 / 9,
+        ),
+      ),
     );
   }
 }

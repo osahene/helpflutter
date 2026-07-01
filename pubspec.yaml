@@ -68,6 +68,7 @@ dependencies:
   country_code_picker: ^3.4.1
   flutter_dotenv: ^6.0.0
   flutter_contacts: ^2.0.2
+  youtube_player_flutter: ^10.0.1
 
 dev_dependencies:
   flutter_test:

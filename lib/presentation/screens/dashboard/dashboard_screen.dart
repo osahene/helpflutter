@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:helpflutter/logic/auth/auth_bloc.dart';
 import 'package:helpflutter/presentation/screens/dashboard/home_screen.dart';
 import 'package:helpflutter/presentation/screens/dashboard/contact_screen.dart';
 import 'package:helpflutter/presentation/screens/dashboard/register_contact_screen.dart';
 import 'package:helpflutter/presentation/screens/dashboard/emergency_contacts_screen.dart';
 import 'package:helpflutter/presentation/screens/extra/video_tutorials_screen.dart';
-import 'package:helpflutter/presentation/screens/extra/live_report_screen.dart';
+import 'package:helpflutter/presentation/screens/auth/login_screen.dart';
+// import 'package:helpflutter/presentation/screens/extra/live_report_screen.dart';
 import 'package:helpflutter/presentation/widgets/bottom_nav_bar.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -101,28 +104,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
 
-          // Live Report Menu Item
-          ListTile(
-            leading: Icon(
-              Icons.report_problem_rounded,
-              color: Colors.red.shade400,
-            ),
-            title: const Text(
-              'Live Report',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            onTap: () {
-              // Close the drawer first
-              Navigator.pop(context);
-              // Navigate to Live Report Screen
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const LiveReportScreen(),
-                ),
-              );
-            },
-          ),
+          // Live Report Menu Item to be added when the security services come on board
+          // ListTile(
+          //   leading: Icon(
+          //     Icons.report_problem_rounded,
+          //     color: Colors.red.shade400,
+          //   ),
+          //   title: const Text(
+          //     'Live Report',
+          //     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          //   ),
+          //   onTap: () {
+          //     // Close the drawer first
+          //     Navigator.pop(context);
+          //     // Navigate to Live Report Screen
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (context) => const LiveReportScreen(),
+          //       ),
+          //     );
+          //   },
+          // ),
 
           // Tutorial Menu Item
           ListTile(
@@ -146,6 +149,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Temporary visual feedback until screen is created
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Tutorial screen coming soon!')),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout_outlined, color: Colors.blue),
+            title: const Text(
+              'Logout',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            onTap: () {
+              // Close the drawer first
+              context.read<AuthBloc>().add(AuthLogoutRequested());
+              // Navigate to Logout Screen (Replace Placeholder with your actual screen)
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+              );
+
+              // Temporary visual feedback until screen is created
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Logged out successfully!')),
               );
             },
           ),

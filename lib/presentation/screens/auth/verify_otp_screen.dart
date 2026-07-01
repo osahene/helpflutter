@@ -450,7 +450,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen>
                           const SizedBox(width: 10),
                           const Expanded(
                             child: Text(
-                              'The OTP expires in 10 minutes. Do not share it with anyone.',
+                              'The OTP expires in 2 minutes. Do not share it with anyone.',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: _textSecondary,

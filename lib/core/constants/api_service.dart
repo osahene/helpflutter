@@ -44,8 +44,8 @@ class ApiService {
   Future<Response> rejectDependant(Map<String, dynamic> data) =>
       _dio.post(AppConstants.rejectDependant, data: data);
 
-  Future<Response> deleteContact(String contactId) =>
-      _dio.delete('${AppConstants.deleteContact}$contactId/');
+  Future<Response> deleteContact(Map<String, dynamic> data) =>
+      _dio.post(AppConstants.deleteContact, data: data);
 
   Future<Response> updateContact(Map<String, dynamic> data) =>
       _dio.post(AppConstants.updateContact, data: data);

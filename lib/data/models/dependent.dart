@@ -4,6 +4,7 @@ class Dependent {
   final String id;
   final String fullName;
   final String phone;
+  final String relation;
   final String email;
   final DependentStatus status;
 
@@ -11,6 +12,7 @@ class Dependent {
     required this.id,
     required this.fullName,
     required this.phone,
+    required this.relation,
     required this.email,
     required this.status,
   });
@@ -22,6 +24,7 @@ class Dependent {
       id: json['pk'].toString(),
       fullName: '${json['first_name']} ${json['last_name']}',
       phone: '$countryCode$phoneNumber'.trim(),
+      relation: json['relation'] ?? '',
       email: json['email'] ?? '',
       status: DependentStatus.values.firstWhere(
         (s) => s.name == json['status'],

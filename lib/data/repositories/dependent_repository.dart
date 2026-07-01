@@ -21,7 +21,6 @@ class DependentRepositoryImpl implements DependentRepository {
       final response = await apiService.getMyDependants();
       final dynamic data = response.data;
 
-      // Robust check for Map vs List
       if (data is Map<String, dynamic> && data['data'] is List) {
         final List<dynamic> rawList = data['data'];
         return rawList.map((json) => Dependent.fromJson(json)).toList();
@@ -46,8 +45,7 @@ class DependentRepositoryImpl implements DependentRepository {
     DependentStatus status,
   ) async {
     try {
-      final payload = {'dependent_id': dependentId, 'status': status.name};
-
+      final payload = {'id': dependentId, 'status': status.name};
       if (status == DependentStatus.approved) {
         await apiService.approveDependant(payload);
       } else if (status == DependentStatus.rejected) {

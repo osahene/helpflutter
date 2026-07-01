@@ -5,7 +5,18 @@ import 'package:helpflutter/core/constants/api_service.dart';
 abstract class ContactRepository {
   Future<List<Contact>> getContacts();
   Future<void> addContact(Contact contact);
-  Future<void> updateContactStatus(String contactId, String status);
+
+  /// All editable fields are now required so every change reaches the API.
+  Future<void> updateContactInfo({
+    required String contactId,
+    required String firstName,
+    required String lastName,
+    required String countryCode,
+    required String phoneNumber,
+    required String relation,
+    required List<String> situation,
+  });
+
   Future<void> deleteContact(String contactId);
 }
 
@@ -17,16 +28,11 @@ class ContactRepositoryImpl implements ContactRepository {
   @override
   Future<void> addContact(Contact contact) async {
     try {
-      print('Adding contact prrrr: ${contact.toJson()}');
       final res = await apiService.createRelation(contact.toJson());
       print(res);
     } on DioException catch (e) {
-      print('DioException type: ${e.type}');
-      print('Response data: ${e.response?.data}');
-      print('Response status: ${e.response?.statusCode}');
-      print('Message: ${e.message}');
       throw Exception(
-        'Failed to add contactzzz: ${e.response?.data ?? e.message}',
+        'Failed to add contact: ${e.response?.data ?? e.message}',
       );
     }
   }
@@ -34,7 +40,7 @@ class ContactRepositoryImpl implements ContactRepository {
   @override
   Future<void> deleteContact(String contactId) async {
     try {
-      await apiService.deleteContact(contactId);
+      await apiService.deleteContact({'pk': contactId});
     } on DioException catch (e) {
       throw Exception(
         'Failed to delete contact: ${e.response?.data ?? e.message}',
@@ -48,7 +54,6 @@ class ContactRepositoryImpl implements ContactRepository {
       final response = await apiService.getMyContacts();
       final dynamic data = response.data;
 
-      // 1. If the response is a Map and contains a 'results' or 'data' key
       if (data is Map<String, dynamic>) {
         final List<dynamic>? rawList = data['results'] is List
             ? data['results']
@@ -61,35 +66,43 @@ class ContactRepositoryImpl implements ContactRepository {
         }
       }
 
-      // 2. If the response is the List itself (common in some Django REST setups)
       if (data is List) {
         return data.map((json) => Contact.fromJson(json)).toList();
       }
 
-      // Default to empty if structure is unknown or null
       return [];
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) return [];
       throw Exception('Server Error: ${e.response?.statusCode}');
-    } catch (e) {
-      // Catch parsing errors and return empty to trigger your UI empty state
+    } catch (_) {
       return [];
     }
   }
 
   @override
-  Future<void> updateContactStatus(String contactId, String status) async {
+  Future<void> updateContactInfo({
+    required String contactId,
+    required String firstName,
+    required String lastName,
+    required String countryCode,
+    required String phoneNumber,
+    required String relation,
+    required List<String> situation,
+  }) async {
     try {
-      final payload = {'contact_id': contactId, 'status': status};
-
-      if (status == 'approved') {
-        await apiService.approveDependant(payload);
-      } else if (status == 'rejected') {
-        await apiService.rejectDependant(payload);
-      }
+      final payload = {
+        'contact_id': contactId,
+        'first_name': firstName,
+        'last_name': lastName,
+        'country_code': countryCode,
+        'phone_number': phoneNumber,
+        'relation': relation,
+        'situations': situation,
+      };
+      await apiService.updateContact(payload);
     } on DioException catch (e) {
       throw Exception(
-        'Failed to update contact status: ${e.response?.data ?? e.message}',
+        'Failed to update contact: ${e.response?.data ?? e.message}',
       );
     }
   }

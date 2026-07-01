@@ -13,9 +13,9 @@ class AppConstants {
   static const String inviteStatus = '/account/invite-status/';
   static const String createContact = '/account/create-relation/';
   static const String myContacts = '/account/my-contacts/';
-  static const String myDependents = '/account/my-dependents/';
-  static const String approveDependant = '/account/approve-dependant/';
-  static const String rejectDependant = '/account/reject-dependant/';
+  static const String myDependents = '/account/my-dependants/';
+  static const String approveDependant = '/account/approve-dependent/';
+  static const String rejectDependant = '/account/reject-dependent/';
   static const String deleteContact = '/account/delete-contact/';
   static const String updateContact = '/account/update-contact/';
   static const String verifyEmergency = '/account/verify-emergency/';
