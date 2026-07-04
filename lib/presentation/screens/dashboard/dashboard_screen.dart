@@ -6,7 +6,7 @@ import 'package:helpflutter/presentation/screens/dashboard/contact_screen.dart';
 import 'package:helpflutter/presentation/screens/dashboard/register_contact_screen.dart';
 import 'package:helpflutter/presentation/screens/dashboard/emergency_contacts_screen.dart';
 import 'package:helpflutter/presentation/screens/extra/video_tutorials_screen.dart';
-import 'package:helpflutter/presentation/screens/auth/login_screen.dart';
+// import 'package:helpflutter/presentation/screens/auth/login_screen.dart';
 // import 'package:helpflutter/presentation/screens/extra/live_report_screen.dart';
 import 'package:helpflutter/presentation/widgets/bottom_nav_bar.dart';
 
@@ -159,16 +159,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             onTap: () {
-              // Close the drawer first
+              // 1. Close the drawer safely
+              Navigator.pop(context);
+
+              // 2. Trigger the state change.
+              // main.dart will automatically see AuthUnauthenticated and switch to LoginScreen!
               context.read<AuthBloc>().add(AuthLogoutRequested());
-              // Navigate to Logout Screen (Replace Placeholder with your actual screen)
 
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
-
-              // Temporary visual feedback until screen is created
+              // 3. Temporary visual feedback
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Logged out successfully!')),
               );

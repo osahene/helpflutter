@@ -4,8 +4,7 @@ class Alert {
   final DateTime timestamp;
   final bool includeLocation;
   final String? customMessage;
-  final List<String>
-  notifiedContactIds; // IDs of contacts who received the alert
+  final List<String> notifiedContactIds;
 
   Alert({
     required this.id,
@@ -18,12 +17,18 @@ class Alert {
 
   factory Alert.fromJson(Map<String, dynamic> json) {
     return Alert(
-      id: json['id'],
-      situation: json['situation'],
-      timestamp: DateTime.parse(json['timestamp']),
-      includeLocation: json['includeLocation'],
-      customMessage: json['customMessage'],
-      notifiedContactIds: List<String>.from(json['notifiedContactIds']),
+      // Fallback to empty string if id is somehow missing
+      id: json['id'] ?? '',
+      situation: json['situation'] ?? json['alertType'] ?? 'Emergency',
+      timestamp: json['timestamp'] != null
+          ? DateTime.parse(json['timestamp'])
+          : DateTime.now(),
+      includeLocation:
+          json['includeLocation'] ?? json['include_location'] ?? false,
+      customMessage: json['customMessage'] ?? json['message'],
+      notifiedContactIds: json['notifiedContactIds'] != null
+          ? List<String>.from(json['notifiedContactIds'])
+          : [],
     );
   }
 

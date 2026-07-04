@@ -27,26 +27,30 @@ class AlertRepositoryImpl implements AlertRepository {
       try {
         position = await _getCurrentLocation();
       } catch (e) {
-        // Log error but perhaps continue without location if the situation is dire
-        print('Location error: $e');
+        // CRITICAL: Look at your debug console to see what this prints!
+        print('Location error caught: $e');
       }
     }
 
-    // 2. Prepare the request payload
-    // Note: Ensure these keys match what your Django EmergencyActionView expects!
+    // 2. Format the situation string for the backend payload
+    // final String formattedAlertType = _formatAlertType(situation);
+
+    // 3. Prepare the request payload
     final Map<String, dynamic> payload = {
-      'situation': situation,
+      // 'alertType': formattedAlertType,
+      'alertType': situation,
       'include_location': includeLocation,
-      'latitude': position?.latitude,
-      'longitude': position?.longitude,
+      'location': position != null
+          ? {'latitude': position.latitude, 'longitude': position.longitude}
+          : null,
       'timestamp': DateTime.now().toIso8601String(),
     };
 
-    // 3. Send to backend via ApiService (Dio)
+    // 4. Send to backend via ApiService (Dio)
     try {
       final response = await apiService.triggerAlert(payload);
-
-      // Dio automatically decodes the JSON body into response.data
+      print('Alert sent successfully: ${response}');
+      print('Alert sent successfully: ${response.data}');
       return Alert.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception(
@@ -55,29 +59,51 @@ class AlertRepositoryImpl implements AlertRepository {
     }
   }
 
+  /// Helper to map strings like "Health Crisis" to "health"
+  // String _formatAlertType(String incomingSituation) {
+  //   // Take the first word, lowercase it, and trim spaces
+  //   String cleaned = incomingSituation.split(' ').first.toLowerCase().trim();
+
+  //   // Fallback handler if the incoming phrase is "Call Emergency"
+  //   if (cleaned == 'call') {
+  //     return 'call'; // Adjust this to whatever your backend expects for Call Emergency
+  //   }
+
+  //   return cleaned;
+  // }
+
   /// Helper to handle Location Permissions and Fetching
   Future<Position> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      throw Exception('Location services are disabled.');
+      throw Exception('Location services are disabled on the device.');
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        throw Exception('Location permissions are denied.');
+        throw Exception('Location permissions were denied by the user.');
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      throw Exception('Location permissions are permanently denied.');
+      throw Exception(
+        'Location permissions are permanently denied. Change this in settings.',
+      );
     }
 
+    // Added a time limit fallback in case high accuracy takes too long indoors
     return await Geolocator.getCurrentPosition(
-      locationSettings: LocationSettings(
+      locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
+        timeLimit: Duration(seconds: 5),
       ),
-    );
+    ).catchError((e) async {
+      // If high accuracy fails/times out, try grabbing the last known location
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null) return lastKnown;
+      throw e;
+    });
   }
 }

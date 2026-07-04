@@ -27,7 +27,7 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
   }
 
   Future<void> _onAdd(AddContact event, Emitter<ContactsState> emit) async {
-    emit(ContactsLoading());
+    // emit(ContactsLoading());
     try {
       final newContact = Contact(
         id: '',
@@ -54,7 +54,7 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     UpdateContactInfo event,
     Emitter<ContactsState> emit,
   ) async {
-    emit(ContactsLoading());
+    // emit(ContactsLoading());
     try {
       await repository.updateContactInfo(
         contactId: event.contactId,
@@ -76,7 +76,7 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     DeleteContact event,
     Emitter<ContactsState> emit,
   ) async {
-    emit(ContactsLoading());
+    // emit(ContactsLoading());
     try {
       await repository.deleteContact(event.contactId);
       final contacts = await repository.getContacts();

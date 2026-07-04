@@ -17,13 +17,13 @@ class AlertBloc extends Bloc<AlertEvent, AlertState> {
   Future<void> _onSendAlert(SendAlert event, Emitter<AlertState> emit) async {
     emit(AlertSending());
     try {
-      // Call repository to send alert
       final result = await repository.sendAlert(
         situation: event.situation,
         includeLocation: event.includeLocation,
       );
       emit(AlertSuccess(alertId: result.id, timestamp: DateTime.now()));
     } catch (e) {
+      print('Failed to send alert: ${e.toString()}');
       emit(AlertFailure(e.toString()));
     }
   }

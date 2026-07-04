@@ -59,6 +59,14 @@
 		<string>LaunchScreen</string>
 		<key>UIMainStoryboardFile</key>
 		<string>Main</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>The purpose of the app is for the user to transmit their live location to their trusted contacts when an emergency occurs.</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>The purpose of the app is for the user to transmit their live location to their trusted contacts when an emergency occurs.</string>
+		<key>UIBackgroundModes</key>
+		<array>
+		<string>location</string>
+		</array>
 		<key>UISupportedInterfaceOrientations</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>

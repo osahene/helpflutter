@@ -62,22 +62,24 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
     return contacts.where((contact) {
       if (contact.status != ContactStatus.approved) return false;
 
-      final Map<String, dynamic>? situation =
-          contact.situation as Map<String, dynamic>?;
-      if (situation == null || situation.isEmpty) return false;
+      // FIX: Safely parse a dynamic iterable instead of strict typecasting
+      final dynamic rawSituation = contact.situation;
+      if (rawSituation == null || rawSituation is! Iterable) return false;
 
-      for (final entry in situation.entries) {
-        final String currentKey = entry.key.toLowerCase().trim();
+      final List<String> situation = rawSituation
+          .map((e) => e.toString())
+          .toList();
+      if (situation.isEmpty) return false;
 
+      for (final entry in situation.asMap().entries) {
+        final String currentKey = entry.value.toLowerCase();
         final bool keyMatches =
             currentKey == targetKey ||
             currentKey == targetKey.replaceAll(' ', '_') ||
             currentKey == targetKey.replaceAll(' ', '');
 
         if (keyMatches) {
-          final dynamic val = entry.value;
-          // Accept true / 1 / "true" as a positive match
-          if (val == true || val == 1 || val == 'true') return true;
+          return true;
         }
       }
       return false;
