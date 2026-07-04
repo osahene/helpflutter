@@ -26,14 +26,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       if (event.user != null) {
         // Use the user data passed from AuthBloc
         user = event.user;
-      } else {
-        // Fallback: Fetch from repository if no user was passed
-        user = await repository.getUserProfile();
       }
 
       final history = await repository.getRequestHistory();
-
-      // Safety check: ensure user is not null
       if (user != null) {
         emit(ProfileLoaded(user: user, history: history));
       } else {

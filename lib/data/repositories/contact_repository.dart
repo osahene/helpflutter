@@ -28,8 +28,7 @@ class ContactRepositoryImpl implements ContactRepository {
   @override
   Future<void> addContact(Contact contact) async {
     try {
-      final res = await apiService.createRelation(contact.toJson());
-      print(res);
+      await apiService.createRelation(contact.toJson());
     } on DioException catch (e) {
       throw Exception(
         'Failed to add contact: ${e.response?.data ?? e.message}',

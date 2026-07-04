@@ -30,37 +30,60 @@ class TopNavBar extends StatelessWidget implements PreferredSizeWidget {
         padding: const EdgeInsets.only(left: 12, top: 6, bottom: 6),
         child: GestureDetector(
           onTap: onProfileTap,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.red.shade300, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.red.withValues(alpha: 0.4),
-                  blurRadius: 8,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            child: BlocBuilder<ProfileBloc, ProfileState>(
-              builder: (context, state) {
-                String? imageUrl;
+          child: BlocBuilder<ProfileBloc, ProfileState>(
+            builder: (context, state) {
+              String displayInitials = '--';
+              ImageProvider? imageProvider;
 
-                // Extract image URL only if state is ProfileLoaded
-                if (state is ProfileLoaded) {
-                  imageUrl = state.user.profileImageUrl;
+              // Extract user info only if state is successfully loaded
+              if (state is ProfileLoaded) {
+                final user = state.user;
+
+                // Dynamically split full name into components for initials
+                final nameParts = user.fullName.trim().split(' ');
+                final String first = nameParts.isNotEmpty
+                    ? nameParts.first
+                    : '';
+                final String last = nameParts.length > 1 ? nameParts.last : '';
+                displayInitials = _initials(first, last);
+
+                if (user.profileImageUrl != null &&
+                    user.profileImageUrl!.isNotEmpty) {
+                  imageProvider = NetworkImage(user.profileImageUrl!);
                 }
+              }
 
-                return CircleAvatar(
-                  backgroundImage: (imageUrl != null)
-                      ? NetworkImage(imageUrl)
-                      : const AssetImage('assets/logo/logo.png')
-                            as ImageProvider,
-                  radius: 18,
-                  backgroundColor: const Color(0xFF3D0000),
-                );
-              },
-            ),
+              return Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.15),
+                  border: Border.all(color: Colors.red.shade300, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withValues(alpha: 0.4),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  backgroundColor: Colors.transparent,
+                  backgroundImage: imageProvider,
+                  child: imageProvider == null
+                      ? Text(
+                          displayInitials,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Colors
+                                .white, // High contrast text over gradient
+                          ),
+                        )
+                      : null,
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -114,10 +137,17 @@ class TopNavBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
+  String _initials(String first, String last) {
+    final String f = first.isNotEmpty ? first[0].toUpperCase() : '';
+    final String l = last.isNotEmpty ? last[0].toUpperCase() : '';
+    return '$f$l';
+  }
+
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
+// ── Live Dot Widget (Keeping your existing implementation intact) ───────────
 class _LiveDot extends StatefulWidget {
   @override
   State<_LiveDot> createState() => _LiveDotState();

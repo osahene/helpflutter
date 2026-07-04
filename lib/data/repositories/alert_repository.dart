@@ -49,8 +49,6 @@ class AlertRepositoryImpl implements AlertRepository {
     // 4. Send to backend via ApiService (Dio)
     try {
       final response = await apiService.triggerAlert(payload);
-      print('Alert sent successfully: ${response}');
-      print('Alert sent successfully: ${response.data}');
       return Alert.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception(

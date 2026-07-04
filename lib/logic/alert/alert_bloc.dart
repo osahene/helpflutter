@@ -23,7 +23,6 @@ class AlertBloc extends Bloc<AlertEvent, AlertState> {
       );
       emit(AlertSuccess(alertId: result.id, timestamp: DateTime.now()));
     } catch (e) {
-      print('Failed to send alert: ${e.toString()}');
       emit(AlertFailure(e.toString()));
     }
   }

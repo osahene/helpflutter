@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:helpflutter/logic/profile/profile_bloc.dart';
+import 'package:helpflutter/data/models/request_history.dart';
+import 'package:helpflutter/core/constants/constants.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -25,10 +27,10 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Loading View
 // ─────────────────────────────────────────────────────────────────────────────
-
 class _LoadingView extends StatelessWidget {
   const _LoadingView();
 
@@ -46,7 +48,6 @@ class _LoadingView extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Error View
 // ─────────────────────────────────────────────────────────────────────────────
-
 class _ErrorView extends StatelessWidget {
   final String message;
   const _ErrorView({required this.message});
@@ -80,7 +81,6 @@ class _ErrorView extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Loaded View
 // ─────────────────────────────────────────────────────────────────────────────
-
 class _LoadedView extends StatelessWidget {
   final ProfileLoaded state;
   const _LoadedView({required this.state});
@@ -92,12 +92,12 @@ class _LoadedView extends StatelessWidget {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        // ── Hero App Bar ───────────────────────────────────────────────────
+        // Hero App Bar
         SliverAppBar(
           expandedHeight: 260,
           pinned: true,
           backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
+          surfaceTintColor: const Color.fromARGB(255, 250, 247, 247),
           elevation: 0,
           leading: Padding(
             padding: const EdgeInsets.only(left: 12, top: 6, bottom: 6),
@@ -105,12 +105,17 @@ class _LoadedView extends StatelessWidget {
               onTap: () => Navigator.pop(context),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.06),
+                  color: const Color.fromARGB(
+                    255,
+                    209,
+                    201,
+                    201,
+                  ).withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
                   Icons.arrow_back_ios_new_rounded,
-                  color: Colors.black87,
+                  color: Color.fromARGB(221, 255, 255, 255),
                   size: 18,
                 ),
               ),
@@ -120,12 +125,10 @@ class _LoadedView extends StatelessWidget {
             collapseMode: CollapseMode.pin,
             background: _ProfileHero(state: state),
           ),
-
-          // Collapsed title (shows only when scrolled up)
           titleSpacing: 0,
         ),
 
-        // ── Stats Row ──────────────────────────────────────────────────────
+        // Stats Row
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -133,7 +136,7 @@ class _LoadedView extends StatelessWidget {
           ),
         ),
 
-        // ── History Header ─────────────────────────────────────────────────
+        // History Header
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
           sliver: SliverToBoxAdapter(
@@ -171,7 +174,7 @@ class _LoadedView extends StatelessWidget {
           ),
         ),
 
-        // ── History List ───────────────────────────────────────────────────
+        // History List
         state.history.isEmpty
             ? SliverToBoxAdapter(child: _EmptyHistory())
             : SliverPadding(
@@ -192,9 +195,8 @@ class _LoadedView extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Profile Hero (expanded header content)
+// Profile Hero
 // ─────────────────────────────────────────────────────────────────────────────
-
 class _ProfileHero extends StatelessWidget {
   final ProfileLoaded state;
   const _ProfileHero({required this.state});
@@ -204,7 +206,6 @@ class _ProfileHero extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Background gradient
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -214,8 +215,6 @@ class _ProfileHero extends StatelessWidget {
             ),
           ),
         ),
-
-        // Decorative circles
         Positioned(
           top: -40,
           right: -40,
@@ -240,8 +239,6 @@ class _ProfileHero extends StatelessWidget {
             ),
           ),
         ),
-
-        // White bottom curve
         Align(
           alignment: Alignment.bottomCenter,
           child: Container(
@@ -255,15 +252,12 @@ class _ProfileHero extends StatelessWidget {
             ),
           ),
         ),
-
-        // Profile content
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.only(bottom: 32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Avatar
                 Container(
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
@@ -285,7 +279,7 @@ class _ProfileHero extends StatelessWidget {
                         : null,
                     child: state.user.profileImageUrl == null
                         ? Text(
-                            state.user.fullName[0].toUpperCase(),
+                            '${state.user.firstName?.isNotEmpty == true ? state.user.firstName![0].toUpperCase() : ''}${state.user.lastName?.isNotEmpty == true ? state.user.lastName![0].toUpperCase() : ''}',
                             style: TextStyle(
                               fontSize: 36,
                               fontWeight: FontWeight.w800,
@@ -296,10 +290,8 @@ class _ProfileHero extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
-
-                // Name
                 Text(
-                  state.user.fullName,
+                  '${state.user.firstName} ${state.user.lastName}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -308,8 +300,6 @@ class _ProfileHero extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 5),
-
-                // Phone pill
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -355,9 +345,8 @@ class _ProfileHero extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Stats Row
 // ─────────────────────────────────────────────────────────────────────────────
-
 class _StatsRow extends StatelessWidget {
-  final List history;
+  final List<RequestHistory> history;
   const _StatsRow({required this.history});
 
   @override
@@ -441,30 +430,30 @@ class _StatCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// History Card
+// History Card (Refactored to match AppConstants situations)
 // ─────────────────────────────────────────────────────────────────────────────
-
 class _HistoryCard extends StatelessWidget {
-  final dynamic item;
+  final RequestHistory item;
   final bool isLast;
   const _HistoryCard({required this.item, required this.isLast});
 
-  static const _situationIcons = {
-    'Fire': Icons.local_fire_department_rounded,
-    'Medical': Icons.health_and_safety_rounded,
-    'Security': Icons.security_rounded,
-    'Legal': Icons.gavel_rounded,
-    'Flood': Icons.water_damage_rounded,
-    'General SOS': Icons.sos_rounded,
+  // Color mapping matching AppConstants.situations directly
+  static const Map<String, Color> _situationColors = {
+    'Fire Outbreak': Color(0xFFE8500A),
+    'Health Crisis': Color(0xFF1A9E5C),
+    'Robbery Attack': Color(0xFFCC2222),
+    'Violence Alert': Color(0xFF7B22CE),
+    'Flood Alert': Color(0xFF0A72C4),
+    'Call Emergency': Color(0xFF8B5C00),
   };
 
-  static const _situationColors = {
-    'Fire': Color(0xFFE8500A),
-    'Medical': Color(0xFF1A9E5C),
-    'Security': Color(0xFFCC2222),
-    'Legal': Color(0xFF8B5C00),
-    'Flood': Color(0xFF0A72C4),
-    'General SOS': Color(0xFF7B22CE),
+  static const Map<String, IconData> _situationIcons = {
+    'Fire Outbreak': Icons.local_fire_department_rounded,
+    'Health Crisis': Icons.health_and_safety_rounded,
+    'Robbery Attack': Icons.security_rounded,
+    'Violence Alert': Icons.gavel_rounded,
+    'Flood Alert': Icons.water_damage_rounded,
+    'Call Emergency': Icons.sos_rounded,
   };
 
   @override
@@ -472,8 +461,13 @@ class _HistoryCard extends StatelessWidget {
     final bool isSent = item.status == 'Sent';
     final Color tileColor =
         _situationColors[item.situation] ?? Colors.grey.shade600;
-    final IconData tileIcon =
-        _situationIcons[item.situation] ?? Icons.warning_rounded;
+
+    // Look up icon path dynamically based on unified index position
+    final int situationIndex = AppConstants.situations.indexOf(item.situation);
+
+    final IconData tileIcon = situationIndex != -1
+        ? (_situationIcons[item.situation] ?? Icons.warning_rounded)
+        : Icons.warning_rounded;
 
     final String day = item.timestamp.day.toString().padLeft(2, '0');
     final String month = item.timestamp.month.toString().padLeft(2, '0');
@@ -496,15 +490,16 @@ class _HistoryCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            // Situation icon badge
+            // Situation Icon Badge using local PNG assets
             Container(
               width: 48,
               height: 48,
+              padding: const EdgeInsets.all(10), // Padding to scale png nicely
               decoration: BoxDecoration(
                 color: tileColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(tileIcon, color: tileColor, size: 24),
+              child: Icon(tileIcon, color: tileColor, size: 22),
             ),
             const SizedBox(width: 14),
 
@@ -532,7 +527,9 @@ class _HistoryCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          item.notifiedContacts.join(', '),
+                          item.notifiedContacts.isEmpty
+                              ? 'No contacts notified'
+                              : item.notifiedContacts.join(', '),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -609,7 +606,6 @@ class _HistoryCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Empty History State
 // ─────────────────────────────────────────────────────────────────────────────
-
 class _EmptyHistory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
