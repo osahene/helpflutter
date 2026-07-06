@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:helpflutter/logic/auth/auth_bloc.dart';
 import 'package:helpflutter/presentation/screens/dashboard/home_screen.dart';
@@ -6,8 +7,6 @@ import 'package:helpflutter/presentation/screens/dashboard/contact_screen.dart';
 import 'package:helpflutter/presentation/screens/dashboard/register_contact_screen.dart';
 import 'package:helpflutter/presentation/screens/dashboard/emergency_contacts_screen.dart';
 import 'package:helpflutter/presentation/screens/extra/video_tutorials_screen.dart';
-// import 'package:helpflutter/presentation/screens/auth/login_screen.dart';
-// import 'package:helpflutter/presentation/screens/extra/live_report_screen.dart';
 import 'package:helpflutter/presentation/widgets/bottom_nav_bar.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -104,30 +103,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
 
-          // Live Report Menu Item to be added when the security services come on board
-          // ListTile(
-          //   leading: Icon(
-          //     Icons.report_problem_rounded,
-          //     color: Colors.red.shade400,
-          //   ),
-          //   title: const Text(
-          //     'Live Report',
-          //     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          //   ),
-          //   onTap: () {
-          //     // Close the drawer first
-          //     Navigator.pop(context);
-          //     // Navigate to Live Report Screen
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(
-          //         builder: (context) => const LiveReportScreen(),
-          //       ),
-          //     );
-          //   },
-          // ),
-
-          // Tutorial Menu Item
+          // Tutorial Menu Item (Stays exactly where it is)
           ListTile(
             leading: const Icon(Icons.school_rounded, color: Colors.blue),
             title: const Text(
@@ -135,10 +111,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             onTap: () {
-              // Close the drawer first
-              Navigator.pop(context);
-              // Navigate to Tutorial Screen (Replace Placeholder with your actual screen)
-
+              Navigator.pop(context); // Close the drawer first
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -146,31 +119,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               );
 
-              // Temporary visual feedback until screen is created
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Tutorial screen coming soon!')),
               );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.logout_outlined, color: Colors.blue),
-            title: const Text(
-              'Logout',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          const Spacer(),
+          Divider(height: 1, thickness: 1, color: Colors.grey.shade300),
+
+          // Logout Section pinned tightly to the bottom (wrapped in a SafeArea for modern device notches)
+          SafeArea(
+            top: false,
+            child: ListTile(
+              leading: Icon(Icons.logout_outlined, color: Colors.red.shade600),
+              title: Text(
+                'Logout',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.red.shade700,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context); // Close the drawer safely
+                context.read<AuthBloc>().add(
+                  AuthLogoutRequested(),
+                ); // Trigger state change
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Logged out successfully!')),
+                );
+              },
             ),
-            onTap: () {
-              // 1. Close the drawer safely
-              Navigator.pop(context);
-
-              // 2. Trigger the state change.
-              // main.dart will automatically see AuthUnauthenticated and switch to LoginScreen!
-              context.read<AuthBloc>().add(AuthLogoutRequested());
-
-              // 3. Temporary visual feedback
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logged out successfully!')),
-              );
-            },
           ),
         ],
       ),
