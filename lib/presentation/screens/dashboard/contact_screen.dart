@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:helpflutter/data/models/contact.dart';
 import 'package:helpflutter/core/constants/constants.dart';
 import 'package:helpflutter/data/models/dependent.dart';
-import 'package:helpflutter/data/repositories/contact_repository.dart';
+// import 'package:helpflutter/data/repositories/contact_repository.dart';
 import 'package:helpflutter/data/repositories/dependent_repository.dart';
 import 'package:helpflutter/logic/contacts/contacts_bloc.dart';
 import 'package:helpflutter/logic/dependents/dependent_bloc.dart';
@@ -30,19 +30,10 @@ class ContactsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) =>
-              ContactsBloc(repository: context.read<ContactRepository>())
-                ..add(LoadContacts()),
-        ),
-        BlocProvider(
-          create: (context) =>
-              DependentsBloc(repository: context.read<DependentRepository>())
-                ..add(LoadDependents()),
-        ),
-      ],
+    return BlocProvider(
+      create: (context) =>
+          DependentsBloc(repository: context.read<DependentRepository>())
+            ..add(LoadDependents()),
       child: DefaultTabController(
         length: 2,
         child: Scaffold(

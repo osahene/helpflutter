@@ -11,14 +11,24 @@ class AuthRegisterRequested extends AuthEvent {
   final String lastName;
   final String countryCode;
   final String phoneNumber;
+  final bool agreedToTerms;
+
   const AuthRegisterRequested(
     this.firstName,
     this.lastName,
     this.countryCode,
-    this.phoneNumber,
-  );
+    this.phoneNumber, {
+    this.agreedToTerms = false,
+  });
+
   @override
-  List<Object> get props => [firstName, lastName, countryCode, phoneNumber];
+  List<Object> get props => [
+    firstName,
+    lastName,
+    countryCode,
+    phoneNumber,
+    agreedToTerms,
+  ];
 }
 
 class AuthSendOtpRequested extends AuthEvent {

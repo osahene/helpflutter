@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:helpflutter/logic/auth/auth_bloc.dart';
-import 'package:helpflutter/presentation/screens/auth/verify_otp_screen.dart';
+import 'package:helpflutter/presentation/screens/auth/terms_agreement_screen.dart';
 
-// Country model
 class CountryCode {
   final String name;
   final String flag;
@@ -17,7 +14,6 @@ class CountryCode {
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
-
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
@@ -33,47 +29,46 @@ class _RegisterScreenState extends State<RegisterScreen>
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
 
-  // Popular country codes
   static const List<CountryCode> _countryCodes = [
     CountryCode(name: 'Ghana', flag: '🇬🇭', code: '+233'),
-    // CountryCode(name: 'Nigeria', flag: '🇳🇬', code: '+234'),
-    // CountryCode(name: 'Kenya', flag: '🇰🇪', code: '+254'),
-    // CountryCode(name: 'South Africa', flag: '🇿🇦', code: '+27'),
-    // CountryCode(name: 'United States', flag: '🇺🇸', code: '+1'),
-    // CountryCode(name: 'United Kingdom', flag: '🇬🇧', code: '+44'),
-    // CountryCode(name: 'Canada', flag: '🇨🇦', code: '+1'),
-    // CountryCode(name: 'India', flag: '🇮🇳', code: '+91'),
-    // CountryCode(name: 'Germany', flag: '🇩🇪', code: '+49'),
-    // CountryCode(name: 'France', flag: '🇫🇷', code: '+33'),
-    // CountryCode(name: 'Australia', flag: '🇦🇺', code: '+61'),
-    // CountryCode(name: 'Brazil', flag: '🇧🇷', code: '+55'),
-    // CountryCode(name: 'Senegal', flag: '🇸🇳', code: '+221'),
-    // CountryCode(name: 'Côte d\'Ivoire', flag: '🇨🇮', code: '+225'),
-    // CountryCode(name: 'Tanzania', flag: '🇹🇿', code: '+255'),
-    // CountryCode(name: 'Uganda', flag: '🇺🇬', code: '+256'),
-    // CountryCode(name: 'Rwanda', flag: '🇷🇼', code: '+250'),
-    // CountryCode(name: 'Ethiopia', flag: '🇪🇹', code: '+251'),
-    // CountryCode(name: 'Egypt', flag: '🇪🇬', code: '+20'),
-    // CountryCode(name: 'Morocco', flag: '🇲🇦', code: '+212'),
+    CountryCode(name: 'Nigeria', flag: '🇳🇬', code: '+234'),
+    CountryCode(name: 'Kenya', flag: '🇰🇪', code: '+254'),
+    CountryCode(name: 'South Africa', flag: '🇿🇦', code: '+27'),
+    CountryCode(name: 'United States', flag: '🇺🇸', code: '+1'),
+    CountryCode(name: 'United Kingdom', flag: '🇬🇧', code: '+44'),
+    CountryCode(name: 'Canada', flag: '🇨🇦', code: '+1'),
+    CountryCode(name: 'India', flag: '🇮🇳', code: '+91'),
+    CountryCode(name: 'Germany', flag: '🇩🇪', code: '+49'),
+    CountryCode(name: 'France', flag: '🇫🇷', code: '+33'),
+    CountryCode(name: 'Australia', flag: '🇦🇺', code: '+61'),
+    CountryCode(name: 'Brazil', flag: '🇧🇷', code: '+55'),
+    CountryCode(name: 'Senegal', flag: '🇸🇳', code: '+221'),
+    CountryCode(name: 'Tanzania', flag: '🇹🇿', code: '+255'),
+    CountryCode(name: 'Uganda', flag: '🇺🇬', code: '+256'),
+    CountryCode(name: 'Rwanda', flag: '🇷🇼', code: '+250'),
+    CountryCode(name: 'Ethiopia', flag: '🇪🇹', code: '+251'),
+    CountryCode(name: 'Egypt', flag: '🇪🇬', code: '+20'),
+    CountryCode(name: 'Morocco', flag: '🇲🇦', code: '+212'),
+    CountryCode(name: 'Cameroon', flag: '🇨🇲', code: '+237'),
+    CountryCode(name: 'Zimbabwe', flag: '🇿🇼', code: '+263'),
+    CountryCode(name: 'Zambia', flag: '🇿🇲', code: '+260'),
   ];
 
   CountryCode _selectedCountry = _countryCodes.first;
 
-  // Color palette
-  static const Color _accent = Color(0xFF4F8EF7);
-  static const Color _accentLight = Color(0xFFEAF1FE);
-  static const Color _surface = Color(0xFFF7F9FC);
-  static const Color _border = Color(0xFFE2E8F0);
-  static const Color _textPrimary = Color(0xFF0F172A);
-  static const Color _textSecondary = Color(0xFF64748B);
-  static const Color _white = Color(0xFFFFFFFF);
+  static const Color _kPrimary = Color(0xFF2C5FD4);
+  static const Color _kAccent = Color(0xFF5B3FE8);
+  static const Color _kSurface = Color(0xFFF0F4FF);
+  static const Color _kBorder = Color(0xFFDDE3F5);
+  static const Color _kText = Color(0xFF0F1B3E);
+  static const Color _kMuted = Color(0xFF8B94B2);
 
   @override
   void initState() {
     super.initState();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 700),
     );
     _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _slideAnim = Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero)
@@ -92,503 +87,403 @@ class _RegisterScreenState extends State<RegisterScreen>
     super.dispose();
   }
 
-  void _showConfirmationModal() {
-    final firstName = _firstNameController.text.trim();
-    final lastName = _lastNameController.text.trim();
-    final phone = _phoneController.text.trim();
-    final fullPhone = '${_selectedCountry.code} $phone';
-
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(28),
-          decoration: BoxDecoration(
-            color: _white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 32,
-                offset: const Offset(0, 8),
-              ),
-            ],
+  // Validate form then navigate to TermsAgreementScreen.
+  // Form data is held in state — NO API call here.
+  void _proceedToTerms() {
+    if (_formKey.currentState!.validate()) {
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, animation, __) => TermsAgreementScreen(
+            firstName: _firstNameController.text.trim(),
+            lastName: _lastNameController.text.trim(),
+            countryCode: _selectedCountry.code,
+            phoneNumber: _phoneController.text.trim(),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Icon badge
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: _accentLight,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  color: _accent,
-                  size: 32,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Title
-              Text(
-                'Confirm Registration',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: _textPrimary,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Divider
-              Container(height: 1, color: _border),
-              const SizedBox(height: 16),
-
-              // Message
-              RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: _textSecondary,
-                    height: 1.6,
-                  ),
-                  children: [
-                    const TextSpan(text: 'Hello '),
-                    TextSpan(
-                      text: '$firstName $lastName',
-                      style: const TextStyle(
-                        color: _textPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const TextSpan(
-                      text: ', you are registering with the phone number ',
-                    ),
-                    TextSpan(
-                      text: fullPhone,
-                      style: const TextStyle(
-                        color: _accent,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const TextSpan(text: '.'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Info row
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: _accentLight,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      _selectedCountry.flag,
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _selectedCountry.name,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: _textSecondary,
-                            ),
-                          ),
-                          Text(
-                            fullPhone,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: _textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _textSecondary,
-                        side: const BorderSide(color: _border, width: 1.5),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        context.read<AuthBloc>().add(
-                          AuthRegisterRequested(
-                            firstName,
-                            lastName,
-                            _selectedCountry.code,
-                            phone,
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _accent,
-                        foregroundColor: _white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Submit',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          transitionsBuilder: (_, anim, __, child) => FadeTransition(
+            opacity: anim,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.05),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOut)),
+              child: child,
+            ),
           ),
+          transitionDuration: const Duration(milliseconds: 300),
         ),
-      ),
-    );
+      );
+    }
   }
 
-  InputDecoration _inputDecoration({
-    required String label,
-    required String hint,
-    required IconData icon,
-    Widget? suffixWidget,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      labelStyle: const TextStyle(
-        color: _textSecondary,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-      ),
-      hintStyle: TextStyle(
-        color: _textSecondary.withValues(alpha: 0.5),
-        fontSize: 14,
-      ),
-      prefixIcon: Icon(icon, color: _accent, size: 20),
-      suffix: suffixWidget,
-      filled: true,
-      fillColor: _surface,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _border, width: 1.5),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _border, width: 1.5),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _accent, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFEF4444), width: 2),
-      ),
-    );
-  }
+  InputDecoration _dec(
+    String label,
+    String hint,
+    IconData icon,
+  ) => InputDecoration(
+    labelText: label,
+    hintText: hint,
+    labelStyle: const TextStyle(
+      color: _kMuted,
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+    ),
+    hintStyle: TextStyle(color: _kMuted.withValues(alpha: 0.5), fontSize: 14),
+    prefixIcon: Icon(icon, color: _kPrimary, size: 20),
+    filled: true,
+    fillColor: Colors.white,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(color: _kBorder, width: 1.5),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(color: _kBorder, width: 1.5),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(color: _kPrimary, width: 2),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(color: Color(0xFFEF4444), width: 2),
+    ),
+    errorStyle: const TextStyle(color: Color(0xFFEF4444), fontSize: 11.5),
+  );
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthOtpSent) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => VerifyOtpScreen(
-                countryCode: _selectedCountry.code,
-                phoneNumber: _phoneController.text.trim(),
-              ),
-            ),
-          );
-        } else if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(state.message)),
-                ],
-              ),
-              backgroundColor: const Color(0xFFEF4444),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
-        }
-      },
-      child: Scaffold(
-        backgroundColor: _white,
-        body: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnim,
-            child: SlideTransition(
-              position: _slideAnim,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 32,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header section
-                      const SizedBox(height: 16),
-                      Container(
-                        width: 52,
-                        height: 52,
+    return Scaffold(
+      backgroundColor: _kSurface,
+      body: FadeTransition(
+        opacity: _fadeAnim,
+        child: SlideTransition(
+          position: _slideAnim,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // Hero header
+              SliverToBoxAdapter(
+                child: Stack(
+                  children: [
+                    Container(
+                      height: 220,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [_kPrimary, _kAccent],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(36),
+                          bottomRight: Radius.circular(36),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: -20,
+                      right: -20,
+                      child: Container(
+                        width: 140,
+                        height: 140,
                         decoration: BoxDecoration(
-                          color: _accentLight,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(
-                          Icons.person_add_rounded,
-                          color: _accent,
-                          size: 26,
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.07),
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Create Account',
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w700,
-                          color: _textPrimary,
-                          letterSpacing: -0.5,
-                          height: 1.1,
+                    ),
+                    Positioned(
+                      top: 40,
+                      left: -30,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.05),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Fill in the details below to get started.',
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: _textSecondary,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 36),
-
-                      // First Name
-                      _SectionLabel(label: 'First Name'),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _firstNameController,
-                        textCapitalization: TextCapitalization.words,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: _textPrimary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        decoration: _inputDecoration(
-                          label: 'First Name',
-                          hint: 'e.g. Kwame',
-                          icon: Icons.badge_outlined,
-                        ),
-                        validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Please enter your first name'
-                            : null,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Last Name
-                      _SectionLabel(label: 'Last Name'),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _lastNameController,
-                        textCapitalization: TextCapitalization.words,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: _textPrimary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        decoration: _inputDecoration(
-                          label: 'Last Name',
-                          hint: 'e.g. Mensah',
-                          icon: Icons.badge_rounded,
-                        ),
-                        validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Please enter your last name'
-                            : null,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Phone Number
-                      _SectionLabel(label: 'Phone Number'),
-                      const SizedBox(height: 8),
-                      _PhoneField(
-                        phoneController: _phoneController,
-                        selectedCountry: _selectedCountry,
-                        countryCodes: _countryCodes,
-                        onCountryChanged: (c) =>
-                            setState(() => _selectedCountry = c),
-                      ),
-                      const SizedBox(height: 36),
-
-                      // Divider
-                      Container(height: 1, color: _border),
-                      const SizedBox(height: 28),
-
-                      // Submit Button
-                      BlocBuilder<AuthBloc, AuthState>(
-                        builder: (context, state) {
-                          final isLoading = state is AuthLoading;
-                          return SizedBox(
-                            width: double.infinity,
-                            height: 54,
-                            child: ElevatedButton(
-                              onPressed: isLoading
-                                  ? null
-                                  : () {
-                                      if (_formKey.currentState!.validate()) {
-                                        _showConfirmationModal();
-                                      }
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _accent,
-                                foregroundColor: _white,
-                                disabledBackgroundColor: _accent.withValues(
-                                  alpha: 0.6,
-                                ),
-                                elevation: 0,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                              ),
-                              child: isLoading
-                                  ? const SizedBox(
-                                      width: 22,
-                                      height: 22,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          'Create Account',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w700,
-                                            letterSpacing: 0.2,
-                                          ),
-                                        ),
-                                        SizedBox(width: 8),
-                                        Icon(
-                                          Icons.arrow_forward_rounded,
-                                          size: 20,
-                                        ),
-                                      ],
-                                    ),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Already have account
-                      Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                    ),
+                    SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Already have an account?',
-                              style: TextStyle(
-                                color: _textSecondary,
-                                fontSize: 14,
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.25),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_back_ios_new_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            GestureDetector(
-                              onTap: () => Navigator.maybePop(context),
-                              child: const Text(
-                                'Sign in',
-                                style: TextStyle(
-                                  color: _accent,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
+                            const SizedBox(height: 20),
+                            Container(
+                              padding: const EdgeInsets.all(11),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  width: 1.5,
                                 ),
+                              ),
+                              child: const Icon(
+                                Icons.person_add_rounded,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            const Text(
+                              'Create Account',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Join your personal safety network',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.65),
+                                fontSize: 13.5,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Form
+              SliverToBoxAdapter(
+                child: Form(
+                  key: _formKey,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 48),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _Label(
+                          icon: Icons.badge_rounded,
+                          label: 'Personal Info',
+                          color: _kPrimary,
+                        ),
+                        const SizedBox(height: 14),
+                        TextFormField(
+                          controller: _firstNameController,
+                          textCapitalization: TextCapitalization.words,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: _kText,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          decoration: _dec(
+                            'First Name',
+                            'e.g. Kwame',
+                            Icons.person_outline_rounded,
+                          ),
+                          validator: (v) => v == null || v.trim().isEmpty
+                              ? 'First name is required'
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _lastNameController,
+                          textCapitalization: TextCapitalization.words,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: _kText,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          decoration: _dec(
+                            'Last Name',
+                            'e.g. Mensah',
+                            Icons.person_outline_rounded,
+                          ),
+                          validator: (v) => v == null || v.trim().isEmpty
+                              ? 'Last name is required'
+                              : null,
+                        ),
+                        const SizedBox(height: 24),
+                        _Label(
+                          icon: Icons.phone_rounded,
+                          label: 'Phone Number',
+                          color: const Color(0xFF1A9E5C),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Select your country code and enter your number.',
+                          style: TextStyle(color: _kMuted, fontSize: 12.5),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              onTap: () => showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (_) => _CountrySheet(
+                                  countryCodes: _countryCodes,
+                                  selectedCountry: _selectedCountry,
+                                  onSelected: (c) {
+                                    setState(() => _selectedCountry = c);
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              ),
+                              child: Container(
+                                height: 56,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: _kBorder,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _selectedCountry.flag,
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _selectedCountry.code,
+                                      style: const TextStyle(
+                                        color: _kText,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      color: _kMuted,
+                                      size: 18,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _phoneController,
+                                keyboardType: TextInputType.phone,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  color: _kText,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                decoration: _dec(
+                                  'Phone Number',
+                                  'e.g. 244123456',
+                                  Icons.phone_outlined,
+                                ),
+                                validator: (v) {
+                                  if (v == null || v.trim().isEmpty)
+                                    return 'Phone number is required';
+                                  if (v.trim().length < 6)
+                                    return 'Enter a valid number';
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 36),
+                        Container(height: 1, color: _kBorder),
+                        const SizedBox(height: 28),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 54,
+                          child: ElevatedButton(
+                            onPressed: _proceedToTerms,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _kPrimary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Continue',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Icon(Icons.arrow_forward_rounded, size: 20),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Center(
+                          child: GestureDetector(
+                            onTap: () => Navigator.maybePop(context),
+                            child: RichText(
+                              text: const TextSpan(
+                                text: 'Already have an account?  ',
+                                style: TextStyle(color: _kMuted, fontSize: 14),
+                                children: [
+                                  TextSpan(
+                                    text: 'Sign in',
+                                    style: TextStyle(
+                                      color: _kPrimary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -596,201 +491,60 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 }
 
-// ─── Section Label ────────────────────────────────────────────────────────────
-class _SectionLabel extends StatelessWidget {
+class _Label extends StatelessWidget {
+  final IconData icon;
   final String label;
-  const _SectionLabel({required this.label});
-
+  final Color color;
+  const _Label({required this.icon, required this.label, required this.color});
   @override
-  Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: const TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: Color(0xFF374151),
-        letterSpacing: 0.3,
+  Widget build(BuildContext context) => Row(
+    children: [
+      Container(
+        width: 4,
+        height: 16,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(2),
+        ),
       ),
-    );
-  }
+      const SizedBox(width: 8),
+      Icon(icon, size: 15, color: color),
+      const SizedBox(width: 6),
+      Text(
+        label.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.4,
+        ),
+      ),
+    ],
+  );
 }
 
-// ─── Phone Field with Country Code Dropdown ───────────────────────────────────
-class _PhoneField extends StatelessWidget {
-  final TextEditingController phoneController;
-  final CountryCode selectedCountry;
-  final List<CountryCode> countryCodes;
-  final ValueChanged<CountryCode> onCountryChanged;
-
-  const _PhoneField({
-    required this.phoneController,
-    required this.selectedCountry,
-    required this.countryCodes,
-    required this.onCountryChanged,
-  });
-
-  static const Color _accent = Color(0xFF4F8EF7);
-  static const Color _surface = Color(0xFFF7F9FC);
-  static const Color _border = Color(0xFFE2E8F0);
-  static const Color _textPrimary = Color(0xFF0F172A);
-  static const Color _textSecondary = Color(0xFF64748B);
-
-  void _showCountryPicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _CountryPickerSheet(
-        countryCodes: countryCodes,
-        selectedCountry: selectedCountry,
-        onSelected: (c) {
-          onCountryChanged(c);
-          Navigator.pop(ctx);
-        },
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Country Code Selector
-        GestureDetector(
-          onTap: () => _showCountryPicker(context),
-          child: Container(
-            height: 58,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: _surface,
-              border: Border.all(color: _border, width: 1.5),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  selectedCountry.flag,
-                  style: const TextStyle(fontSize: 22),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  selectedCountry.code,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: _textPrimary,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: _textSecondary,
-                  size: 18,
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-
-        // Phone Input
-        Expanded(
-          child: TextFormField(
-            controller: phoneController,
-            keyboardType: TextInputType.phone,
-            style: const TextStyle(
-              fontSize: 15,
-              color: _textPrimary,
-              fontWeight: FontWeight.w500,
-            ),
-            decoration: InputDecoration(
-              labelText: 'Phone Number',
-              hintText: 'e.g. 244123456',
-              labelStyle: const TextStyle(
-                color: _textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              hintStyle: TextStyle(
-                color: _textSecondary.withValues(alpha: 0.5),
-                fontSize: 14,
-              ),
-              prefixIcon: const Icon(
-                Icons.phone_outlined,
-                color: _accent,
-                size: 20,
-              ),
-              filled: true,
-              fillColor: _surface,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 18,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: _border, width: 1.5),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: _border, width: 1.5),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: _accent, width: 2),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(
-                  color: Color(0xFFEF4444),
-                  width: 1.5,
-                ),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(
-                  color: Color(0xFFEF4444),
-                  width: 2,
-                ),
-              ),
-            ),
-            validator: (v) => v == null || v.trim().isEmpty
-                ? 'Please enter your phone number'
-                : null,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Country Picker Bottom Sheet ──────────────────────────────────────────────
-class _CountryPickerSheet extends StatefulWidget {
+class _CountrySheet extends StatefulWidget {
   final List<CountryCode> countryCodes;
   final CountryCode selectedCountry;
   final ValueChanged<CountryCode> onSelected;
-
-  const _CountryPickerSheet({
+  const _CountrySheet({
     required this.countryCodes,
     required this.selectedCountry,
     required this.onSelected,
   });
-
   @override
-  State<_CountryPickerSheet> createState() => _CountryPickerSheetState();
+  State<_CountrySheet> createState() => _CountrySheetState();
 }
 
-class _CountryPickerSheetState extends State<_CountryPickerSheet> {
+class _CountrySheetState extends State<_CountrySheet> {
   String _search = '';
+  static const Color _kPrimary = Color(0xFF2C5FD4);
+  static const Color _kSurface = Color(0xFFF0F4FF);
+  static const Color _kBorder = Color(0xFFDDE3F5);
+  static const Color _kText = Color(0xFF0F1B3E);
+  static const Color _kMuted = Color(0xFF8B94B2);
 
-  static const Color _accent = Color(0xFF4F8EF7);
-  static const Color _accentLight = Color(0xFFEAF1FE);
-  static const Color _border = Color(0xFFE2E8F0);
-  static const Color _textPrimary = Color(0xFF0F172A);
-  static const Color _textSecondary = Color(0xFF64748B);
-  static const Color _surface = Color(0xFFF7F9FC);
-
-  List<CountryCode> get _filtered => widget.countryCodes
+  List<CountryCode> get _f => widget.countryCodes
       .where(
         (c) =>
             c.name.toLowerCase().contains(_search.toLowerCase()) ||
@@ -799,156 +553,142 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
       .toList();
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.72,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          // Handle
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: _border,
-              borderRadius: BorderRadius.circular(2),
+  Widget build(BuildContext context) => Container(
+    height: MediaQuery.of(context).size.height * 0.72,
+    decoration: const BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ),
+    child: Column(
+      children: [
+        const SizedBox(height: 12),
+        Container(
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: _kBorder,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Select Country Code',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: _kText,
+                letterSpacing: -0.3,
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-
-          // Title
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Text(
-                  'Select Country Code',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: _textPrimary,
-                    letterSpacing: -0.3,
+        ),
+        const SizedBox(height: 14),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: TextField(
+            onChanged: (v) => setState(() => _search = v),
+            style: const TextStyle(fontSize: 14, color: _kText),
+            decoration: InputDecoration(
+              hintText: 'Search country or code…',
+              hintStyle: TextStyle(
+                color: _kMuted.withValues(alpha: 0.6),
+                fontSize: 14,
+              ),
+              prefixIcon: const Icon(
+                Icons.search_rounded,
+                color: _kPrimary,
+                size: 20,
+              ),
+              filled: true,
+              fillColor: _kSurface,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: _kBorder),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: _kBorder),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: _kPrimary, width: 1.5),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Divider(height: 1, color: _kBorder),
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemCount: _f.length,
+            separatorBuilder: (_, __) => Divider(
+              height: 1,
+              color: _kBorder.withValues(alpha: 0.5),
+              indent: 20,
+              endIndent: 20,
+            ),
+            itemBuilder: (_, i) {
+              final c = _f[i];
+              final sel =
+                  c.code == widget.selectedCountry.code &&
+                  c.name == widget.selectedCountry.name;
+              return InkWell(
+                onTap: () => widget.onSelected(c),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Search
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextField(
-              onChanged: (v) => setState(() => _search = v),
-              style: const TextStyle(fontSize: 14, color: _textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Search country or code...',
-                hintStyle: TextStyle(
-                  color: _textSecondary.withValues(alpha: 0.6),
-                  fontSize: 14,
-                ),
-                prefixIcon: const Icon(
-                  Icons.search_rounded,
-                  color: _accent,
-                  size: 20,
-                ),
-                filled: true,
-                fillColor: _surface,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _accent, width: 1.5),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Container(height: 1, color: _border),
-
-          // List
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: _filtered.length,
-              separatorBuilder: (_, __) => Divider(
-                height: 1,
-                color: _border.withValues(alpha: 0.6),
-                indent: 20,
-                endIndent: 20,
-              ),
-              itemBuilder: (ctx, i) {
-                final country = _filtered[i];
-                final isSelected =
-                    country.code == widget.selectedCountry.code &&
-                    country.name == widget.selectedCountry.name;
-                return InkWell(
-                  onTap: () => widget.onSelected(country),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
-                    ),
-                    color: isSelected ? _accentLight : Colors.transparent,
-                    child: Row(
-                      children: [
-                        Text(
-                          country.flag,
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Text(
-                            country.name,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              color: isSelected ? _accent : _textPrimary,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          country.code,
+                  color: sel
+                      ? _kPrimary.withValues(alpha: 0.07)
+                      : Colors.transparent,
+                  child: Row(
+                    children: [
+                      Text(c.flag, style: const TextStyle(fontSize: 24)),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          c.name,
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: isSelected ? _accent : _textSecondary,
+                            fontSize: 15,
+                            fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
+                            color: sel ? _kPrimary : _kText,
                           ),
                         ),
-                        if (isSelected) ...[
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.check_circle_rounded,
-                            color: _accent,
-                            size: 18,
-                          ),
-                        ],
+                      ),
+                      Text(
+                        c.code,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: sel ? _kPrimary : _kMuted,
+                        ),
+                      ),
+                      if (sel) ...[
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          color: _kPrimary,
+                          size: 18,
+                        ),
                       ],
-                    ),
+                    ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }

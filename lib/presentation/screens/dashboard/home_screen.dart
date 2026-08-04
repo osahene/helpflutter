@@ -1,6 +1,11 @@
+// lib/presentation/screens/dashboard/home_screen.dart
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:helpflutter/logic/contacts/contacts_bloc.dart';
 import 'package:helpflutter/presentation/screens/alert/alert_confirmation_screen.dart';
 import 'package:helpflutter/presentation/widgets/emergency_tile.dart';
+import 'package:helpflutter/presentation/widgets/status_banner.dart';
 import 'package:helpflutter/presentation/widgets/top_nav_bar.dart';
 import 'package:helpflutter/presentation/screens/dashboard/profile_screen.dart';
 
@@ -57,182 +62,129 @@ class HomeScreen extends StatelessWidget {
           final bool isLandscape =
               MediaQuery.of(context).orientation == Orientation.landscape;
 
-          // Responsive column count
           final int crossAxisCount = isTablet
               ? (isLandscape ? 4 : 3)
               : (isLandscape ? 3 : 2);
 
-          // Responsive sizing
           final double headerPadH = isTablet ? 32.0 : 20.0;
           final double gridPad = isTablet ? 24.0 : 16.0;
           final double gridSpacing = isTablet ? 20.0 : 14.0;
 
-          return CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // ─── Header Banner ─────────────────────────────────────────
-              SliverToBoxAdapter(child: _HeaderBanner(paddingH: headerPadH)),
+          return RefreshIndicator(
+            color: const Color(0xFF6B0F0F),
+            onRefresh: () async {
+              context.read<ContactsBloc>().add(LoadContacts());
+              // Give the bloc a beat to emit before dismissing the spinner.
+              await context.read<ContactsBloc>().stream.firstWhere(
+                (s) => s is! ContactsLoading,
+              );
+            },
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              slivers: [
+                // ─── Status banner ─────────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: StatusBanner(
+                    paddingH: headerPadH,
+                    onNavigate: onTabTapped,
+                    // maxContacts: read from the signed-in user's plan when
+                    // AuthBloc exposes it — 5 (free) is the backend default.
+                    maxContacts: 5,
+                  ),
+                ),
 
-              // ─── Emergency Grid ─────────────────────────────────────────
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(gridPad, 0, gridPad, gridPad + 20),
-                sliver: SliverGrid(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    return EmergencyTile(
-                      title: _situations[index],
-                      icon: _icons[index],
-                      color: _colors[index],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder: (context, animation, __) =>
-                                AlertConfirmationScreen(
-                                  emergencyType: _situations[index],
-                                  icon: _icons[index],
-                                  color: _colors[index],
-                                ),
-                            transitionsBuilder: (_, anim, __, child) {
-                              return FadeTransition(
-                                opacity: anim,
-                                child: SlideTransition(
-                                  position:
-                                      Tween<Offset>(
-                                        begin: const Offset(0, 0.06),
-                                        end: Offset.zero,
-                                      ).animate(
-                                        CurvedAnimation(
-                                          parent: anim,
-                                          curve: Curves.easeOut,
+                // ─── Emergency grid ────────────────────────────────────────
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    gridPad,
+                    4,
+                    gridPad,
+                    gridPad + 20,
+                  ),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      return EmergencyTile(
+                        title: _situations[index],
+                        icon: _icons[index],
+                        color: _colors[index],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, __) =>
+                                  AlertConfirmationScreen(
+                                    emergencyType: _situations[index],
+                                    icon: _icons[index],
+                                    color: _colors[index],
+                                  ),
+                              transitionsBuilder: (_, anim, __, child) {
+                                return FadeTransition(
+                                  opacity: anim,
+                                  child: SlideTransition(
+                                    position:
+                                        Tween<Offset>(
+                                          begin: const Offset(0, 0.06),
+                                          end: Offset.zero,
+                                        ).animate(
+                                          CurvedAnimation(
+                                            parent: anim,
+                                            curve: Curves.easeOut,
+                                          ),
                                         ),
-                                      ),
-                                  child: child,
-                                ),
-                              );
-                            },
-                            transitionDuration: const Duration(
-                              milliseconds: 300,
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              transitionDuration: const Duration(
+                                milliseconds: 300,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    );
-                  }, childCount: _situations.length),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: gridSpacing,
-                    mainAxisSpacing: gridSpacing,
-                    childAspectRatio: isTablet ? 0.9 : 0.88,
+                          );
+                        },
+                      );
+                    }, childCount: _situations.length),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: gridSpacing,
+                      mainAxisSpacing: gridSpacing,
+                      childAspectRatio: isTablet ? 0.9 : 0.88,
+                    ),
                   ),
                 ),
-              ),
 
-              // ─── Footer disclaimer ──────────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(headerPadH, 0, headerPadH, 32),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.info_outline_rounded,
-                        size: 14,
-                        color: Colors.white24,
-                      ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'Alerts include your live location.',
-                        style: TextStyle(
-                          color: Colors.white24,
-                          fontSize: 12,
-                          letterSpacing: 0.3,
+                // ─── Footer disclaimer ─────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(headerPadH, 0, headerPadH, 32),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // FIX: this row was Colors.white24 on a near-white
+                        // background — effectively invisible on device.
+                        Icon(
+                          Icons.my_location_rounded,
+                          size: 15,
+                          color: Colors.black.withValues(alpha: 0.35),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ─── Header Banner ────────────────────────────────────────────────────────────
-
-class _HeaderBanner extends StatelessWidget {
-  final double paddingH;
-  const _HeaderBanner({required this.paddingH});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.fromLTRB(paddingH, 10, paddingH, 10),
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF3D0000), Color(0xFF6B0F0F)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.red.withValues(alpha: 0.25),
-            blurRadius: 24,
-            spreadRadius: 0,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "What's your emergency?",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Tap a situation below to instantly\nalert your emergency contacts.',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 16,
-                    height: 1.5,
+                        const SizedBox(width: 6),
+                        Text(
+                          'Every alert includes your live location.',
+                          style: TextStyle(
+                            color: Colors.black.withValues(alpha: 0.55),
+                            fontSize: 13,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
-                width: 1.5,
-              ),
-            ),
-            child: const Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

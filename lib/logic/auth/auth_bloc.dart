@@ -11,8 +11,6 @@ part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository repository;
-
-  // 1. ADD THIS VARIABLE
   StreamSubscription? _logoutSubscription;
 
   AuthBloc({required this.repository}) : super(AuthInitial()) {
@@ -43,6 +41,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         lastName: event.lastName,
         countryCode: event.countryCode,
         phoneNumber: event.phoneNumber,
+        agreedToTerms: event.agreedToTerms,
       );
       emit(AuthOtpSent());
     } catch (e) {

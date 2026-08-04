@@ -920,7 +920,9 @@ class _SubmitButtonState extends State<_SubmitButton>
             children: [
               Icon(
                 Icons.person_add_alt_1_rounded,
-                color: isEnabled ? Colors.white : Colors.white.withOpacity(0.6),
+                color: isEnabled
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.6),
                 size: 20,
               ),
               const SizedBox(width: 10),
@@ -929,7 +931,7 @@ class _SubmitButtonState extends State<_SubmitButton>
                 style: TextStyle(
                   color: isEnabled
                       ? Colors.white
-                      : Colors.white.withOpacity(0.6),
+                      : Colors.white.withValues(alpha: 0.6),
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.3,

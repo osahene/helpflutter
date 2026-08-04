@@ -9,6 +9,7 @@ abstract class AuthRepository {
     required String lastName,
     required String countryCode,
     required String phoneNumber,
+    required bool agreedToTerms,
   });
 
   Future<void> sendOtp({
@@ -26,7 +27,7 @@ abstract class AuthRepository {
 }
 
 class AuthRepositoryImpl implements AuthRepository {
-  final ApiService apiService; // Changed from ApiClient to ApiService
+  final ApiService apiService;
 
   AuthRepositoryImpl({required this.apiService});
 
@@ -36,6 +37,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String lastName,
     required String countryCode,
     required String phoneNumber,
+    required bool agreedToTerms,
   }) async {
     try {
       await apiService.register({
@@ -43,6 +45,7 @@ class AuthRepositoryImpl implements AuthRepository {
         'last_name': lastName,
         'country_code': countryCode,
         'phone_number': phoneNumber,
+        'agree_to_terms': agreedToTerms,
       });
     } on DioException catch (e) {
       throw _handleError(e);
@@ -78,7 +81,6 @@ class AuthRepositoryImpl implements AuthRepository {
       });
 
       final data = response.data;
-      // Handle cases where backend might return a list or an object
       final Map<String, dynamic> actualData = (data is List) ? data[0] : data;
 
       return (
@@ -94,8 +96,6 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout(String refreshToken) async {
     try {
-      // If your ApiService.logout() doesn't accept data,
-      // you may need to update the ApiService or pass it here
       await apiService.logout();
       await SecureStorage.clearTokens();
     } on DioException catch (e) {
