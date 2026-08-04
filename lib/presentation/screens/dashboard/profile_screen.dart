@@ -323,10 +323,7 @@ class _ProfileHero extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        state.user.countryCode != null &&
-                                state.user.phoneNumber != null
-                            ? '${state.user.countryCode}${state.user.phoneNumber}'
-                            : state.user.phone,
+                        state.user.phoneNumber ?? '',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 13,

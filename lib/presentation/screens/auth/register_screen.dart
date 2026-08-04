@@ -172,7 +172,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                 child: Stack(
                   children: [
                     Container(
-                      height: 220,
+                      height: 200,
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           colors: [_kPrimary, _kAccent],
@@ -211,64 +211,80 @@ class _RegisterScreenState extends State<RegisterScreen>
                     ),
                     SafeArea(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                        padding: const EdgeInsets.fromLTRB(20, 28, 20, 32),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.25),
-                                    width: 1,
+                            // GestureDetector(
+                            //   onTap: () => Navigator.pop(context),
+                            //   child: Container(
+                            //     width: 40,
+                            //     height: 40,
+                            //     decoration: BoxDecoration(
+                            //       color: Colors.white.withValues(alpha: 0.15),
+                            //       borderRadius: BorderRadius.circular(12),
+                            //       border: Border.all(
+                            //         color: Colors.white.withValues(alpha: 0.25),
+                            //         width: 1,
+                            //       ),
+                            //     ),
+                            //     child: const Icon(
+                            //       Icons.arrow_back_ios_new_rounded,
+                            //       color: Colors.white,
+                            //       size: 18,
+                            //     ),
+                            //   ),
+                            // ),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.person_add_alt_1,
+                                    color: Colors.white,
+                                    size: 26,
                                   ),
                                 ),
-                                child: const Icon(
-                                  Icons.arrow_back_ios_new_rounded,
-                                  color: Colors.white,
-                                  size: 18,
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Create Account',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Join your personal safety network',
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.65,
+                                        ),
+                                        fontSize: 13.5,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            Container(
-                              padding: const EdgeInsets.all(11),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.3),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.person_add_rounded,
-                                color: Colors.white,
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            const Text(
-                              'Create Account',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Join your personal safety network',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.65),
-                                fontSize: 13.5,
-                              ),
+                              ],
                             ),
                           ],
                         ),
@@ -412,10 +428,12 @@ class _RegisterScreenState extends State<RegisterScreen>
                                   Icons.phone_outlined,
                                 ),
                                 validator: (v) {
-                                  if (v == null || v.trim().isEmpty)
+                                  if (v == null || v.trim().isEmpty) {
                                     return 'Phone number is required';
-                                  if (v.trim().length < 6)
+                                  }
+                                  if (v.trim().length < 6) {
                                     return 'Enter a valid number';
+                                  }
                                   return null;
                                 },
                               ),

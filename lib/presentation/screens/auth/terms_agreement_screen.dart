@@ -109,81 +109,182 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
         backgroundColor: _kSurface,
         body: Column(
           children: [
-            // ── Header ─────────────────────────────────
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [_kPrimary, _kAccent],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Back button
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.25),
-                              width: 1,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Icon
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.25),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.gavel_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'Terms of Agreement',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Please read carefully before registering',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.65),
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
+            // ── Enhanced Hero Section ─────────────────────────────
+            ClipRect(
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(32),
                   ),
+                  gradient: LinearGradient(
+                    colors: [_kPrimary, _kAccent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // Background Decorative Ambient Circles
+                    Positioned(
+                      top: -40,
+                      right: -30,
+                      child: Container(
+                        width: 180,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: -50,
+                      left: -20,
+                      child: Container(
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.06),
+                        ),
+                      ),
+                    ),
+
+                    // Main Header Content
+                    SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Top Navigation Row
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () => Navigator.pop(context),
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      width: 42,
+                                      height: 42,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.15,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.25,
+                                          ),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.arrow_back_ios_new_rounded,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'STEP 2 OF 2',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Row Header: Gavel Icon (Left) + Text (Right)
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.18),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.08,
+                                        ),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.gavel_rounded,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Terms of Agreement',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -0.4,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Please review carefully before finalizing your account setup',
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.85,
+                                          ),
+                                          fontSize: 13,
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -251,7 +352,7 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
                       icon: Icons.warning_amber_rounded,
                       title: 'Non-Substitution Disclaimer',
                       body:
-                          'Help OO Help is a supplementary peer-to-peer emergency notification system and is NOT a replacement for primary state emergency services. In any emergency situation, you should ALWAYS contact the appropriate state institutions directly — Ghana Police Service (191 / 18555), Ghana Fire Service (192), National Ambulance Service (0501614877), or NADMO (112). This app exists to supplement those services by alerting your trusted contacts, not to replace them.',
+                          'Help OO Help is designed to notify your trusted circle when you need them. However, it does not replace official emergency services. In life-threatening situations, always prioritize contacting state institutions directly — Ghana Police (191 / 18555), Fire Service (192), Ambulance (112), or NADMO. We are here to support your safety network, not replace the authorities.',
                     ),
                     _TermsClause(
                       number: '02',
@@ -263,7 +364,7 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
                           '1. You must register the contact in the app, specifying which types of emergencies they should be notified for.\n\n'
                           '2. The contact must explicitly approve your request before they can receive any alert.\n\n'
                           '3. When you trigger an alert, your approved contacts will receive: a voice call, an SMS, and a WhatsApp message containing your name, the type of emergency, your live GPS location, and a Google Maps link.\n\n'
-                          'Upon receiving an alert, contacts are advised to notify the appropriate state institutions (police, fire service, ambulance) rather than putting themselves in danger by physically responding.',
+                          'Inasmuch as they may be in a position to assist, they are strongly advised to get the appropriate authorities involved in so as to avoid potentially dangerous situations from befalling them.',
                     ),
                     _TermsClause(
                       number: '03',
@@ -271,15 +372,15 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
                       icon: Icons.cloud_off_rounded,
                       title: 'Technical & Delivery Disclaimer',
                       body:
-                          'Help OO Help and TeenByte Tech Lab disclaim all liability for failed, delayed, or undelivered alerts caused by: third-party telecom outages, network congestion, weak or unavailable GPS signals, low device battery, recipient device issues, or WhatsApp/SMS gateway unavailability. Alert delivery depends on infrastructure beyond our control. Always call state emergency services directly in life-threatening situations.',
+                          'We work hard to make our alerts lightning-fast, but things like weak network coverage, dead batteries, or telecom outages can occasionally delay or block messages. Because we cannot control mobile infrastructure, TeenByte Tech Lab cannot be held legally responsible for failed deliveries. Simple visit the Emergency Contacts tab to access the contacts of all the relevant state emergency response agencies to report the incidents to them.',
                     ),
                     _TermsClause(
                       number: '04',
-                      color: const Color(0xFF5B3FE8),
-                      icon: Icons.people_outline_rounded,
-                      title: 'Recipient Action Disclaimer',
+                      color: const Color(0xFF1A9E5C),
+                      icon: Icons.privacy_tip_rounded,
+                      title: 'Privacy & Data Handling',
                       body:
-                          'TeenByte Tech Lab bears no responsibility for the actions, omissions, decisions, or physical safety of any emergency contact who chooses to respond to an alert. The company is not liable for any harm, injury, loss, or damage suffered by a contact as a result of physically responding to or ignoring an emergency alert.',
+                          'We value your privacy. Your personal information, including your name, phone number, and emergency contacts, is securely stored and used solely for the purpose of sending emergency alerts. We do not share your data with third parties without your explicit consent, except as required by law or to facilitate emergency response.',
                     ),
                     _TermsClause(
                       number: '05',
@@ -287,7 +388,7 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
                       icon: Icons.block_rounded,
                       title: 'False Alerts & Misuse',
                       body:
-                          'Triggering false, malicious, or negligently careless emergency alerts is strictly prohibited. Violation of this rule will result in immediate and permanent account termination without prior notice. The account holder may also be held liable for any damages, costs (including legal costs), or harm caused to third parties as a direct or indirect result of a false alert. Repeated misuse may be reported to the relevant law enforcement authorities.',
+                          'This app is for genuine emergencies. While we understand that accidental "pocket-dials" happen, deliberately triggering fake or malicious alerts undermines the system and is strictly prohibited. Intentional misuse will result in account termination, and you may be held responsible for any harm caused. Please use this tool responsibly',
                     ),
                     _TermsClause(
                       number: '06',
@@ -295,7 +396,7 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
                       icon: Icons.location_on_rounded,
                       title: 'Geolocation Consent',
                       body:
-                          'By agreeing to these terms, you explicitly consent to Help OO Help capturing, processing, and transmitting your real-time GPS coordinates to your designated emergency contacts at the moment you trigger an emergency alert. Location data is captured only when an alert is actively triggered and is not continuously monitored, stored beyond the alert record, or used for any other purpose. You may revoke this consent at any time by deleting your account.',
+                          'We deeply respect your privacy. We only capture and share your live GPS coordinates with your chosen contacts exactly at the moment you trigger an alert. Your location is never continuously tracked in the background, stored beyond the alert record, or used for anything else. You can revoke this permission anytime by deleting your account.',
                     ),
                     const SizedBox(height: 8),
                     // Scroll nudge
