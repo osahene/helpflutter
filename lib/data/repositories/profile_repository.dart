@@ -2,15 +2,29 @@ import 'package:dio/dio.dart';
 import 'dart:convert';
 import 'package:helpflutter/data/models/request_history.dart';
 import 'package:helpflutter/core/constants/api_service.dart';
+import 'package:helpflutter/data/models/user.dart';
 
 abstract class ProfileRepository {
   Future<List<RequestHistory>> getRequestHistory();
+  Future<User> getProfile();
 }
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final ApiService apiService;
 
   ProfileRepositoryImpl({required this.apiService});
+
+  @override
+  Future<User> getProfile() async {
+    try {
+      final res = await apiService.getUserProfile();
+      dynamic data = res.data;
+      if (data is String) data = jsonDecode(data);
+      return User.fromJson((data['user'] ?? data) as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
 
   @override
   Future<List<RequestHistory>> getRequestHistory() async {

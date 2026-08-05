@@ -5,7 +5,6 @@ class User {
   final String fullName;
   final String? countryCode;
   final String? phoneNumber;
-  final String phone;
   final String? profileImageUrl;
   final bool? isVerified;
 
@@ -16,7 +15,6 @@ class User {
     required this.fullName,
     this.countryCode,
     this.phoneNumber,
-    required this.phone,
     this.profileImageUrl,
     this.isVerified,
   });
@@ -29,7 +27,6 @@ class User {
       fullName: '${json['first_name']} ${json['last_name']}',
       countryCode: json['country_code'],
       phoneNumber: json['phone'],
-      phone: '${json['country_code']}${json['phone']}',
       profileImageUrl: json['profile_image_url'],
       isVerified: json['is_verified'],
     );
@@ -39,7 +36,6 @@ class User {
     'first_name': firstName,
     'last_name': lastName,
     'fullName': fullName,
-    'phone': phone,
     'country_code': countryCode,
   };
 }

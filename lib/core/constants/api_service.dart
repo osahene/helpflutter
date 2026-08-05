@@ -20,8 +20,7 @@ class ApiService {
   Future<Response> verifyOtp(Map<String, dynamic> data) =>
       _dio.post(AppConstants.verifyOtp, data: data);
 
-  Future<Response> getUserProfile() =>
-      _dio.get('/auth/profile/'); // Adjust path to your API
+  Future<Response> getUserProfile() => _dio.get(AppConstants.getUserProfile);
   Future<Response> getRequestHistory() => _dio.get(AppConstants.getHistory);
 
   // Contacts & Relations

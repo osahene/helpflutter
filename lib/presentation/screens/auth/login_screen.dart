@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:helpflutter/logic/auth/auth_bloc.dart';
 import 'package:helpflutter/presentation/screens/auth/verify_otp_screen.dart';
 import 'package:helpflutter/presentation/screens/auth/register_screen.dart';
+import 'package:helpflutter/core/utils/phone_input.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -86,12 +87,24 @@ class _LoginScreenState extends State<LoginScreen>
         countryCodes: _countryCodes,
         selectedCountry: _selectedCountry,
         onSelected: (c) {
-          setState(() => _selectedCountry = c);
+          final cleaned = sanitizePhoneInput(
+            _phoneController.text,
+            dialCode: c.code,
+          );
+          setState(() {
+            _selectedCountry = c;
+            _phoneController.value = TextEditingValue(
+              text: cleaned,
+              selection: TextSelection.collapsed(offset: cleaned.length),
+            );
+          });
           Navigator.pop(ctx);
         },
       ),
     );
   }
+
+  String _submittedPhone = '';
 
   Future<void> _handleSendOtp() async {
     if (!_formKey.currentState!.validate()) return;
@@ -103,11 +116,15 @@ class _LoginScreenState extends State<LoginScreen>
 
     if (!mounted) return;
     setState(() => _isLoading = false);
+    _submittedPhone = sanitizePhoneInput(
+      _phoneController.text,
+      dialCode: _selectedCountry.code,
+    );
 
     context.read<AuthBloc>().add(
       AuthSendOtpRequested(
         countryCode: _selectedCountry.code,
-        phoneNumber: _phoneController.text.trim(),
+        phoneNumber: _submittedPhone,
       ),
     );
   }
@@ -122,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen>
             MaterialPageRoute(
               builder: (_) => VerifyOtpScreen(
                 countryCode: _selectedCountry.code,
-                phoneNumber: _phoneController.text.trim(),
+                phoneNumber: _submittedPhone,
               ),
             ),
           );
@@ -347,6 +364,11 @@ class _LoginScreenState extends State<LoginScreen>
                                 child: TextFormField(
                                   controller: _phoneController,
                                   keyboardType: TextInputType.phone,
+                                  inputFormatters: [
+                                    PhoneInputFormatter(
+                                      dialCode: _selectedCountry.code,
+                                    ),
+                                  ],
                                   style: const TextStyle(
                                     fontSize: 15,
                                     color: _textPrimary,
@@ -413,10 +435,19 @@ class _LoginScreenState extends State<LoginScreen>
                                       ),
                                     ),
                                   ),
-                                  validator: (v) =>
-                                      v == null || v.trim().isEmpty
-                                      ? 'Please enter your phone number'
-                                      : null,
+                                  validator: (v) {
+                                    final value = sanitizePhoneInput(
+                                      v ?? '',
+                                      dialCode: _selectedCountry.code,
+                                    );
+                                    if (value.isEmpty) {
+                                      return 'Please enter your phone number';
+                                    }
+                                    if (value.length < 6) {
+                                      return 'Enter a valid number';
+                                    }
+                                    return null;
+                                  },
                                 ),
                               ),
                             ],
@@ -424,6 +455,23 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(height: 12),
 
                           // ── Helper text ─────────────────────────────────────
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.phone_callback,
+                                size: 14,
+                                color: _textSecondary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Enter the number without the leading 0 · ${_selectedCountry.code}${_phoneController.text}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: _textSecondary.withValues(alpha: 0.8),
+                                ),
+                              ),
+                            ],
+                          ),
                           Row(
                             children: [
                               const Icon(

@@ -93,13 +93,22 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  Future<User> getProfile() async {
+    try {
+      final response = await apiService.getUserProfile();
+      return User.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   @override
   Future<void> logout(String refreshToken) async {
     try {
       await apiService.logout();
-      await SecureStorage.clearTokens();
+      await SecureStorage.clearSession();
     } on DioException catch (e) {
-      await SecureStorage.clearTokens();
+      await SecureStorage.clearSession();
       throw _handleError(e);
     }
   }

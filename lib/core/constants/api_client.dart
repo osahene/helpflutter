@@ -43,59 +43,90 @@ class ApiClient {
 }
 
 class AuthInterceptor extends Interceptor {
+  static Completer<String?>? _refreshCompleter;
+
+  bool _isAuthPath(String path) =>
+      path.contains(AppConstants.refreshToken) ||
+      path.contains(AppConstants.sendOtp) ||
+      path.contains(AppConstants.verifyOtp) ||
+      path.contains(AppConstants.login);
+
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final accessToken = await SecureStorage.getAccessToken();
-    if (accessToken != null) {
-      options.headers['Authorization'] = 'Bearer $accessToken';
+    if (!_isAuthPath(options.path)) {
+      final token = await SecureStorage.getAccessToken();
+      if (token != null) options.headers['Authorization'] = 'Bearer $token';
     }
     handler.next(options);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401 &&
-        err.requestOptions.path != AppConstants.refreshToken) {
-      // Attempt refresh token
-      final refreshToken = await SecureStorage.getRefreshToken();
-      if (refreshToken != null) {
-        try {
-          final refreshDio = Dio(
-            BaseOptions(
-              baseUrl: ApiClient.baseUrl,
-              headers: {'X-API-Key': ApiClient.apiKey},
-              extra: {'withCredentials': true},
-            ),
-          );
-
-          final response = await refreshDio.post(
-            AppConstants.refreshToken,
-            data: {'refresh': refreshToken},
-          );
-
-          final newAccessToken = response.data['access'];
-          await SecureStorage.saveAccessToken(newAccessToken);
-          // Retry original request
-
-          final opts = err.requestOptions;
-          opts.headers['Authorization'] = 'Bearer $newAccessToken';
-
-          final retryResponse = await ApiClient.instance.fetch(opts);
-          return handler.resolve(retryResponse);
-        } catch (e) {
-          // Refresh failed, logout
-          await SecureStorage.clearTokens();
-          await SecureStorage.setLoggedIn(false);
-          ApiClient._logoutController.add(null);
-
-          return handler.reject(err);
-          // You might want to emit a logout event via BLoC
-        }
-      }
+    if (err.response?.statusCode != 401 ||
+        _isAuthPath(err.requestOptions.path)) {
+      return handler.next(err);
     }
-    handler.next(err);
+
+    final newToken = await _refresh();
+    if (newToken == null) return handler.reject(err);
+
+    try {
+      final opts = err.requestOptions;
+      opts.headers['Authorization'] = 'Bearer $newToken';
+      return handler.resolve(await ApiClient.instance.fetch(opts));
+    } catch (_) {
+      return handler.reject(err);
+    }
+  }
+
+  static Future<String?> _refresh() {
+    // every concurrent 401 awaits the SAME refresh call
+    if (_refreshCompleter != null) return _refreshCompleter!.future;
+
+    final completer = Completer<String?>();
+    _refreshCompleter = completer;
+
+    () async {
+      try {
+        final refreshToken = await SecureStorage.getRefreshToken();
+        if (refreshToken == null) throw Exception('no refresh token');
+
+        final refreshDio = Dio(
+          BaseOptions(
+            baseUrl: ApiClient.baseUrl,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-API-Key': ApiClient.apiKey,
+            },
+          ),
+        );
+
+        final res = await refreshDio.post(
+          AppConstants.refreshToken,
+          data: {'refresh': refreshToken},
+        );
+
+        final access = res.data['access'] as String?;
+        final rotated = res.data['refresh'] as String?;
+        if (access == null) throw Exception('malformed refresh response');
+
+        await SecureStorage.saveAccessToken(access);
+        if (rotated != null) {
+          await SecureStorage.saveRefreshToken(rotated); // ← THE fix for (a)
+        }
+        completer.complete(access);
+      } catch (_) {
+        await SecureStorage.clearSession();
+        ApiClient._logoutController.add(null);
+        completer.complete(null);
+      } finally {
+        _refreshCompleter = null;
+      }
+    }();
+
+    return completer.future;
   }
 }

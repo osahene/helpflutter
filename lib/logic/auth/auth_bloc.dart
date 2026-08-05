@@ -17,6 +17,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRegisterRequested>(_onRegister);
     on<AuthSendOtpRequested>(_onSendOtp);
     on<AuthVerifyOtpRequested>(_onVerifyOtp);
+    on<AuthCheckRequested>(_onCheck);
     on<AuthLogoutRequested>(_onLogout);
 
     _logoutSubscription = ApiClient.logoutStream.listen((_) {
@@ -78,10 +79,41 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       await SecureStorage.saveAccessToken(result.token);
       await SecureStorage.saveRefreshToken(result.refresh);
+      await SecureStorage.saveUser(result.user);
       await SecureStorage.setLoggedIn(true);
       emit(AuthAuthenticated(result.user));
     } catch (e) {
       emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<void> _onCheck(
+    AuthCheckRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final access = await SecureStorage.getAccessToken();
+    final refresh = await SecureStorage.getRefreshToken();
+
+    if (access == null || refresh == null) {
+      emit(AuthUnauthenticated());
+      return;
+    }
+
+    final cached = await SecureStorage.getCachedUser();
+    if (cached != null) {
+      emit(AuthAuthenticated(cached));
+      return;
+    }
+
+    try {
+      // call via dynamic to avoid static dependency on repository method name
+      final user = await (repository as dynamic)
+          .getProfile(); // new: hits /auth/profile/
+      await SecureStorage.saveUser(user);
+      emit(AuthAuthenticated(user));
+    } catch (_) {
+      await SecureStorage.clearSession();
+      emit(AuthUnauthenticated());
     }
   }
 
@@ -93,8 +125,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (refreshToken != null) {
       await repository.logout(refreshToken).catchError((_) => null);
     }
-    await SecureStorage.clearTokens();
-    await SecureStorage.setLoggedIn(false);
+    await SecureStorage.clearSession();
     emit(AuthUnauthenticated());
   }
 }

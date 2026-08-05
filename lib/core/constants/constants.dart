@@ -9,6 +9,7 @@ class AppConstants {
   static const String login = '/account/user-login/';
   static const String sendOtp = '/account/send-otp/';
   static const String verifyOtp = '/account/verify-otp/';
+  static const String getUserProfile = '/account/user-profile/';
   static const String getHistory = '/account/user-history/';
   static const String inviteStatus = '/account/invite-status/';
   static const String createContact = '/account/create-relation/';
@@ -26,6 +27,7 @@ class AppConstants {
   static const String logout = '/account/user-logout/';
 
   // Storage keys
+  static const String userKey = 'user';
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
   static const String isLoggedInKey = 'is_logged_in';

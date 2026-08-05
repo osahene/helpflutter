@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:helpflutter/core/constants/constants.dart';
 import 'package:helpflutter/logic/contacts/contacts_bloc.dart';
+import 'package:helpflutter/core/utils/phone_input.dart';
 
 // ── Brand palette ─────────────────────────────────────────────────────────────
 const _kPrimary = Color(0xFF2C5FD4); // cobalt blue
@@ -29,25 +30,25 @@ class CountryCode {
 // List of available country codes (same as login_screen)
 const List<CountryCode> _countryCodes = [
   CountryCode(name: 'Ghana', flag: '🇬🇭', code: '+233'),
-  // CountryCode(name: 'Nigeria', flag: '🇳🇬', code: '+234'),
-  // CountryCode(name: 'Kenya', flag: '🇰🇪', code: '+254'),
-  // CountryCode(name: 'South Africa', flag: '🇿🇦', code: '+27'),
-  // CountryCode(name: 'United States', flag: '🇺🇸', code: '+1'),
-  // CountryCode(name: 'United Kingdom', flag: '🇬🇧', code: '+44'),
-  // CountryCode(name: 'Canada', flag: '🇨🇦', code: '+1'),
-  // CountryCode(name: 'India', flag: '🇮🇳', code: '+91'),
-  // CountryCode(name: 'Germany', flag: '🇩🇪', code: '+49'),
-  // CountryCode(name: 'France', flag: '🇫🇷', code: '+33'),
-  // CountryCode(name: 'Australia', flag: '🇦🇺', code: '+61'),
-  // CountryCode(name: 'Brazil', flag: '🇧🇷', code: '+55'),
-  // CountryCode(name: 'Senegal', flag: '🇸🇳', code: '+221'),
-  // CountryCode(name: "Côte d'Ivoire", flag: '🇨🇮', code: '+225'),
-  // CountryCode(name: 'Tanzania', flag: '🇹🇿', code: '+255'),
-  // CountryCode(name: 'Uganda', flag: '🇺🇬', code: '+256'),
-  // CountryCode(name: 'Rwanda', flag: '🇷🇼', code: '+250'),
-  // CountryCode(name: 'Ethiopia', flag: '🇪🇹', code: '+251'),
-  // CountryCode(name: 'Egypt', flag: '🇪🇬', code: '+20'),
-  // CountryCode(name: 'Morocco', flag: '🇲🇦', code: '+212'),
+  CountryCode(name: 'Nigeria', flag: '🇳🇬', code: '+234'),
+  CountryCode(name: 'Kenya', flag: '🇰🇪', code: '+254'),
+  CountryCode(name: 'South Africa', flag: '🇿🇦', code: '+27'),
+  CountryCode(name: 'United States', flag: '🇺🇸', code: '+1'),
+  CountryCode(name: 'United Kingdom', flag: '🇬🇧', code: '+44'),
+  CountryCode(name: 'Canada', flag: '🇨🇦', code: '+1'),
+  CountryCode(name: 'India', flag: '🇮🇳', code: '+91'),
+  CountryCode(name: 'Germany', flag: '🇩🇪', code: '+49'),
+  CountryCode(name: 'France', flag: '🇫🇷', code: '+33'),
+  CountryCode(name: 'Australia', flag: '🇦🇺', code: '+61'),
+  CountryCode(name: 'Brazil', flag: '🇧🇷', code: '+55'),
+  CountryCode(name: 'Senegal', flag: '🇸🇳', code: '+221'),
+  CountryCode(name: "Côte d'Ivoire", flag: '🇨🇮', code: '+225'),
+  CountryCode(name: 'Tanzania', flag: '🇹🇿', code: '+255'),
+  CountryCode(name: 'Uganda', flag: '🇺🇬', code: '+256'),
+  CountryCode(name: 'Rwanda', flag: '🇷🇼', code: '+250'),
+  CountryCode(name: 'Ethiopia', flag: '🇪🇹', code: '+251'),
+  CountryCode(name: 'Egypt', flag: '🇪🇬', code: '+20'),
+  CountryCode(name: 'Morocco', flag: '🇲🇦', code: '+212'),
 ];
 
 class RegisterContactScreen extends StatefulWidget {
@@ -189,34 +190,40 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
   }
 
   void _parseAndSetPhoneNumber(String rawNumber) {
-    String normalized = rawNumber.replaceAll(RegExp(r'[^\d+]'), '');
-    if (!normalized.startsWith('+')) {
-      _phoneController.text = normalized;
-      return;
+    var normalized = rawNumber.replaceAll(RegExp(r'[^\d+]'), '');
+
+    // Phonebook entries often use the 00 international prefix.
+    if (normalized.startsWith('00')) {
+      normalized = '+${normalized.substring(2)}';
     }
 
-    final sortedCodes = List<CountryCode>.from(_countryCodes)
-      ..sort((a, b) => b.code.length.compareTo(a.code.length));
+    CountryCode? matched;
+    String localPart = normalized;
 
-    CountryCode? matchedCode;
-    String localPart = '';
+    if (normalized.startsWith('+')) {
+      // Longest code first so +233 wins over +23 style collisions.
+      final sortedCodes = List<CountryCode>.from(_countryCodes)
+        ..sort((a, b) => b.code.length.compareTo(a.code.length));
 
-    for (final code in sortedCodes) {
-      if (normalized.startsWith(code.code)) {
-        matchedCode = code;
-        localPart = normalized.substring(code.code.length);
-        break;
+      for (final code in sortedCodes) {
+        if (normalized.startsWith(code.code)) {
+          matched = code;
+          localPart = normalized.substring(code.code.length);
+          break;
+        }
       }
     }
 
-    if (matchedCode != null && localPart.isNotEmpty) {
-      setState(() {
-        _selectedCountry = matchedCode!;
-        _phoneController.text = localPart;
-      });
-    } else {
-      _phoneController.text = normalized;
-    }
+    final country = matched ?? _selectedCountry;
+    final cleaned = sanitizePhoneInput(localPart, dialCode: country.code);
+
+    setState(() {
+      _selectedCountry = country;
+      _phoneController.value = TextEditingValue(
+        text: cleaned,
+        selection: TextSelection.collapsed(offset: cleaned.length),
+      );
+    });
   }
 
   void _showCountryPicker() {
@@ -228,7 +235,17 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
         countryCodes: _countryCodes,
         selectedCountry: _selectedCountry,
         onSelected: (c) {
-          setState(() => _selectedCountry = c);
+          final cleaned = sanitizePhoneInput(
+            _phoneController.text,
+            dialCode: c.code,
+          );
+          setState(() {
+            _selectedCountry = c;
+            _phoneController.value = TextEditingValue(
+              text: cleaned,
+              selection: TextSelection.collapsed(offset: cleaned.length),
+            );
+          });
           Navigator.pop(ctx);
         },
       ),
@@ -237,7 +254,12 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
 
   void _submit() {
     // The button is disabled when invalid, but we keep the check for safety
+    final phone = sanitizePhoneInput(
+      _phoneController.text,
+      dialCode: _selectedCountry.code,
+    );
     if (_formKey.currentState!.validate() &&
+        phone.isNotEmpty &&
         _relationController.text.trim().isNotEmpty &&
         _selectedSituations.isNotEmpty) {
       HapticFeedback.mediumImpact();
@@ -248,7 +270,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
           _lastNameController.text.trim(),
           _selectedCountry
               .code, // Make sure this provides the value (e.g. "+233")
-          _phoneController.text.trim(),
+          phone,
           _emailController.text.trim(),
           _relationController.text.trim(),
           _selectedSituations, // Send the raw array list directly!
@@ -283,7 +305,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
     final bool isFormValid =
         _firstNameController.text.trim().isNotEmpty &&
         _lastNameController.text.trim().isNotEmpty &&
-        _phoneController.text.trim().isNotEmpty &&
+        _phoneController.text.trim().length >= 6 &&
         _relationController.text.trim().isNotEmpty &&
         _selectedSituations.isNotEmpty;
 
@@ -540,10 +562,22 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
                                     label: 'Phone Number',
                                     icon: Icons.phone_rounded,
                                     keyboardType: TextInputType.phone,
-                                    validator: (v) =>
-                                        v == null || v.trim().isEmpty
-                                        ? 'Required'
-                                        : null,
+                                    inputFormatters: [
+                                      PhoneInputFormatter(
+                                        dialCode: _selectedCountry.code,
+                                      ),
+                                    ],
+                                    validator: (v) {
+                                      final value = sanitizePhoneInput(
+                                        v ?? '',
+                                        dialCode: _selectedCountry.code,
+                                      );
+                                      if (value.isEmpty) return 'Required';
+                                      if (value.length < 6) {
+                                        return 'Enter a valid number';
+                                      }
+                                      return null;
+                                    },
                                   ),
                                   Positioned(
                                     right: 8,
@@ -688,12 +722,14 @@ class _LightTextField extends StatelessWidget {
   final IconData icon;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
+  final List<TextInputFormatter>? inputFormatters;
   const _LightTextField({
     required this.controller,
     required this.label,
     required this.icon,
     this.keyboardType,
     this.validator,
+    this.inputFormatters,
   });
   @override
   Widget build(BuildContext context) {
@@ -701,6 +737,7 @@ class _LightTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
+      inputFormatters: inputFormatters,
       style: const TextStyle(
         color: _kText,
         fontSize: 15,

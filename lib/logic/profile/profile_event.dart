@@ -14,3 +14,5 @@ class LoadProfile extends ProfileEvent {
   @override
   List<Object?> get props => [user];
 }
+
+class ClearProfile extends ProfileEvent {}

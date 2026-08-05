@@ -102,12 +102,12 @@ class _MyAppState extends State<MyApp> {
           // 2. Now the Blocs can "read" the repositories from the context
           BlocProvider(
             create: (context) =>
-                AuthBloc(repository: context.read<AuthRepository>()),
+                AuthBloc(repository: context.read<AuthRepository>())
+                  ..add(AuthCheckRequested()),
           ),
           BlocProvider(
             create: (context) =>
-                ProfileBloc(repository: context.read<ProfileRepository>())
-                  ..add(LoadProfile()),
+                ProfileBloc(repository: context.read<ProfileRepository>()),
           ),
           BlocProvider(
             // 3. Fixed positional to named parameter `repository:`
@@ -125,27 +125,32 @@ class _MyAppState extends State<MyApp> {
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system,
           debugShowCheckedModeBanner: false,
-          home: BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, state) {
-              // If the Bloc explicitly says unauthenticated (Logged Out)
-              if (state is AuthUnauthenticated) {
-                return const LoginScreen();
-              }
-
-              // If the Bloc explicitly says authenticated (Logged In)
+          home: BlocListener<AuthBloc, AuthState>(
+            listener: (context, state) {
               if (state is AuthAuthenticated) {
-                return const DashboardScreen();
-              }
-
-              // Default startup logic (Checks SharedPreferences / SecureStorage)
-              if (!widget.hasSeenOnboarding) {
-                return const OnboardingScreen();
-              } else if (!widget.isLoggedIn) {
-                return const LoginScreen();
-              } else {
-                return const DashboardScreen();
+                context.read<ProfileBloc>().add(LoadProfile(user: state.user));
+              } else if (state is AuthUnauthenticated) {
+                context.read<ProfileBloc>().add(
+                  ClearProfile(),
+                ); // add this event
               }
             },
+            child: BlocBuilder<AuthBloc, AuthState>(
+              // ← the critical guard: transient states must NOT rebuild the root
+              buildWhen: (prev, curr) =>
+                  curr is AuthAuthenticated ||
+                  curr is AuthUnauthenticated ||
+                  curr is AuthInitial,
+              builder: (context, state) {
+                if (state is AuthAuthenticated) return const DashboardScreen();
+                if (state is AuthUnauthenticated) {
+                  return widget.hasSeenOnboarding
+                      ? const LoginScreen()
+                      : const OnboardingScreen();
+                }
+                return const _SplashScreen(); // AuthInitial — still checking storage
+              },
+            ),
           ),
         ),
       ),
@@ -163,4 +168,13 @@ class _MyAppState extends State<MyApp> {
   //     return const DashboardScreen();
   //   }
   // }
+}
+
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  }
 }

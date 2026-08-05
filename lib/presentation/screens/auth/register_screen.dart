@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:helpflutter/presentation/screens/auth/terms_agreement_screen.dart';
+import 'package:helpflutter/core/utils/phone_input.dart';
 
 class CountryCode {
   final String name;
@@ -87,33 +88,34 @@ class _RegisterScreenState extends State<RegisterScreen>
     super.dispose();
   }
 
-  // Validate form then navigate to TermsAgreementScreen.
-  // Form data is held in state — NO API call here.
   void _proceedToTerms() {
-    if (_formKey.currentState!.validate()) {
-      Navigator.push(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (_, animation, __) => TermsAgreementScreen(
-            firstName: _firstNameController.text.trim(),
-            lastName: _lastNameController.text.trim(),
-            countryCode: _selectedCountry.code,
-            phoneNumber: _phoneController.text.trim(),
-          ),
-          transitionsBuilder: (_, anim, __, child) => FadeTransition(
-            opacity: anim,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.05),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOut)),
-              child: child,
-            ),
-          ),
-          transitionDuration: const Duration(milliseconds: 300),
+    if (_formKey.currentState!.validate()) return;
+    final phone = sanitizePhoneInput(
+      _phoneController.text,
+      dialCode: _selectedCountry.code,
+    );
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, animation, __) => TermsAgreementScreen(
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          countryCode: _selectedCountry.code,
+          phoneNumber: phone,
         ),
-      );
-    }
+        transitionsBuilder: (_, anim, __, child) => FadeTransition(
+          opacity: anim,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.05),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOut)),
+            child: child,
+          ),
+        ),
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
   }
 
   InputDecoration _dec(
@@ -364,12 +366,24 @@ class _RegisterScreenState extends State<RegisterScreen>
                                 context: context,
                                 isScrollControlled: true,
                                 backgroundColor: Colors.transparent,
-                                builder: (_) => _CountrySheet(
+                                builder: (sheetCtx) => _CountrySheet(
                                   countryCodes: _countryCodes,
                                   selectedCountry: _selectedCountry,
                                   onSelected: (c) {
-                                    setState(() => _selectedCountry = c);
-                                    Navigator.pop(context);
+                                    final cleaned = sanitizePhoneInput(
+                                      _phoneController.text,
+                                      dialCode: c.code,
+                                    );
+                                    setState(() {
+                                      _selectedCountry = c;
+                                      _phoneController.value = TextEditingValue(
+                                        text: cleaned,
+                                        selection: TextSelection.collapsed(
+                                          offset: cleaned.length,
+                                        ),
+                                      );
+                                    });
+                                    Navigator.pop(sheetCtx);
                                   },
                                 ),
                               ),
@@ -417,6 +431,11 @@ class _RegisterScreenState extends State<RegisterScreen>
                               child: TextFormField(
                                 controller: _phoneController,
                                 keyboardType: TextInputType.phone,
+                                inputFormatters: [
+                                  PhoneInputFormatter(
+                                    dialCode: _selectedCountry.code,
+                                  ),
+                                ],
                                 style: const TextStyle(
                                   fontSize: 15,
                                   color: _kText,
@@ -428,15 +447,33 @@ class _RegisterScreenState extends State<RegisterScreen>
                                   Icons.phone_outlined,
                                 ),
                                 validator: (v) {
-                                  if (v == null || v.trim().isEmpty) {
+                                  final value = sanitizePhoneInput(
+                                    v ?? '',
+                                    dialCode: _selectedCountry.code,
+                                  );
+                                  if (value.trim().isEmpty) {
                                     return 'Phone number is required';
                                   }
-                                  if (v.trim().length < 6) {
+                                  if (value.trim().length < 6) {
                                     return 'Enter a valid number';
                                   }
                                   return null;
                                 },
                               ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.phone_callback,
+                              size: 14,
+                              color: _kMuted,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Enter the number without the leading 0 · ${_selectedCountry.code}${_phoneController.text}',
+                              style: TextStyle(fontSize: 12, color: _kMuted),
                             ),
                           ],
                         ),

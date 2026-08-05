@@ -56,3 +56,7 @@ class AuthVerifyOtpRequested extends AuthEvent {
 }
 
 class AuthLogoutRequested extends AuthEvent {}
+
+class AuthCheckRequested extends AuthEvent {}
+
+class AuthProfileRefreshed extends AuthEvent {}
