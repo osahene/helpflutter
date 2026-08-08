@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:helpflutter/data/models/contact.dart';
 import 'package:helpflutter/core/constants/constants.dart';
 import 'package:helpflutter/data/models/dependent.dart';
-// import 'package:helpflutter/data/repositories/contact_repository.dart';
+import 'package:helpflutter/core/utils/phone_input.dart';
 import 'package:helpflutter/data/repositories/dependent_repository.dart';
 import 'package:helpflutter/logic/contacts/contacts_bloc.dart';
 import 'package:helpflutter/logic/dependents/dependent_bloc.dart';
@@ -19,9 +19,103 @@ const _kBorder = Color(0xFFDDE3F5);
 const _kText = Color(0xFF0F1B3E);
 const _kMuted = Color(0xFF8B94B2);
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Root Screen
-// ─────────────────────────────────────────────────────────────────────────────
+class CountryCode {
+  final String name;
+  final String flag;
+  final String code;
+  const CountryCode({
+    required this.name,
+    required this.flag,
+    required this.code,
+  });
+}
+
+const List<CountryCode> _countryCodes = [
+  CountryCode(name: 'Ghana', flag: '🇬🇭', code: '+233'),
+  CountryCode(name: 'Nigeria', flag: '🇳🇬', code: '+234'),
+  CountryCode(name: 'Kenya', flag: '🇰🇪', code: '+254'),
+  CountryCode(name: 'South Africa', flag: '🇿🇦', code: '+27'),
+  CountryCode(name: 'United States', flag: '🇺🇸', code: '+1'),
+  CountryCode(name: 'United Kingdom', flag: '🇬🇧', code: '+44'),
+  CountryCode(name: 'Canada', flag: '🇨🇦', code: '+1'),
+  CountryCode(name: 'India', flag: '🇮🇳', code: '+91'),
+  CountryCode(name: 'Germany', flag: '🇩🇪', code: '+49'),
+  CountryCode(name: 'France', flag: '🇫🇷', code: '+33'),
+  CountryCode(name: 'Australia', flag: '🇦🇺', code: '+61'),
+  CountryCode(name: 'Brazil', flag: '🇧🇷', code: '+55'),
+  CountryCode(name: 'Senegal', flag: '🇸🇳', code: '+221'),
+  CountryCode(name: "Côte d'Ivoire", flag: '🇨🇮', code: '+225'),
+  CountryCode(name: 'Tanzania', flag: '🇹🇿', code: '+255'),
+  CountryCode(name: 'Uganda', flag: '🇺🇬', code: '+256'),
+  CountryCode(name: 'Rwanda', flag: '🇷🇼', code: '+250'),
+  CountryCode(name: 'Ethiopia', flag: '🇪🇹', code: '+251'),
+  CountryCode(name: 'Egypt', flag: '🇪🇬', code: '+20'),
+  CountryCode(name: 'Morocco', flag: '🇲🇦', code: '+212'),
+];
+
+CountryCode? _countryFromDialCode(String? dialCode) {
+  final digits = (dialCode ?? '').replaceAll(RegExp(r'\D'), '');
+  if (digits.isEmpty) return null;
+  final normalized = '+$digits';
+  for (final c in _countryCodes) {
+    if (c.code == normalized) return c;
+  }
+  return null;
+}
+
+class PhoneParts {
+  final CountryCode? country;
+  final String dialCode; // '+233', or '' when unknown
+  final String national; // '244123456'
+  const PhoneParts({
+    this.country,
+    required this.dialCode,
+    required this.national,
+  });
+}
+
+PhoneParts _splitPhone(String rawPhone, {String? countryCode}) {
+  var raw = rawPhone.trim();
+  if (raw.startsWith('00')) raw = '+${raw.substring(2)}';
+  final isInternational = raw.startsWith('+');
+
+  var digits = raw.replaceAll(RegExp(r'\D'), '');
+
+  CountryCode? country = _countryFromDialCode(countryCode);
+  var dial = country?.code ?? '';
+  if (dial.isEmpty) {
+    final cc = (countryCode ?? '').replaceAll(RegExp(r'\D'), '');
+    if (cc.isNotEmpty) dial = '+$cc';
+  }
+
+  // Only strip a country code when the number was *explicitly* international.
+  // A local Ghanaian number may legitimately start with 233.
+  if (isInternational) {
+    if (dial.isNotEmpty && digits.startsWith(dial.substring(1))) {
+      digits = digits.substring(dial.length - 1);
+    } else {
+      final sorted = List<CountryCode>.from(_countryCodes)
+        ..sort((a, b) => b.code.length.compareTo(a.code.length));
+      for (final c in sorted) {
+        final cc = c.code.substring(1);
+        if (digits.length > cc.length && digits.startsWith(cc)) {
+          country = c;
+          dial = c.code;
+          digits = digits.substring(cc.length);
+          break;
+        }
+      }
+    }
+
+    // Country code isn't in our curated list — show it raw rather than mangle it.
+    if (dial.isEmpty) {
+      return PhoneParts(dialCode: '', national: '+$digits');
+    }
+  }
+
+  digits = digits.replaceFirst(RegExp(r'^0+'), '');
+  return PhoneParts(country: country, dialCode: dial, national: digits);
+}
 
 class ContactsScreen extends StatelessWidget {
   const ContactsScreen({super.key});
@@ -522,10 +616,9 @@ class ContactCard extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    _DetailRow(
-                      icon: Icons.phone_rounded,
-                      text: contact.phoneNumber,
-                      color: const Color(0xFF1A9E5C),
+                    _PhoneDetailRow(
+                      phone: contact.phoneNumber,
+                      countryCode: contact.countryCode,
                     ),
                     const SizedBox(height: 8),
                     _DetailRow(
@@ -611,7 +704,7 @@ class _EditContactSheetState extends State<_EditContactSheet> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _firstNameCtrl;
   late TextEditingController _lastNameCtrl;
-  late TextEditingController _countryCodeCtrl;
+  late CountryCode _selectedCountry;
   late TextEditingController _phoneCtrl;
   late TextEditingController _relationCtrl;
   late List<String> _situations;
@@ -622,7 +715,8 @@ class _EditContactSheetState extends State<_EditContactSheet> {
     final c = widget.contact;
     _firstNameCtrl = TextEditingController(text: c.firstName);
     _lastNameCtrl = TextEditingController(text: c.lastName);
-    _countryCodeCtrl = TextEditingController(text: c.countryCode);
+    final parts = _splitPhone(c.phoneNumber, countryCode: c.countryCode);
+    _selectedCountry = parts.country ?? _countryCodes.first;
     _phoneCtrl = TextEditingController(text: c.phoneNumber);
     _relationCtrl = TextEditingController(text: c.relation);
     _situations = List<String>.from(c.situation);
@@ -632,10 +726,32 @@ class _EditContactSheetState extends State<_EditContactSheet> {
   void dispose() {
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
-    _countryCodeCtrl.dispose();
     _phoneCtrl.dispose();
     _relationCtrl.dispose();
     super.dispose();
+  }
+
+  void _showCountryPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _CountryPickerSheet(
+        countryCodes: _countryCodes,
+        selectedCountry: _selectedCountry,
+        onSelected: (c) {
+          final cleaned = sanitizePhoneInput(_phoneCtrl.text, dialCode: c.code);
+          setState(() {
+            _selectedCountry = c;
+            _phoneCtrl.value = TextEditingValue(
+              text: cleaned,
+              selection: TextSelection.collapsed(offset: cleaned.length),
+            );
+          });
+          Navigator.pop(ctx);
+        },
+      ),
+    );
   }
 
   InputDecoration _dec(String label, {String? hint}) => InputDecoration(
@@ -799,30 +915,65 @@ class _EditContactSheetState extends State<_EditContactSheet> {
                     _FieldLabel('Phone Number'),
                     const SizedBox(height: 6),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Country code
-                        SizedBox(
-                          width: 90,
-                          child: TextFormField(
-                            controller: _countryCodeCtrl,
-                            decoration: _dec('Code', hint: '+233'),
-                            keyboardType: TextInputType.phone,
-                            validator: (v) =>
-                                v == null || v.trim().isEmpty ? 'Req.' : null,
+                        GestureDetector(
+                          onTap: _showCountryPicker,
+                          child: Container(
+                            height: 52,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: _kSurface,
+                              border: Border.all(color: _kBorder, width: 1.5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _selectedCountry.flag,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _selectedCountry.code,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: _kText,
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: _kMuted,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: TextFormField(
                             controller: _phoneCtrl,
-                            decoration: _dec(
-                              'Phone Number',
-                              hint: '244 123 456',
-                            ),
+                            decoration: _dec('Phone Number', hint: '244123456'),
                             keyboardType: TextInputType.phone,
-                            validator: (v) => v == null || v.trim().isEmpty
-                                ? 'Required'
-                                : null,
+                            inputFormatters: [
+                              PhoneInputFormatter(
+                                dialCode: _selectedCountry.code,
+                              ),
+                            ],
+                            validator: (v) {
+                              final value = sanitizePhoneInput(
+                                v ?? '',
+                                dialCode: _selectedCountry.code,
+                              );
+                              if (value.isEmpty) return 'Required';
+                              if (value.length < 6)
+                                return 'Enter a valid number';
+                              return null;
+                            },
                           ),
                         ),
                       ],
@@ -948,14 +1099,19 @@ class _EditContactSheetState extends State<_EditContactSheet> {
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
                               if (_situations.isEmpty) return;
+                              final bloc = context.read<ContactsBloc>();
                               Navigator.pop(context); // close form sheet
                               _showUpdateConfirmDialog(
                                 context,
+                                bloc: bloc,
                                 contact: widget.contact,
                                 firstName: _firstNameCtrl.text.trim(),
                                 lastName: _lastNameCtrl.text.trim(),
-                                countryCode: _countryCodeCtrl.text.trim(),
-                                phoneNumber: _phoneCtrl.text.trim(),
+                                countryCode: _selectedCountry.code,
+                                phoneNumber: sanitizePhoneInput(
+                                  _phoneCtrl.text,
+                                  dialCode: _selectedCountry.code,
+                                ),
                                 relation: _relationCtrl.text.trim(),
                                 situation: _situations,
                               );
@@ -1002,6 +1158,7 @@ class _EditContactSheetState extends State<_EditContactSheet> {
 
 void _showUpdateConfirmDialog(
   BuildContext context, {
+  required ContactsBloc bloc,
   required Contact contact,
   required String firstName,
   required String lastName,
@@ -1065,7 +1222,7 @@ void _showUpdateConfirmDialog(
         GestureDetector(
           onTap: () {
             Navigator.pop(ctx);
-            context.read<ContactsBloc>().add(
+            bloc.add(
               UpdateContactInfo(
                 contact.id,
                 firstName,
@@ -1346,11 +1503,7 @@ class DependentCard extends StatelessWidget {
                       color: _kPrimary,
                     ),
                     const SizedBox(height: 8),
-                    _DetailRow(
-                      icon: Icons.phone_rounded,
-                      text: dependent.phone,
-                      color: const Color(0xFF1A9E5C),
-                    ),
+                    _PhoneDetailRow(phone: dependent.phone),
                     if (dependent.status == DependentStatus.pending) ...[
                       const SizedBox(height: 12),
                       Divider(color: _kBorder, height: 1),
@@ -1531,6 +1684,58 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
+class _PhoneDetailRow extends StatelessWidget {
+  final String phone;
+  final String? countryCode;
+  const _PhoneDetailRow({required this.phone, this.countryCode});
+
+  static const _green = Color(0xFF1A9E5C);
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = _splitPhone(phone, countryCode: countryCode);
+
+    return Row(
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _green.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: parts.country != null
+              ? Text(parts.country!.flag, style: const TextStyle(fontSize: 16))
+              : const Icon(Icons.phone_rounded, size: 15, color: _green),
+        ),
+        const SizedBox(width: 10),
+        if (parts.dialCode.isNotEmpty) ...[
+          Text(
+            parts.dialCode,
+            style: const TextStyle(
+              fontSize: 13.5,
+              color: _kMuted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 6),
+        ],
+        Expanded(
+          child: Text(
+            parts.national,
+            style: const TextStyle(
+              fontSize: 13.5,
+              color: _kText,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ActionButton extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -1590,4 +1795,179 @@ class _StatusStyle {
     required this.icon,
     required this.label,
   });
+}
+
+class _CountryPickerSheet extends StatefulWidget {
+  final List<CountryCode> countryCodes;
+  final CountryCode selectedCountry;
+  final ValueChanged<CountryCode> onSelected;
+  const _CountryPickerSheet({
+    required this.countryCodes,
+    required this.selectedCountry,
+    required this.onSelected,
+  });
+  @override
+  State<_CountryPickerSheet> createState() => _CountryPickerSheetState();
+}
+
+class _CountryPickerSheetState extends State<_CountryPickerSheet> {
+  String _search = '';
+  static const Color _accent = Color(0xFF4F8EF7);
+  static const Color _accentLight = Color(0xFFEAF1FE);
+  static const Color _border = Color(0xFFE2E8F0);
+  static const Color _textPrimary = Color(0xFF0F172A);
+  static const Color _textSecondary = Color(0xFF64748B);
+  static const Color _surface = Color(0xFFF7F9FC);
+  List<CountryCode> get _filtered => widget.countryCodes
+      .where(
+        (c) =>
+            c.name.toLowerCase().contains(_search.toLowerCase()) ||
+            c.code.contains(_search),
+      )
+      .toList();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.72,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: _border,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Text(
+                  'Select Country Code',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: _textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextField(
+              onChanged: (v) => setState(() => _search = v),
+              style: const TextStyle(fontSize: 14, color: _textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Search country or code...',
+                hintStyle: TextStyle(
+                  color: _textSecondary.withValues(alpha: 0.6),
+                  fontSize: 14,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: _accent,
+                  size: 20,
+                ),
+                filled: true,
+                fillColor: _surface,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: _accent, width: 1.5),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(height: 1, color: _border),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _filtered.length,
+              separatorBuilder: (_, __) => Divider(
+                height: 1,
+                color: _border.withValues(alpha: 0.6),
+                indent: 20,
+                endIndent: 20,
+              ),
+              itemBuilder: (ctx, i) {
+                final country = _filtered[i];
+                final isSelected =
+                    country.code == widget.selectedCountry.code &&
+                    country.name == widget.selectedCountry.name;
+                return InkWell(
+                  onTap: () => widget.onSelected(country),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
+                    color: isSelected ? _accentLight : Colors.transparent,
+                    child: Row(
+                      children: [
+                        Text(
+                          country.flag,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            country.name,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: isSelected ? _accent : _textPrimary,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          country.code,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected ? _accent : _textSecondary,
+                          ),
+                        ),
+                        if (isSelected) ...[
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            color: _accent,
+                            size: 18,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
