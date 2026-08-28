@@ -183,7 +183,6 @@ class _VideoCard extends StatelessWidget {
             builder: (_) => VideoPlayerScreen(
               videoUrl: tutorial.videoUrl,
               title: tutorial.title,
-              thumbnailUrl: tutorial.thumbnailUrl,
             ),
           ),
         );
@@ -198,24 +197,28 @@ class _VideoCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Thumbnail
+              // Thumbnail, pulled directly from YouTube for tutorial.videoUrl
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  // Dynamically get the YouTube thumbnail URL
-                  _getYoutubeThumbnail(tutorial.thumbnailUrl),
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, progress) {
-                    if (progress == null) return child;
-                    return Container(color: Colors.grey.shade300);
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey.shade300,
-                      child: const Icon(Icons.broken_image, size: 50),
-                    );
-                  },
-                ),
+                child: tutorial.thumbnailUrl == null
+                    ? Container(
+                        color: Colors.grey.shade300,
+                        child: const Icon(Icons.broken_image, size: 50),
+                      )
+                    : Image.network(
+                        tutorial.thumbnailUrl!,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return Container(color: Colors.grey.shade300);
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey.shade300,
+                            child: const Icon(Icons.broken_image, size: 50),
+                          );
+                        },
+                      ),
               ),
               // Gradient overlay
               Positioned(
@@ -282,25 +285,5 @@ class _VideoCard extends StatelessWidget {
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return '${duration.inHours > 0 ? '${duration.inHours}:' : ''}$minutes:$seconds';
-  }
-
-  String _getYoutubeThumbnail(String videoUrl) {
-    try {
-      final uri = Uri.parse(videoUrl);
-      String? videoId;
-
-      if (uri.host.contains('youtu.be')) {
-        videoId = uri.pathSegments.first;
-      } else {
-        videoId = uri.queryParameters['v'];
-      }
-
-      // hqdefault.jpg gives a high-quality 4:3 image
-      // maxresdefault.jpg can be used if you want full 16:9 HD, but hqdefault is safer for older videos
-      return 'https://img.youtube.com/vi/$videoId/hqdefault.jpg';
-    } catch (_) {
-      // Fallback placeholder if URL parsing fails
-      return 'https://via.placeholder.com/150';
-    }
   }
 }

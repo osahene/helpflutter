@@ -59,4 +59,10 @@ class ApiService {
   Future<Response> decodeEmergencyToken(String token) => _dio.get(
     '${AppConstants.decodeEmergencyToken}${Uri.encodeComponent(token)}/',
   );
+
+  // Live reports to agencies
+  Future<Response> getAgencies() => _dio.get(AppConstants.agencyList);
+
+  Future<Response> sendLiveReport(FormData data) =>
+      _dio.post(AppConstants.liveReport, data: data);
 }

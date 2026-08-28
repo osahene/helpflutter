@@ -1,6 +1,7 @@
 import 'package:helpflutter/data/models/alert.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:helpflutter/core/constants/api_service.dart';
+import 'package:helpflutter/core/constants/constants.dart';
 import 'package:dio/dio.dart';
 
 abstract class AlertRepository {
@@ -33,12 +34,12 @@ class AlertRepositoryImpl implements AlertRepository {
     }
 
     // 2. Format the situation string for the backend payload
-    // final String formattedAlertType = _formatAlertType(situation);
+    final String formattedAlertType =
+        AppConstants.situationToAlertType[situation] ?? 'other';
 
     // 3. Prepare the request payload
     final Map<String, dynamic> payload = {
-      // 'alertType': formattedAlertType,
-      'alertType': situation,
+      'alertType': formattedAlertType,
       'include_location': includeLocation,
       'location': position != null
           ? {'latitude': position.latitude, 'longitude': position.longitude}
@@ -56,19 +57,6 @@ class AlertRepositoryImpl implements AlertRepository {
       );
     }
   }
-
-  /// Helper to map strings like "Health Crisis" to "health"
-  // String _formatAlertType(String incomingSituation) {
-  //   // Take the first word, lowercase it, and trim spaces
-  //   String cleaned = incomingSituation.split(' ').first.toLowerCase().trim();
-
-  //   // Fallback handler if the incoming phrase is "Call Emergency"
-  //   if (cleaned == 'call') {
-  //     return 'call'; // Adjust this to whatever your backend expects for Call Emergency
-  //   }
-
-  //   return cleaned;
-  // }
 
   /// Helper to handle Location Permissions and Fetching
   Future<Position> _getCurrentLocation() async {

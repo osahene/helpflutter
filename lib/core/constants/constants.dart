@@ -26,6 +26,9 @@ class AppConstants {
   static const String refreshToken = '/account/token/refresh/';
   static const String logout = '/account/user-logout/';
 
+  static const String agencyList = '/agency/list/';
+  static const String liveReport = '/agency/live-report/';
+
   // Storage keys
   static const String userKey = 'user';
   static const String accessTokenKey = 'access_token';
@@ -43,6 +46,17 @@ class AppConstants {
     'Flood Alert',
     'Call Emergency',
   ];
+
+  // Maps the display strings above to the alert-type codes the backend's
+  // Emergency.ALERT_TYPES expects (e.g. 'Fire Outbreak' -> 'fire').
+  static const Map<String, String> situationToAlertType = {
+    'Fire Outbreak': 'fire',
+    'Health Crisis': 'health',
+    'Robbery Attack': 'robbery',
+    'Violence Alert': 'violence',
+    'Flood Alert': 'flood',
+    'Call Emergency': 'other',
+  };
 
   static const List<String> situationIcons = [
     'assets/icons/fire.png',

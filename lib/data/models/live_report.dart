@@ -1,32 +1,23 @@
-enum ReportType { text, audio, video }
+/// One photo/video/voice-note file attached to a [LiveReport].
+class LiveReportMedia {
+  final String path;
+
+  /// 'image' | 'video' | 'audio'
+  final String type;
+
+  const LiveReportMedia({required this.path, required this.type});
+}
 
 class LiveReport {
   final String situation;
-  final List<String> recipientIds; // could be contact IDs or 'police' etc.
-  final String? message; // for text reports
-  final String? mediaPath; // local path for audio/video
-  final ReportType type;
-  final double? latitude;
-  final double? longitude;
+  final List<String> agencyIds;
+  final String? message;
+  final List<LiveReportMedia> media;
 
   LiveReport({
     required this.situation,
-    required this.recipientIds,
+    required this.agencyIds,
     this.message,
-    this.mediaPath,
-    required this.type,
-    this.latitude,
-    this.longitude,
+    this.media = const [],
   });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'situation': situation,
-      'recipients': recipientIds,
-      'message': message,
-      'type': type.toString(),
-      'lat': latitude,
-      'lng': longitude,
-    };
-  }
 }

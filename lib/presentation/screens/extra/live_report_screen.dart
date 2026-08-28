@@ -1,16 +1,20 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 import 'package:helpflutter/core/constants/constants.dart';
+import 'package:helpflutter/data/models/agency.dart';
+import 'package:helpflutter/data/models/live_report.dart';
+import 'package:helpflutter/data/repositories/agency_repository.dart';
 import 'package:helpflutter/data/repositories/live_report_repository.dart';
 import 'package:helpflutter/logic/live_report/live_report_bloc.dart';
 
-enum MediaType { image, video, audio }
-
 class MediaAttachment {
   final String path;
-  final MediaType type;
+  final String type; // 'image' | 'video' | 'audio'
 
   MediaAttachment({required this.path, required this.type});
 }
@@ -25,14 +29,43 @@ class LiveReportScreen extends StatefulWidget {
 class _LiveReportScreenState extends State<LiveReportScreen> {
   String? _selectedSituation;
   final _messageController = TextEditingController();
-  Set<String> _selectedOrgIds = {}; // Store organization names as IDs
+  final Set<String> _selectedAgencyIds = {};
   final List<MediaAttachment> _mediaAttachments = [];
   final ImagePicker _picker = ImagePicker();
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  bool _isRecording = false;
+
+  List<Agency>? _agencies;
+  String? _agenciesError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAgencies();
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _audioRecorder.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadAgencies() async {
+    setState(() => _agenciesError = null);
+    try {
+      final agencies = await context.read<AgencyRepository>().getAgencies();
+      if (!mounted) return;
+      setState(() => _agencies = agencies);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _agenciesError = 'Could not load agencies. Pull to retry.');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final organizations = AppConstants.nationalEmergencies;
 
     return BlocProvider(
       create: (context) =>
@@ -57,8 +90,8 @@ class _LiveReportScreenState extends State<LiveReportScreen> {
           listener: (context, state) {
             if (state is LiveReportSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Report sent successfully'),
+                const SnackBar(
+                  content: Text('Report sent successfully'),
                   backgroundColor: Colors.green,
                   behavior: SnackBarBehavior.floating,
                 ),
@@ -105,77 +138,13 @@ class _LiveReportScreenState extends State<LiveReportScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Organization selection
+                // Agency selection
                 const Text(
-                  'Notify Organizations',
+                  'Notify Agencies',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    // Select All chip
-                    FilterChip(
-                      label: const Text('All'),
-                      selected: _selectedOrgIds.length == organizations.length,
-                      onSelected: (selected) {
-                        setState(() {
-                          if (selected) {
-                            _selectedOrgIds = organizations
-                                .map((e) => e['name'] as String)
-                                .toSet();
-                          } else {
-                            _selectedOrgIds.clear();
-                          }
-                        });
-                      },
-                      backgroundColor: Colors.grey.shade100,
-                      selectedColor: theme.colorScheme.primary.withValues(
-                        alpha: 0.2,
-                      ),
-                      checkmarkColor: theme.colorScheme.primary,
-                    ),
-                    // Individual organization chips
-                    ...organizations.map((org) {
-                      final name = org['name']!;
-                      final isSelected = _selectedOrgIds.contains(name);
-                      return FilterChip(
-                        label: Text(name),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            if (selected) {
-                              _selectedOrgIds.add(name);
-                            } else {
-                              _selectedOrgIds.remove(name);
-                            }
-                          });
-                        },
-                        backgroundColor: Colors.grey.shade100,
-                        selectedColor: theme.colorScheme.primary.withValues(
-                          alpha: 0.2,
-                        ),
-                        checkmarkColor: theme.colorScheme.primary,
-                        avatar: Text(
-                          org['icon']!,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-                if (_selectedOrgIds.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      'Select at least one organization',
-                      style: TextStyle(
-                        color: theme.colorScheme.error,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
+                _buildAgencySelector(theme),
                 const SizedBox(height: 24),
 
                 // Media attachments
@@ -189,19 +158,20 @@ class _LiveReportScreenState extends State<LiveReportScreen> {
                     _buildMediaButton(
                       icon: Icons.photo_camera,
                       label: 'Photo',
-                      onTap: () => _pickMedia(MediaType.image),
+                      onTap: () => _pickImageOrVideo(isVideo: false),
                     ),
                     const SizedBox(width: 12),
                     _buildMediaButton(
                       icon: Icons.videocam,
                       label: 'Video',
-                      onTap: () => _pickMedia(MediaType.video),
+                      onTap: () => _pickImageOrVideo(isVideo: true),
                     ),
                     const SizedBox(width: 12),
                     _buildMediaButton(
-                      icon: Icons.mic,
-                      label: 'Audio',
-                      onTap: () => _pickMedia(MediaType.audio),
+                      icon: _isRecording ? Icons.stop_circle : Icons.mic,
+                      label: _isRecording ? 'Stop' : 'Audio',
+                      highlighted: _isRecording,
+                      onTap: _toggleAudioRecording,
                     ),
                   ],
                 ),
@@ -227,17 +197,17 @@ class _LiveReportScreenState extends State<LiveReportScreen> {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
                                 color: Colors.grey.shade200,
-                                image: media.type == MediaType.image
+                                image: media.type == 'image'
                                     ? DecorationImage(
                                         image: FileImage(File(media.path)),
                                         fit: BoxFit.cover,
                                       )
                                     : null,
                               ),
-                              child: media.type != MediaType.image
+                              child: media.type != 'image'
                                   ? Center(
                                       child: Icon(
-                                        media.type == MediaType.video
+                                        media.type == 'video'
                                             ? Icons.videocam
                                             : Icons.audiotrack,
                                         size: 40,
@@ -300,31 +270,49 @@ class _LiveReportScreenState extends State<LiveReportScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 55,
-                  child: ElevatedButton(
-                    onPressed:
-                        _selectedSituation != null && _selectedOrgIds.isNotEmpty
-                        ? () {
-                            context.read<LiveReportBloc>().add(
-                              SendLiveReport(
-                                situation: _selectedSituation!,
-                                message: _messageController.text,
-                                recipientIds: _selectedOrgIds.toList(),
-                                mediaPaths: _mediaAttachments
-                                    .map((e) => e.path)
-                                    .toList(),
+                  child: BlocBuilder<LiveReportBloc, LiveReportState>(
+                    builder: (context, state) {
+                      final canSend = _selectedSituation != null &&
+                          _selectedAgencyIds.isNotEmpty &&
+                          state is! LiveReportLoading;
+                      return ElevatedButton(
+                        onPressed: canSend
+                            ? () {
+                                context.read<LiveReportBloc>().add(
+                                  SendLiveReport(
+                                    situation: _selectedSituation!,
+                                    message: _messageController.text,
+                                    agencyIds: _selectedAgencyIds.toList(),
+                                    media: _mediaAttachments
+                                        .map((e) => LiveReportMedia(
+                                              path: e.path,
+                                              type: e.type,
+                                            ))
+                                        .toList(),
+                                  ),
+                                );
+                              }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: state is LiveReportLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                'Send Report',
+                                style: TextStyle(fontSize: 18),
                               ),
-                            );
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Text(
-                      'Send Report',
-                      style: TextStyle(fontSize: 18),
-                    ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -335,11 +323,99 @@ class _LiveReportScreenState extends State<LiveReportScreen> {
     );
   }
 
+  Widget _buildAgencySelector(ThemeData theme) {
+    if (_agenciesError != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_agenciesError!, style: TextStyle(color: theme.colorScheme.error)),
+          TextButton(onPressed: _loadAgencies, child: const Text('Retry')),
+        ],
+      );
+    }
+
+    if (_agencies == null) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: SizedBox(
+          height: 24,
+          width: 24,
+          child: CircularProgressIndicator(strokeWidth: 2.5),
+        ),
+      );
+    }
+
+    final agencies = _agencies!;
+    if (agencies.isEmpty) {
+      return const Text('No agencies are available to notify right now.');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilterChip(
+              label: const Text('All'),
+              selected: _selectedAgencyIds.length == agencies.length,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedAgencyIds
+                      ..clear()
+                      ..addAll(agencies.map((a) => a.id));
+                  } else {
+                    _selectedAgencyIds.clear();
+                  }
+                });
+              },
+              backgroundColor: Colors.grey.shade100,
+              selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+              checkmarkColor: theme.colorScheme.primary,
+            ),
+            ...agencies.map((agency) {
+              final isSelected = _selectedAgencyIds.contains(agency.id);
+              return FilterChip(
+                label: Text(agency.name),
+                selected: isSelected,
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _selectedAgencyIds.add(agency.id);
+                    } else {
+                      _selectedAgencyIds.remove(agency.id);
+                    }
+                  });
+                },
+                backgroundColor: Colors.grey.shade100,
+                selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                checkmarkColor: theme.colorScheme.primary,
+                avatar: Text(agency.icon, style: const TextStyle(fontSize: 16)),
+              );
+            }),
+          ],
+        ),
+        if (_selectedAgencyIds.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Select at least one agency',
+              style: TextStyle(color: theme.colorScheme.error, fontSize: 12),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildMediaButton({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    bool highlighted = false,
   }) {
+    final theme = Theme.of(context);
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -347,13 +423,20 @@ class _LiveReportScreenState extends State<LiveReportScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardTheme.color,
+            color: highlighted
+                ? theme.colorScheme.error.withValues(alpha: 0.1)
+                : theme.cardTheme.color,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(
+              color: highlighted ? theme.colorScheme.error : Colors.grey.shade300,
+            ),
           ),
           child: Column(
             children: [
-              Icon(icon, color: Theme.of(context).colorScheme.primary),
+              Icon(
+                icon,
+                color: highlighted ? theme.colorScheme.error : theme.colorScheme.primary,
+              ),
               const SizedBox(height: 4),
               Text(label, style: const TextStyle(fontSize: 12)),
             ],
@@ -363,29 +446,68 @@ class _LiveReportScreenState extends State<LiveReportScreen> {
     );
   }
 
-  Future<void> _pickMedia(MediaType type) async {
-    XFile? pickedFile;
-    switch (type) {
-      case MediaType.image:
-        pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-        break;
-      case MediaType.video:
-        pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
-        break;
-      case MediaType.audio:
-        // For audio, you might use a different package; here we'll simulate
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audio recording not implemented yet')),
-        );
-        return;
-    }
+  Future<void> _pickImageOrVideo({required bool isVideo}) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: Icon(isVideo ? Icons.videocam : Icons.photo_camera),
+              title: Text(isVideo ? 'Record video' : 'Take photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+
+    final pickedFile = isVideo
+        ? await _picker.pickVideo(source: source)
+        : await _picker.pickImage(source: source);
 
     if (pickedFile != null) {
       setState(() {
         _mediaAttachments.add(
-          MediaAttachment(path: pickedFile!.path, type: type),
+          MediaAttachment(
+            path: pickedFile.path,
+            type: isVideo ? 'video' : 'image',
+          ),
         );
       });
     }
+  }
+
+  Future<void> _toggleAudioRecording() async {
+    if (_isRecording) {
+      final path = await _audioRecorder.stop();
+      setState(() => _isRecording = false);
+      if (path != null) {
+        setState(() {
+          _mediaAttachments.add(MediaAttachment(path: path, type: 'audio'));
+        });
+      }
+      return;
+    }
+
+    if (!await _audioRecorder.hasPermission()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Microphone permission is required to record a voice note')),
+      );
+      return;
+    }
+
+    final dir = await getTemporaryDirectory();
+    final path =
+        '${dir.path}/live_report_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    await _audioRecorder.start(const RecordConfig(encoder: AudioEncoder.aacLc), path: path);
+    setState(() => _isRecording = true);
   }
 }

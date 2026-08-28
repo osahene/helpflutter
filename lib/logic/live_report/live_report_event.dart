@@ -7,20 +7,19 @@ abstract class LiveReportEvent extends Equatable {
   List<Object> get props => [];
 }
 
-// Rename this from SendTextReport to SendLiveReport
 class SendLiveReport extends LiveReportEvent {
   final String situation;
   final String message;
-  final List<String> recipientIds;
-  final List<String> mediaPaths; // Add this to handle your attachments
+  final List<String> agencyIds;
+  final List<LiveReportMedia> media;
 
   const SendLiveReport({
     required this.situation,
     required this.message,
-    required this.recipientIds,
-    required this.mediaPaths,
+    required this.agencyIds,
+    required this.media,
   });
 
   @override
-  List<Object> get props => [situation, message, recipientIds, mediaPaths];
+  List<Object> get props => [situation, message, agencyIds, media];
 }

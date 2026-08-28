@@ -126,11 +126,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
         return;
       }
 
-      final String? contactId = await FlutterContacts.native.showPicker();
-      if (contactId == null) return;
-
-      final Contact? fullContact = await FlutterContacts.get(
-        contactId,
+      final Contact? fullContact = await FlutterContacts.native.showPicker(
         properties: ContactProperties.all,
       );
       if (fullContact == null) return;

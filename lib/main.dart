@@ -10,6 +10,7 @@ import 'package:helpflutter/data/repositories/contact_repository.dart';
 import 'package:helpflutter/data/repositories/dependent_repository.dart';
 import 'package:helpflutter/data/repositories/profile_repository.dart';
 import 'package:helpflutter/data/repositories/live_report_repository.dart';
+import 'package:helpflutter/data/repositories/agency_repository.dart';
 import 'package:helpflutter/data/repositories/tutorial_repository.dart';
 import 'package:helpflutter/logic/alert/alert_bloc.dart';
 import 'package:helpflutter/logic/auth/auth_bloc.dart';
@@ -91,7 +92,10 @@ class _MyAppState extends State<MyApp> {
           create: (context) => ProfileRepositoryImpl(apiService: _apiService),
         ),
         RepositoryProvider<LiveReportRepository>(
-          create: (context) => MockLiveReportRepository(),
+          create: (context) => LiveReportRepositoryImpl(apiService: _apiService),
+        ),
+        RepositoryProvider<AgencyRepository>(
+          create: (context) => AgencyRepositoryImpl(apiService: _apiService),
         ),
         RepositoryProvider<TutorialRepository>(
           create: (context) => MockTutorialRepository(),

@@ -1,4 +1,4 @@
-package com.example.helpflutter
+package com.helpoohelp.helpflutter
 
 import io.flutter.embedding.android.FlutterActivity
 

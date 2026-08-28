@@ -4,13 +4,11 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 class VideoPlayerScreen extends StatefulWidget {
   final String videoUrl;
   final String title;
-  final String thumbnailUrl;
 
   const VideoPlayerScreen({
     super.key,
     required this.videoUrl,
     required this.title,
-    required this.thumbnailUrl,
   });
 
   @override
