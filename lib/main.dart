@@ -15,6 +15,7 @@ import 'package:helpflutter/data/repositories/live_report_repository.dart';
 import 'package:helpflutter/data/repositories/agency_repository.dart';
 import 'package:helpflutter/data/repositories/titbit_repository.dart';
 import 'package:helpflutter/data/repositories/tutorial_repository.dart';
+import 'package:helpflutter/data/repositories/incoming_alert_repository.dart';
 import 'package:helpflutter/logic/alert/alert_bloc.dart';
 import 'package:helpflutter/logic/auth/auth_bloc.dart';
 import 'package:helpflutter/logic/contacts/contacts_bloc.dart';
@@ -128,6 +129,9 @@ class _MyAppState extends State<MyApp> {
         ),
         RepositoryProvider<TitbitRepository>(
           create: (context) => TitbitRepositoryImpl(apiService: _apiService),
+        ),
+        RepositoryProvider<IncomingAlertRepository>(
+          create: (context) => IncomingAlertRepositoryImpl(apiService: _apiService),
         ),
         RepositoryProvider<TutorialRepository>(
           create: (context) => MockTutorialRepository(),

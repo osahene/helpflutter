@@ -21,6 +21,7 @@ class AppConstants {
   static const String updateContact = '/account/update-contact/';
   static const String verifyEmergency = '/account/verify-emergency/';
   static const String decodeEmergencyToken = '/account/decode-emergency-token/';
+  static const String incomingAlert = '/account/incoming-alert/';
 
   static const String triggerAlert = '/account/trigger-alert/';
   static const String refreshToken = '/account/token/refresh/';

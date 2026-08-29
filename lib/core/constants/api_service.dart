@@ -60,6 +60,10 @@ class ApiService {
     '${AppConstants.decodeEmergencyToken}${Uri.encodeComponent(token)}/',
   );
 
+  // Incoming alert (push-triggered "incoming call"-style screen)
+  Future<Response> getIncomingAlert(String emergencyId) =>
+      _dio.get('${AppConstants.incomingAlert}$emergencyId/');
+
   // Live reports to agencies
   Future<Response> getAgencies() => _dio.get(AppConstants.agencyList);
 

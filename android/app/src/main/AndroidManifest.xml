@@ -9,6 +9,15 @@
     <!-- Required on Android 13+ to display notifications (Titbit push /
          flutter_local_notifications). Harmless if push is never configured. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Lets the "incoming alert" push (type: incoming_alert) launch
+         IncomingAlertScreen straight over the lock screen, even from a fully
+         killed app — the same mechanism alarm/call apps use. This is a
+         normal permission on most Android versions, but on Android 14+ the
+         user can revoke it from Settings > Apps > Special app access > Full
+         screen intent; if revoked, the notification still posts (as a
+         heads-up notification) but won't auto-launch — tapping it still
+         works. Expected and acceptable; no runtime prompt needed. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <application
         android:label="helpflutter"
         android:name="${applicationName}"
@@ -22,7 +31,9 @@
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true">
             <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user
                  while the Flutter UI initializes. After that, this theme continues
