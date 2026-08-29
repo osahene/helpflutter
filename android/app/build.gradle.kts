@@ -6,6 +6,8 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 val keystoreProperties = Properties()
@@ -59,8 +61,33 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+
+            // Code + resource shrinking — the debug build intentionally skips
+            // both (for fast iteration/debuggability), which is why debug
+            // APKs are much larger than a properly configured release build.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
+
+    // NOTE on ABI splitting: this Flutter version's own Gradle plugin
+    // already wires up `splits { abi { ... } }` automatically — but only
+    // when the `split-per-abi` Gradle property is set, which is exactly
+    // what `flutter build apk --split-per-abi` passes (see flutter_tools'
+    // FlutterPlugin.kt: shouldProjectSplitPerAbi). A manually-added,
+    // unconditional `splits {}` block here would collide with Flutter's
+    // *own* fallback `ndk.abiFilters` configuration (applied to every
+    // build type, including debug, whenever splits-per-abi is NOT
+    // requested) — that combination is rejected by AGP with "Conflicting
+    // configuration ... ndk abiFilters cannot be present when splits abi
+    // filters are set". So: no manual splits config is needed here at
+    // all; just build with `flutter build apk --release --split-per-abi`
+    // to get per-ABI release APKs, and a plain `flutter build apk` (debug
+    // or release) still produces one universal APK as before.
 }
 
 flutter {
@@ -69,4 +96,7 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    implementation(platform("com.google.firebase:firebase-bom:34.18.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-crashlytics")
 }

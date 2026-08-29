@@ -2,18 +2,27 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:helpflutter/data/repositories/titbit_repository.dart';
 import 'package:helpflutter/logic/contacts/contacts_bloc.dart';
 import 'package:helpflutter/presentation/screens/alert/alert_confirmation_screen.dart';
+import 'package:helpflutter/presentation/screens/extra/titbits_screen.dart';
 import 'package:helpflutter/presentation/widgets/emergency_tile.dart';
 import 'package:helpflutter/presentation/widgets/status_banner.dart';
 import 'package:helpflutter/presentation/widgets/top_nav_bar.dart';
 import 'package:helpflutter/presentation/screens/dashboard/profile_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final VoidCallback? onMenuTap;
   final Function(int) onTabTapped;
 
   const HomeScreen({super.key, this.onMenuTap, required this.onTabTapped});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _unreadCount = 0;
 
   static const _situations = [
     'Robbery Attack',
@@ -43,6 +52,30 @@ class HomeScreen extends StatelessWidget {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUnreadCount() async {
+    try {
+      final count = await context.read<TitbitRepository>().getUnreadCount();
+      if (!mounted) return;
+      setState(() => _unreadCount = count);
+    } catch (_) {
+      // Non-fatal: badge just stays at its last known value.
+    }
+  }
+
+  Future<void> _openTitbits() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const TitbitsScreen()),
+    );
+    _loadUnreadCount();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 247, 244, 244),
@@ -53,7 +86,9 @@ class HomeScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const ProfileScreen()),
           );
         },
-        onMenuTap: onMenuTap,
+        onMenuTap: widget.onMenuTap,
+        onNotificationsTap: _openTitbits,
+        unreadCount: _unreadCount,
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -88,7 +123,7 @@ class HomeScreen extends StatelessWidget {
                 SliverToBoxAdapter(
                   child: StatusBanner(
                     paddingH: headerPadH,
-                    onNavigate: onTabTapped,
+                    onNavigate: widget.onTabTapped,
                     // maxContacts: read from the signed-in user's plan when
                     // AuthBloc exposes it — 5 (free) is the backend default.
                     maxContacts: 5,

@@ -65,4 +65,28 @@ class ApiService {
 
   Future<Response> sendLiveReport(FormData data) =>
       _dio.post(AppConstants.liveReport, data: data);
+
+  // Titbits (notification inbox) & push
+  Future<Response> getTitbits({int page = 1, String? category, bool? unread}) {
+    final queryParameters = <String, dynamic>{'page': page};
+    if (category != null) queryParameters['category'] = category;
+    if (unread != null) queryParameters['unread'] = unread;
+    return _dio.get(AppConstants.titbits, queryParameters: queryParameters);
+  }
+
+  Future<Response> getUnreadTitbitCount() =>
+      _dio.get(AppConstants.titbitUnreadCount);
+
+  Future<Response> markTitbitRead(String id) =>
+      _dio.patch('${AppConstants.titbits}$id/read/');
+
+  Future<Response> registerDevice(String token, String platform) => _dio.post(
+    AppConstants.registerDevice,
+    data: {'token': token, 'platform': platform},
+  );
+
+  Future<Response> unregisterDevice(String token) => _dio.delete(
+    AppConstants.registerDevice,
+    data: {'token': token},
+  );
 }

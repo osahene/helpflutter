@@ -7,8 +7,16 @@ import 'package:helpflutter/logic/profile/profile_bloc.dart';
 class TopNavBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onProfileTap;
   final VoidCallback? onMenuTap;
+  final VoidCallback? onNotificationsTap;
+  final int unreadCount;
 
-  const TopNavBar({super.key, this.onProfileTap, this.onMenuTap});
+  const TopNavBar({
+    super.key,
+    this.onProfileTap,
+    this.onMenuTap,
+    this.onNotificationsTap,
+    this.unreadCount = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +118,58 @@ class TopNavBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       centerTitle: true,
       actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: GestureDetector(
+            onTap: onNotificationsTap,
+            child: Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(
+                    Icons.notifications_none_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      top: -4,
+                      right: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        constraints: const BoxConstraints(minWidth: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade400,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFF1A3A8F), width: 1.5),
+                        ),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : '$unreadCount',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: GestureDetector(

@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:helpflutter/core/theme/theme.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 // import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:helpflutter/core/constants/api_service.dart';
+import 'package:helpflutter/core/services/push_service.dart';
 import 'package:helpflutter/data/repositories/auth_repository.dart';
 import 'package:helpflutter/data/repositories/alert_repository.dart';
 import 'package:helpflutter/data/repositories/contact_repository.dart';
@@ -11,6 +13,7 @@ import 'package:helpflutter/data/repositories/dependent_repository.dart';
 import 'package:helpflutter/data/repositories/profile_repository.dart';
 import 'package:helpflutter/data/repositories/live_report_repository.dart';
 import 'package:helpflutter/data/repositories/agency_repository.dart';
+import 'package:helpflutter/data/repositories/titbit_repository.dart';
 import 'package:helpflutter/data/repositories/tutorial_repository.dart';
 import 'package:helpflutter/logic/alert/alert_bloc.dart';
 import 'package:helpflutter/logic/auth/auth_bloc.dart';
@@ -22,6 +25,10 @@ import 'package:helpflutter/presentation/screens/dashboard/dashboard_screen.dart
 import 'package:helpflutter/core/constants/secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Lets PushService navigate to the Titbit inbox from a notification tap,
+/// from outside the widget tree (e.g. a cold-start tap on a push).
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
@@ -29,7 +36,29 @@ void main() async {
   final isLoggedIn = await SecureStorage.isLoggedIn();
 
   // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  await dotenv.load(fileName: ".env");
+
+  // Never blocks/crashes app start — see PushService's own doc comment.
+  // There's no Firebase project configured yet, so this will fail and
+  // leave PushService.isAvailable false until one is added.
+  await PushService.initialize(navigatorKey);
+
+  // Crashlytics relies on the same Firebase project as PushService. If
+  // Firebase.initializeApp() above failed, PushService.isAvailable stays
+  // false and we skip wiring Crashlytics entirely rather than let it throw
+  // on an uninitialized Firebase app — crash reporting is purely additive
+  // and must never itself be the reason the app fails to start.
+  if (PushService.isAvailable) {
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  }
+
+  // Never blocks/crashes app start — see PushService's own doc comment.
+  // There's no Firebase project configured yet, so this will fail and
+  // leave PushService.isAvailable false until one is added.
+  await PushService.initialize(navigatorKey);
 
   runApp(
     MyApp(
@@ -97,6 +126,9 @@ class _MyAppState extends State<MyApp> {
         RepositoryProvider<AgencyRepository>(
           create: (context) => AgencyRepositoryImpl(apiService: _apiService),
         ),
+        RepositoryProvider<TitbitRepository>(
+          create: (context) => TitbitRepositoryImpl(apiService: _apiService),
+        ),
         RepositoryProvider<TutorialRepository>(
           create: (context) => MockTutorialRepository(),
         ),
@@ -124,6 +156,7 @@ class _MyAppState extends State<MyApp> {
           ),
         ],
         child: MaterialApp(
+          navigatorKey: navigatorKey,
           title: 'Help Oo Help',
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
@@ -133,6 +166,10 @@ class _MyAppState extends State<MyApp> {
             listener: (context, state) {
               if (state is AuthAuthenticated) {
                 context.read<ProfileBloc>().add(LoadProfile(user: state.user));
+                // Fire-and-forget: registers this device's FCM token once
+                // signed in (covers both a fresh login and an already-
+                // logged-in cold start). No-op if Firebase isn't set up.
+                PushService.registerDeviceToken(context.read<TitbitRepository>());
               } else if (state is AuthUnauthenticated) {
                 context.read<ProfileBloc>().add(
                   ClearProfile(),

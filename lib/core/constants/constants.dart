@@ -29,6 +29,11 @@ class AppConstants {
   static const String agencyList = '/agency/list/';
   static const String liveReport = '/agency/live-report/';
 
+  // Titbits (notification inbox) & push
+  static const String titbits = '/notifications/';
+  static const String titbitUnreadCount = '/notifications/unread-count/';
+  static const String registerDevice = '/notifications/register-device/';
+
   // Storage keys
   static const String userKey = 'user';
   static const String accessTokenKey = 'access_token';

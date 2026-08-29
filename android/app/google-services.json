@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1005334547839",
+    "project_id": "helpoohelp-notification",
+    "storage_bucket": "helpoohelp-notification.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1005334547839:android:bd93e8af03a2633c43de4a",
+        "android_client_info": {
+          "package_name": "com.helpoohelp.helpflutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClykvhgXJry415WqowA7FMbQOj53S-5ik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
