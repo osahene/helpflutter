@@ -148,13 +148,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             PageRouteBuilder(
-                              pageBuilder: (context, animation, __) =>
+                              pageBuilder: (context, animation, _) =>
                                   AlertConfirmationScreen(
                                     emergencyType: _situations[index],
                                     icon: _icons[index],
                                     color: _colors[index],
                                   ),
-                              transitionsBuilder: (_, anim, __, child) {
+                              transitionsBuilder: (_, anim, _, child) {
                                 return FadeTransition(
                                   opacity: anim,
                                   child: SlideTransition(

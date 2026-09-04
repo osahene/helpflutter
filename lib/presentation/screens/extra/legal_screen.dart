@@ -48,7 +48,6 @@ class _LegalHeroHeader extends StatelessWidget {
   final String title;
   final String subtitle;
   final List<Color> gradient;
-  final EdgeInsetsGeometry padding;
 
   const _LegalHeroHeader({
     required this.badge,
@@ -56,7 +55,6 @@ class _LegalHeroHeader extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.gradient,
-    this.padding = const EdgeInsets.fromLTRB(20, 12, 20, 32),
   });
 
   @override
@@ -109,7 +107,7 @@ class _LegalHeroHeader extends StatelessWidget {
         SafeArea(
           bottom: false,
           child: Padding(
-            padding: padding,
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -254,7 +252,7 @@ class _LegalScaffold extends StatelessWidget {
               child: ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
                 itemCount: sections.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) =>
                     _SectionCard(section: sections[index]),
               ),

@@ -970,8 +970,9 @@ class _EditContactSheetState extends State<_EditContactSheet> {
                                 dialCode: _selectedCountry.code,
                               );
                               if (value.isEmpty) return 'Required';
-                              if (value.length < 6)
+                              if (value.length < 6) {
                                 return 'Enter a valid number';
+                              }
                               return null;
                             },
                           ),
@@ -1905,7 +1906,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: _filtered.length,
-              separatorBuilder: (_, __) => Divider(
+              separatorBuilder: (_, _) => Divider(
                 height: 1,
                 color: _border.withValues(alpha: 0.6),
                 indent: 20,

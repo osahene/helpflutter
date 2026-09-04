@@ -66,7 +66,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen>
   final _phoneController = TextEditingController(); // local number only
   final _emailController = TextEditingController();
   final _relationController = TextEditingController();
-  List<String> _selectedSituations = [];
+  final List<String> _selectedSituations = [];
   bool _isPicking = false;
 
   CountryCode _selectedCountry = _countryCodes.first; // country code state
@@ -1088,7 +1088,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: _filtered.length,
-              separatorBuilder: (_, __) => Divider(
+              separatorBuilder: (_, _) => Divider(
                 height: 1,
                 color: _border.withValues(alpha: 0.6),
                 indent: 20,

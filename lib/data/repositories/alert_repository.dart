@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:helpflutter/data/models/alert.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:helpflutter/core/constants/api_service.dart';
@@ -28,8 +29,7 @@ class AlertRepositoryImpl implements AlertRepository {
       try {
         position = await _getCurrentLocation();
       } catch (e) {
-        // CRITICAL: Look at your debug console to see what this prints!
-        print('Location error caught: $e');
+        debugPrint('Location error caught: $e');
       }
     }
 

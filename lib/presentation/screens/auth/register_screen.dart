@@ -97,13 +97,13 @@ class _RegisterScreenState extends State<RegisterScreen>
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, animation, __) => TermsAgreementScreen(
+        pageBuilder: (_, animation, _) => TermsAgreementScreen(
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
           countryCode: _selectedCountry.code,
           phoneNumber: phone,
         ),
-        transitionsBuilder: (_, anim, __, child) => FadeTransition(
+        transitionsBuilder: (_, anim, _, child) => FadeTransition(
           opacity: anim,
           child: SlideTransition(
             position: Tween<Offset>(
@@ -685,7 +685,7 @@ class _CountrySheetState extends State<_CountrySheet> {
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: _f.length,
-            separatorBuilder: (_, __) => Divider(
+            separatorBuilder: (_, _) => Divider(
               height: 1,
               color: _kBorder.withValues(alpha: 0.5),
               indent: 20,

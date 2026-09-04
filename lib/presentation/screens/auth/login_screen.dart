@@ -703,7 +703,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: _filtered.length,
-              separatorBuilder: (_, __) => Divider(
+              separatorBuilder: (_, _) => Divider(
                 height: 1,
                 color: _border.withValues(alpha: 0.6),
                 indent: 20,
