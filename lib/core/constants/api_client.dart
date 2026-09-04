@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:meta/meta.dart';
 import 'package:helpflutter/core/constants/constants.dart';
 import 'package:helpflutter/core/constants/secure_storage.dart';
 
@@ -7,15 +8,25 @@ class ApiClient {
   static final _logoutController = StreamController<void>.broadcast();
   static Stream<void> get logoutStream => _logoutController.stream;
 
+  @visibleForTesting
+  static void debugFireLogout() => _logoutController.add(null);
+
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'http://10.0.2.2:8000',
+    defaultValue: 'https://emergencysystem.onrender.com',
   );
 
-  static const String apiKey = String.fromEnvironment(
-    'FRONTEND_API_KEY',
-    defaultValue: 'your-api-key-here', // replace with actual key
-  );
+  static const String apiKey = String.fromEnvironment('FRONTEND_API_KEY');
+
+  static void assertConfigured() {
+    if (apiKey.isEmpty) {
+      throw StateError(
+        'FRONTEND_API_KEY was not provided at build time. Build with '
+        '--dart-define-from-file=.env (see README.md "Configuration") — '
+        'never hardcode the real key in source.',
+      );
+    }
+  }
 
   static final Dio _dio = _createDio();
 

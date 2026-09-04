@@ -3,68 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:helpflutter/main.dart';
 import 'package:helpflutter/presentation/screens/auth/login_screen.dart';
 
-/// In-memory stand-in for the real secure-storage platform implementation.
-///
-/// On Windows, flutter_secure_storage talks to the native Credential Manager
-/// over FFI rather than a mockable MethodChannel — under `flutter test`'s
-/// headless binding (no real message loop), those calls hang indefinitely
-/// instead of failing fast. AuthBloc's AuthCheckRequested handler awaits
-/// SecureStorage.getAccessToken()/getRefreshToken() before it can emit
-/// AuthUnauthenticated, so without this override the widget tree never
-/// leaves its loading state and the test times out. This fake keeps
-/// everything in memory and never touches a real platform.
-class _FakeSecureStoragePlatform extends FlutterSecureStoragePlatform {
-  final _values = <String, String>{};
-
-  @override
-  Future<void> write({
-    required String key,
-    required String value,
-    required Map<String, String> options,
-  }) async {
-    _values[key] = value;
-  }
-
-  @override
-  Future<String?> read({
-    required String key,
-    required Map<String, String> options,
-  }) async {
-    return _values[key];
-  }
-
-  @override
-  Future<bool> containsKey({
-    required String key,
-    required Map<String, String> options,
-  }) async {
-    return _values.containsKey(key);
-  }
-
-  @override
-  Future<void> delete({
-    required String key,
-    required Map<String, String> options,
-  }) async {
-    _values.remove(key);
-  }
-
-  @override
-  Future<Map<String, String>> readAll({
-    required Map<String, String> options,
-  }) async {
-    return Map.of(_values);
-  }
-
-  @override
-  Future<void> deleteAll({required Map<String, String> options}) async {
-    _values.clear();
-  }
-}
+import 'helpers/fake_secure_storage_platform.dart';
 
 void main() {
   setUp(() {
-    FlutterSecureStoragePlatform.instance = _FakeSecureStoragePlatform();
+    FlutterSecureStoragePlatform.instance = FakeSecureStoragePlatform();
   });
 
   testWidgets('App displays LoginScreen when not logged in', (

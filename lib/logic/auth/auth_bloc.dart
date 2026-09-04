@@ -106,9 +106,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
 
     try {
-      // call via dynamic to avoid static dependency on repository method name
-      final user = await (repository as dynamic)
-          .getProfile(); // new: hits /auth/profile/
+      final user = await repository.getProfile();
       await SecureStorage.saveUser(user);
       emit(AuthAuthenticated(user));
     } catch (_) {

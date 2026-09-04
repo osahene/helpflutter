@@ -6,6 +6,15 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- Used by the live-report feature (camera/record packages, see
+         lib/presentation/screens/extra/live_report_screen.dart) to capture
+         photo/video/audio evidence. Was missing here even though the
+         matching iOS usage strings (NSCameraUsageDescription /
+         NSMicrophoneUsageDescription) were already present — without these,
+         Android can't grant the runtime permission at all, so that feature
+         was silently broken on Android specifically. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Required on Android 13+ to display notifications (Titbit push /
          flutter_local_notifications). Harmless if push is never configured. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -22,7 +31,7 @@
         android:label="helpflutter"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
-        android:usesCleartextTraffic="true">
+        android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"
             android:exported="true"

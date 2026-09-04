@@ -45,8 +45,6 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (emergencyId == null || emergencyId.isEmpty) return;
 
   try {
-    // Separate isolate — Firebase needs its own initialization here even
-    // though the main isolate already did this.
     await Firebase.initializeApp();
 
     final localNotifications = FlutterLocalNotificationsPlugin();
@@ -79,7 +77,9 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       payload: '$_incomingAlertPayloadPrefix$emergencyId',
     );
   } catch (e) {
-    debugPrint('PushService: background incoming-alert notification failed: $e');
+    debugPrint(
+      'PushService: background incoming-alert notification failed: $e',
+    );
   }
 }
 
@@ -156,7 +156,8 @@ class PushService {
 
       // Cold start via FCM's own auto-displayed notification (the path
       // Titbit pushes — which carry a `notification` block — use today).
-      final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+      final initialMessage = await FirebaseMessaging.instance
+          .getInitialMessage();
       if (initialMessage != null) _routeForMessage(initialMessage);
 
       // Cold start via OUR OWN full-screen-intent local notification (the
@@ -164,7 +165,8 @@ class PushService {
       // [firebaseMessagingBackgroundHandler] via flutter_local_notifications,
       // not by FCM's auto-display — so `getInitialMessage()` above never
       // sees them).
-      final launchDetails = await _localNotifications.getNotificationAppLaunchDetails();
+      final launchDetails = await _localNotifications
+          .getNotificationAppLaunchDetails();
       if (launchDetails?.didNotificationLaunchApp ?? false) {
         _routeForPayload(launchDetails!.notificationResponse?.payload);
       }
@@ -182,7 +184,10 @@ class PushService {
     );
 
     await _localNotifications.initialize(
-      settings: const InitializationSettings(android: androidInit, iOS: iosInit),
+      settings: const InitializationSettings(
+        android: androidInit,
+        iOS: iosInit,
+      ),
       onDidReceiveNotificationResponse: (response) =>
           _routeForPayload(response.payload),
     );

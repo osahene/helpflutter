@@ -24,6 +24,8 @@ abstract class AuthRepository {
   });
 
   Future<void> logout(String refreshToken);
+
+  Future<User> getProfile();
 }
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -93,6 +95,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
   Future<User> getProfile() async {
     try {
       final response = await apiService.getUserProfile();

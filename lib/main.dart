@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:helpflutter/core/theme/theme.dart';
 // import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:helpflutter/core/constants/api_client.dart';
 import 'package:helpflutter/core/constants/api_service.dart';
 import 'package:helpflutter/core/services/push_service.dart';
 import 'package:helpflutter/data/repositories/auth_repository.dart';
@@ -32,22 +33,13 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  ApiClient.assertConfigured();
   final prefs = await SharedPreferences.getInstance();
   final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
   final isLoggedIn = await SecureStorage.isLoggedIn();
 
-  // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-
-  // Never blocks/crashes app start — see PushService's own doc comment.
-  // There's no Firebase project configured yet, so this will fail and
-  // leave PushService.isAvailable false until one is added.
   await PushService.initialize(navigatorKey);
 
-  // Crashlytics relies on the same Firebase project as PushService. If
-  // Firebase.initializeApp() above failed, PushService.isAvailable stays
-  // false and we skip wiring Crashlytics entirely rather than let it throw
-  // on an uninitialized Firebase app — crash reporting is purely additive
-  // and must never itself be the reason the app fails to start.
   if (PushService.isAvailable) {
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
     PlatformDispatcher.instance.onError = (error, stack) {
@@ -55,11 +47,6 @@ void main() async {
       return true;
     };
   }
-
-  // Never blocks/crashes app start — see PushService's own doc comment.
-  // There's no Firebase project configured yet, so this will fail and
-  // leave PushService.isAvailable false until one is added.
-  await PushService.initialize(navigatorKey);
 
   runApp(
     MyApp(
@@ -70,7 +57,6 @@ void main() async {
   );
 }
 
-// 1. Changed to StatefulWidget to support initState()
 class MyApp extends StatefulWidget {
   final bool hasSeenOnboarding;
   final bool isLoggedIn;
@@ -122,7 +108,8 @@ class _MyAppState extends State<MyApp> {
           create: (context) => ProfileRepositoryImpl(apiService: _apiService),
         ),
         RepositoryProvider<LiveReportRepository>(
-          create: (context) => LiveReportRepositoryImpl(apiService: _apiService),
+          create: (context) =>
+              LiveReportRepositoryImpl(apiService: _apiService),
         ),
         RepositoryProvider<AgencyRepository>(
           create: (context) => AgencyRepositoryImpl(apiService: _apiService),
@@ -131,7 +118,8 @@ class _MyAppState extends State<MyApp> {
           create: (context) => TitbitRepositoryImpl(apiService: _apiService),
         ),
         RepositoryProvider<IncomingAlertRepository>(
-          create: (context) => IncomingAlertRepositoryImpl(apiService: _apiService),
+          create: (context) =>
+              IncomingAlertRepositoryImpl(apiService: _apiService),
         ),
         RepositoryProvider<TutorialRepository>(
           create: (context) => MockTutorialRepository(),
@@ -139,7 +127,6 @@ class _MyAppState extends State<MyApp> {
       ],
       child: MultiBlocProvider(
         providers: [
-          // 2. Now the Blocs can "read" the repositories from the context
           BlocProvider(
             create: (context) =>
                 AuthBloc(repository: context.read<AuthRepository>())
@@ -150,7 +137,6 @@ class _MyAppState extends State<MyApp> {
                 ProfileBloc(repository: context.read<ProfileRepository>()),
           ),
           BlocProvider(
-            // 3. Fixed positional to named parameter `repository:`
             create: (context) =>
                 ContactsBloc(repository: context.read<ContactRepository>()),
           ),
@@ -170,10 +156,9 @@ class _MyAppState extends State<MyApp> {
             listener: (context, state) {
               if (state is AuthAuthenticated) {
                 context.read<ProfileBloc>().add(LoadProfile(user: state.user));
-                // Fire-and-forget: registers this device's FCM token once
-                // signed in (covers both a fresh login and an already-
-                // logged-in cold start). No-op if Firebase isn't set up.
-                PushService.registerDeviceToken(context.read<TitbitRepository>());
+                PushService.registerDeviceToken(
+                  context.read<TitbitRepository>(),
+                );
               } else if (state is AuthUnauthenticated) {
                 context.read<ProfileBloc>().add(
                   ClearProfile(),
@@ -201,23 +186,10 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
-
-  // Widget _getInitialScreen() {
-  //   if (!widget.hasSeenOnboarding) {
-  //     // Added 'widget.' prefix to access properties
-  //     return const OnboardingScreen();
-  //   } else if (!widget.isLoggedIn) {
-  //     // Added 'widget.' prefix
-  //     return const LoginScreen();
-  //   } else {
-  //     return const DashboardScreen();
-  //   }
-  // }
 }
 
 class _SplashScreen extends StatelessWidget {
   const _SplashScreen();
-
   @override
   Widget build(BuildContext context) {
     return const Scaffold(body: Center(child: CircularProgressIndicator()));
