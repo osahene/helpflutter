@@ -163,6 +163,15 @@ class _MyAppState extends State<MyApp> {
                 context.read<ProfileBloc>().add(
                   ClearProfile(),
                 ); // add this event
+                // Swapping `home`'s content below (Dashboard -> Login) only
+                // changes what the *bottom* route shows — any screen the
+                // user had pushed on top (a pushed AlertConfirmationScreen,
+                // IncomingAlertScreen, a settings page, ...) stays on top of
+                // it, hiding the login screen entirely until manually
+                // popped. A forced logout (expired/dead refresh token, see
+                // ApiClient.logoutStream) needs the user to actually land on
+                // LoginScreen, not stay stranded wherever they were.
+                navigatorKey.currentState?.popUntil((route) => route.isFirst);
               }
             },
             child: BlocBuilder<AuthBloc, AuthState>(

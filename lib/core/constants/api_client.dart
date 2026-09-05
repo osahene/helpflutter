@@ -103,7 +103,13 @@ class AuthInterceptor extends Interceptor {
     () async {
       try {
         final refreshToken = await SecureStorage.getRefreshToken();
-        if (refreshToken == null) throw Exception('no refresh token');
+        if (refreshToken == null) {
+          // Nothing to retry with — the session is genuinely over.
+          await SecureStorage.clearSession();
+          ApiClient._logoutController.add(null);
+          completer.complete(null);
+          return;
+        }
 
         final refreshDio = Dio(
           BaseOptions(
@@ -122,16 +128,35 @@ class AuthInterceptor extends Interceptor {
 
         final access = res.data['access'] as String?;
         final rotated = res.data['refresh'] as String?;
-        if (access == null) throw Exception('malformed refresh response');
+        if (access == null) {
+          // The server answered but not with what we expected — a bug
+          // somewhere, not proof the refresh token itself is dead. Don't
+          // tear down a session that might still be perfectly valid.
+          completer.complete(null);
+          return;
+        }
 
         await SecureStorage.saveAccessToken(access);
         if (rotated != null) {
           await SecureStorage.saveRefreshToken(rotated); // ← THE fix for (a)
         }
         completer.complete(access);
+      } on DioException catch (e) {
+        final status = e.response?.statusCode;
+        if (status == 401 || status == 403) {
+          // The server explicitly rejected this refresh token — it's
+          // genuinely dead (expired/blacklisted/revoked). No amount of
+          // retrying helps.
+          await SecureStorage.clearSession();
+          ApiClient._logoutController.add(null);
+        }
+        // Everything else — no connection, a timeout, a 5xx, a cold-started
+        // backend still waking up — is not proof the refresh token is bad.
+        // A network blip must never log out a session that's still
+        // perfectly valid; this one request just fails, and the next
+        // request gets another chance to refresh.
+        completer.complete(null);
       } catch (_) {
-        await SecureStorage.clearSession();
-        ApiClient._logoutController.add(null);
         completer.complete(null);
       } finally {
         _refreshCompleter = null;
