@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:meta/meta.dart';
 import 'package:helpflutter/core/constants/constants.dart';
 import 'package:helpflutter/core/constants/secure_storage.dart';
@@ -62,6 +63,12 @@ class AuthInterceptor extends Interceptor {
       path.contains(AppConstants.verifyOtp) ||
       path.contains(AppConstants.login);
 
+  // Session validity is judged from the token itself, proactively, here —
+  // not reactively from whatever status code a response happens to carry.
+  // This used to only attach whatever was in storage and rely entirely on
+  // onError's 401 handling below, which meant every request with an
+  // already-expired token cost a guaranteed failed round trip before the
+  // retry-after-refresh ever kicked in.
   @override
   void onRequest(
     RequestOptions options,
@@ -69,11 +76,38 @@ class AuthInterceptor extends Interceptor {
   ) async {
     if (!_isAuthPath(options.path)) {
       final token = await SecureStorage.getAccessToken();
-      if (token != null) options.headers['Authorization'] = 'Bearer $token';
+      if (token != null) {
+        if (!_isExpired(token)) {
+          options.headers['Authorization'] = 'Bearer $token';
+        } else {
+          final newToken = await _refresh();
+          if (newToken != null) {
+            options.headers['Authorization'] = 'Bearer $newToken';
+          }
+          // else: refresh was inconclusive (network blip) or the session is
+          // confirmed dead (_refresh() already fired the logout stream in
+          // that case). Either way, let this one request go out without a
+          // fresh token rather than blocking it entirely — onError below is
+          // still there to catch the 401 it'll likely get.
+        }
+      }
     }
     handler.next(options);
   }
 
+  static bool _isExpired(String token) {
+    try {
+      return JwtDecoder.isExpired(token);
+    } catch (_) {
+      // Undecodable/malformed — treat as expired so it goes through the
+      // refresh path instead of being sent as-is.
+      return true;
+    }
+  }
+
+  // Backstop for whatever the proactive check above didn't catch (clock
+  // skew against the server, or the token expiring in the moment between
+  // that check and the server actually seeing the request).
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode != 401 ||
