@@ -7,6 +7,7 @@ import 'package:helpflutter/logic/contacts/contacts_bloc.dart';
 import 'package:helpflutter/presentation/screens/alert/alert_confirmation_screen.dart';
 import 'package:helpflutter/presentation/screens/extra/titbits_screen.dart';
 import 'package:helpflutter/presentation/widgets/emergency_tile.dart';
+import 'package:helpflutter/presentation/widgets/live_location_banner.dart';
 import 'package:helpflutter/presentation/widgets/status_banner.dart';
 import 'package:helpflutter/presentation/widgets/top_nav_bar.dart';
 import 'package:helpflutter/presentation/screens/dashboard/profile_screen.dart';
@@ -119,6 +120,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 parent: BouncingScrollPhysics(),
               ),
               slivers: [
+                // ─── Live location banner (collapses to nothing if inactive) ──
+                SliverToBoxAdapter(
+                  child: LiveLocationBanner(paddingH: headerPadH),
+                ),
+
                 // ─── Status banner ─────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: StatusBanner(

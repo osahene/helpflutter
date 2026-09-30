@@ -27,3 +27,13 @@ class AuthError extends AuthState {
 }
 
 class AuthOtpSent extends AuthState {}
+
+// Emitted right before AuthUnauthenticated when a deactivate/delete call
+// succeeds, purely so a listener can show the server's confirmation
+// message before the screen gets swapped out from under it.
+class AuthAccountActionSuccess extends AuthState {
+  final String message;
+  const AuthAccountActionSuccess(this.message);
+  @override
+  List<Object> get props => [message];
+}

@@ -183,6 +183,7 @@ class _VideoCard extends StatelessWidget {
             builder: (_) => VideoPlayerScreen(
               videoUrl: tutorial.videoUrl,
               title: tutorial.title,
+              isYoutube: tutorial.isYoutube,
             ),
           ),
         );

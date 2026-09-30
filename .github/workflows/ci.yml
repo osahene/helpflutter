@@ -52,3 +52,18 @@ jobs:
             --dart-define=FRONTEND_API_KEY="${FRONTEND_API_KEY:-ci-placeholder-key}"
         env:
           FRONTEND_API_KEY: ${{ secrets.FRONTEND_API_KEY }}
+
+      # Play Store submissions need an App Bundle, not an APK — a distinct
+      # Gradle build path (bundleRelease vs assembleRelease) that the apk
+      # build above never exercises. Same as that step, this runs without
+      # the real upload keystore (android/key.properties is real locally
+      # but gitignored, so it's simply absent here) and so produces a
+      # debug-signed .aab — not upload-ready, but enough to catch a bundle-
+      # specific build break in CI. The real, upload-signed bundle still
+      # has to be built locally with the real keystore before a Play
+      # Console upload.
+      - run: |
+          flutter build appbundle --release \
+            --dart-define=FRONTEND_API_KEY="${FRONTEND_API_KEY:-ci-placeholder-key}"
+        env:
+          FRONTEND_API_KEY: ${{ secrets.FRONTEND_API_KEY }}

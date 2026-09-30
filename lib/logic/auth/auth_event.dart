@@ -57,6 +57,14 @@ class AuthVerifyOtpRequested extends AuthEvent {
 
 class AuthLogoutRequested extends AuthEvent {}
 
+// action is 'deactivate' or 'delete' — see AppConstants.accountStatus.
+class AuthAccountStatusRequested extends AuthEvent {
+  final String action;
+  const AuthAccountStatusRequested(this.action);
+  @override
+  List<Object> get props => [action];
+}
+
 class AuthCheckRequested extends AuthEvent {}
 
 class AuthProfileRefreshed extends AuthEvent {}

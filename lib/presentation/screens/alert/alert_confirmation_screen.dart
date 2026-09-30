@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:helpflutter/core/constants/api_service.dart';
+import 'package:helpflutter/core/services/live_location_service.dart';
 import 'package:helpflutter/data/models/contact.dart';
 import 'package:helpflutter/logic/alert/alert_bloc.dart';
 import 'package:helpflutter/logic/contacts/contacts_bloc.dart';
@@ -96,43 +98,8 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
         if (state is AlertSuccess) {
           showDialog(
             context: context,
-            builder: (_) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: Row(
-                children: [
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.green.shade600,
-                    size: 26,
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Alert Sent',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20),
-                  ),
-                ],
-              ),
-              content: const Text(
-                'Your emergency alert has been sent to your contacts.',
-                style: TextStyle(fontSize: 15, height: 1.5),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () =>
-                      Navigator.popUntil(context, (route) => route.isFirst),
-                  child: Text(
-                    'OK',
-                    style: TextStyle(
-                      color: Colors.green.shade600,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            barrierDismissible: false,
+            builder: (_) => _AlertSentDialog(alertId: state.alertId),
           );
         } else if (state is AlertFailure) {
           ScaffoldMessenger.of(
@@ -464,6 +431,111 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
           ],
         ),
       ),
+    );
+  }
+}
+
+// ─── "Alert Sent" dialog, with the opt-in live-location switch ─────────────
+
+class _AlertSentDialog extends StatefulWidget {
+  final String alertId;
+  const _AlertSentDialog({required this.alertId});
+
+  @override
+  State<_AlertSentDialog> createState() => _AlertSentDialogState();
+}
+
+class _AlertSentDialogState extends State<_AlertSentDialog> {
+  final ApiService _apiService = ApiService();
+  bool _shareLive = false;
+  bool _busy = false;
+
+  Future<void> _onToggle(bool value) async {
+    setState(() => _busy = true);
+    if (value) {
+      await LiveLocationService.start(widget.alertId, _apiService);
+    } else {
+      await LiveLocationService.stop(_apiService);
+    }
+    if (mounted) {
+      setState(() {
+        _shareLive = LiveLocationService.isActive.value;
+        _busy = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Icon(Icons.check_circle_rounded, color: Colors.green.shade600, size: 26),
+          const SizedBox(width: 10),
+          const Text(
+            'Alert Sent',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Your emergency alert has been sent to your contacts.',
+            style: TextStyle(fontSize: 15, height: 1.5),
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Share Live Location',
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        _shareLive
+                            ? 'Updating every 20s while the app is open, for up to 1 hour.'
+                            : 'Keeps your location updating for contacts, for up to 1 hour.',
+                        style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600, height: 1.4),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                _busy
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      )
+                    : Switch(value: _shareLive, onChanged: _onToggle),
+              ],
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+          child: Text(
+            'OK',
+            style: TextStyle(color: Colors.green.shade600, fontWeight: FontWeight.w700, fontSize: 16),
+          ),
+        ),
+      ],
     );
   }
 }

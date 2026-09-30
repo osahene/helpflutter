@@ -13,7 +13,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>Helpflutter</string>
+		<string>Help OO Help</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -21,7 +21,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>helpflutter</string>
+		<string>Help OO Help</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -63,10 +63,8 @@
 		<string>The purpose of the app is for the user to transmit their live location to their trusted contacts when an emergency occurs.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>The purpose of the app is for the user to transmit their live location to their trusted contacts when an emergency occurs.</string>
-		<key>UIBackgroundModes</key>
-		<array>
-		<string>location</string>
-		</array>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Used to attach a photo or video from your library as evidence to a live report.</string>
 		<key>UISupportedInterfaceOrientations</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
@@ -81,11 +79,11 @@
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>UIStatusBarHidden</key>
-		<key>LSApplicationQueriesSchemes</key>
-			<array>
-				<string>sms</string>
-				<string>tel</string>
-			</array>
 		<false/>
+		<key>LSApplicationQueriesSchemes</key>
+		<array>
+			<string>sms</string>
+			<string>tel</string>
+		</array>
 	</dict>
 </plist>

@@ -24,8 +24,21 @@ class AppConstants {
   static const String incomingAlert = '/account/incoming-alert/';
 
   static const String triggerAlert = '/account/trigger-alert/';
+  // POST starts a 1-hour live-location window, PATCH pushes one update
+  // ({latitude, longitude}), DELETE stops early — see LiveLocationService.
+  static String alertLiveLocation(String emergencyId) =>
+      '/account/alert-live-location/$emergencyId/';
   static const String refreshToken = '/account/token/refresh/';
   static const String logout = '/account/user-logout/';
+  // PATCH {"action": "deactivate" | "delete"}. "delete" never deletes on the
+  // spot — it deactivates immediately and schedules a hard delete 30 days
+  // out (see account.models.Users.request_deletion on the backend). Neither
+  // action is self-undoable: is_active is checked on every authenticated
+  // request, so this session is dead the moment either call succeeds.
+  static const String accountStatus = '/account/account-status/';
+  // Admin-managed tutorial content (main_admin.models.Tutorial) — published
+  // here shows up here without an app release.
+  static const String tutorials = '/account/tutorials/';
 
   static const String agencyList = '/agency/list/';
   static const String liveReport = '/agency/live-report/';

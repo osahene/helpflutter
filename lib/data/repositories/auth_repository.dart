@@ -26,6 +26,10 @@ abstract class AuthRepository {
   Future<void> logout(String refreshToken);
 
   Future<User> getProfile();
+
+  // action is 'deactivate' or 'delete'. Neither is self-undoable once it
+  // succeeds — see AppConstants.accountStatus's doc comment.
+  Future<String> updateAccountStatus(String action, String? refreshToken);
 }
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -112,6 +116,25 @@ class AuthRepositoryImpl implements AuthRepository {
       await SecureStorage.clearSession();
     } on DioException catch (e) {
       await SecureStorage.clearSession();
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<String> updateAccountStatus(String action, String? refreshToken) async {
+    try {
+      final response = await apiService.updateAccountStatus(
+        action,
+        refresh: refreshToken,
+      );
+      // Only clear on confirmed success. Unlike logout() above, a failed
+      // call here (e.g. offline, timeout) means the account is still
+      // active server-side — clearing the session anyway would silently
+      // log the user out of a device that's still perfectly valid, having
+      // accomplished nothing. Let them retry instead.
+      await SecureStorage.clearSession();
+      return (response.data['message'] as String?) ?? '';
+    } on DioException catch (e) {
       throw _handleError(e);
     }
   }

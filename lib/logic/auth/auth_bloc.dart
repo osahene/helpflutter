@@ -19,6 +19,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthVerifyOtpRequested>(_onVerifyOtp);
     on<AuthCheckRequested>(_onCheck);
     on<AuthLogoutRequested>(_onLogout);
+    on<AuthAccountStatusRequested>(_onAccountStatusUpdate);
 
     _logoutSubscription = ApiClient.logoutStream.listen((_) {
       add(AuthLogoutRequested());
@@ -125,5 +126,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
     await SecureStorage.clearSession();
     emit(AuthUnauthenticated());
+  }
+
+  Future<void> _onAccountStatusUpdate(
+    AuthAccountStatusRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final refreshToken = await SecureStorage.getRefreshToken();
+      final message = await repository.updateAccountStatus(
+        event.action,
+        refreshToken,
+      );
+      emit(AuthAccountActionSuccess(message));
+      emit(AuthUnauthenticated());
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
   }
 }

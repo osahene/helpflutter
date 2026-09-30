@@ -1,5 +1,5 @@
 name: helpflutter
-description: "A new Flutter project."
+description: "Help OO Help — emergency alerting: trigger an alert, share your live location, and notify your trusted contacts instantly."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -73,6 +73,7 @@ dependencies:
   firebase_crashlytics: ^5.3.0
   flutter_map: ^8.3.2
   latlong2: ^0.10.1
+  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:

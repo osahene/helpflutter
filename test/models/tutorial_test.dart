@@ -8,13 +8,18 @@ void main() {
         'id': 't1',
         'title': 'Basic First Aid',
         'category': 'health',
-        'video_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        // The backend's public serializer (PublicTutorialSerializer) always
+        // sends video_source — it's the one field that resolves whichever
+        // of video_file/video_url the admin actually set, so this model
+        // only ever needs to read this one key.
+        'video_source': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         'duration_seconds': 125,
       });
 
       expect(tutorial.id, 't1');
       expect(tutorial.title, 'Basic First Aid');
       expect(tutorial.category, 'health');
+      expect(tutorial.videoUrl, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
       expect(tutorial.duration, const Duration(seconds: 125));
     });
 
@@ -23,10 +28,35 @@ void main() {
         'id': 't2',
         'title': 'Fire Safety',
         'category': 'safety',
-        'video_url': 'https://youtu.be/dQw4w9WgXcQ',
+        'video_source': 'https://youtu.be/dQw4w9WgXcQ',
       });
 
       expect(tutorial.duration, isNull);
+    });
+
+    test('parses a directly-hosted video file with no thumbnail override', () {
+      final tutorial = Tutorial.fromJson({
+        'id': 't3',
+        'title': 'Flood Response',
+        'category': 'flood',
+        'video_source': 'https://emergencysystem.onrender.com/media/tutorials/videos/flood.mp4',
+      });
+
+      expect(tutorial.isYoutube, isFalse);
+      expect(tutorial.youtubeVideoId, isNull);
+      expect(tutorial.thumbnailUrl, isNull);
+    });
+
+    test('prefers an admin-uploaded thumbnail over the YouTube-derived one', () {
+      final tutorial = Tutorial.fromJson({
+        'id': 't4',
+        'title': 'Robbery Prevention',
+        'category': 'robbery',
+        'video_source': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        'thumbnail': 'https://emergencysystem.onrender.com/media/tutorials/thumbnails/robbery.jpg',
+      });
+
+      expect(tutorial.thumbnailUrl, 'https://emergencysystem.onrender.com/media/tutorials/thumbnails/robbery.jpg');
     });
   });
 

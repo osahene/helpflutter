@@ -48,6 +48,15 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<void> logout(String refreshToken) async {}
 
+  String? accountStatusMessage;
+  Object? accountStatusError;
+
+  @override
+  Future<String> updateAccountStatus(String action, String? refreshToken) async {
+    if (accountStatusError != null) throw accountStatusError!;
+    return accountStatusMessage ?? '';
+  }
+
   @override
   Future<User> getProfile() async {
     getProfileCalls++;

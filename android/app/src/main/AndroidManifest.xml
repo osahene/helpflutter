@@ -4,8 +4,14 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- ACCESS_BACKGROUND_LOCATION / FOREGROUND_SERVICE_LOCATION were
+         declared here previously but nothing in lib/ uses continuous or
+         background location (only one-shot getCurrentPosition()/
+         getLastKnownPosition() calls while the app is foregrounded — see
+         alert_repository.dart and live_report_repository.dart). Declaring
+         background location without a feature that needs it triggers Play
+         Console's mandatory declaration form and is a real rejection risk.
+         Re-add both only alongside an actual background-tracking feature. -->
     <!-- Used by the live-report feature (camera/record packages, see
          lib/presentation/screens/extra/live_report_screen.dart) to capture
          photo/video/audio evidence. Was missing here even though the
@@ -28,7 +34,7 @@
          works. Expected and acceptable; no runtime prompt needed. -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <application
-        android:label="helpflutter"
+        android:label="Help OO Help"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:networkSecurityConfig="@xml/network_security_config">

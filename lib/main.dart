@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:helpflutter/core/theme/theme.dart';
-// import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:helpflutter/core/constants/api_client.dart';
 import 'package:helpflutter/core/constants/api_service.dart';
 import 'package:helpflutter/core/services/push_service.dart';
@@ -33,6 +33,9 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  // Holds the native splash on screen (instead of it vanishing at Flutter's
+  // first frame, well before the real app is ready) until .remove() below.
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   ApiClient.assertConfigured();
   final prefs = await SharedPreferences.getInstance();
   final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
@@ -85,7 +88,7 @@ class _MyAppState extends State<MyApp> {
 
   void initialization() async {
     await Future.delayed(const Duration(seconds: 1));
-    // FlutterNativeSplash.remove();
+    FlutterNativeSplash.remove();
   }
 
   @override
@@ -122,7 +125,7 @@ class _MyAppState extends State<MyApp> {
               IncomingAlertRepositoryImpl(apiService: _apiService),
         ),
         RepositoryProvider<TutorialRepository>(
-          create: (context) => MockTutorialRepository(),
+          create: (context) => TutorialRepositoryImpl(apiService: _apiService),
         ),
       ],
       child: MultiBlocProvider(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:helpflutter/logic/profile/profile_bloc.dart';
+import 'package:helpflutter/logic/auth/auth_bloc.dart';
 import 'package:helpflutter/data/models/request_history.dart';
 import 'package:helpflutter/core/constants/constants.dart';
 
@@ -178,7 +179,7 @@ class _LoadedView extends StatelessWidget {
         state.history.isEmpty
             ? SliverToBoxAdapter(child: _EmptyHistory())
             : SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) => _HistoryCard(
@@ -189,6 +190,14 @@ class _LoadedView extends StatelessWidget {
                   ),
                 ),
               ),
+
+        // Profile & Account actions — deliberately at the bottom of the
+        // page, matching the steps described in the in-app "Data Deletion"
+        // legal page (legal_screen.dart's _DataDeletionPage).
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+          sliver: SliverToBoxAdapter(child: _AccountActionsSection()),
+        ),
       ],
     );
   }
@@ -656,4 +665,323 @@ class _EmptyHistory extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Profile & Account actions (deactivate / delete)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Both actions hit the same backend endpoint (AppConstants.accountStatus)
+// and both end the session immediately and irreversibly from this device's
+// point of view — see AuthBloc._onAccountStatusUpdate. A BlocListener here
+// (rather than in AuthBloc's own global listener in main.dart) is what
+// shows the confirmation/error SnackBar, since main.dart's listener only
+// reacts to Authenticated/Unauthenticated to drive navigation and has no
+// BuildContext with a Scaffold to show a SnackBar from at that point.
+class _AccountActionsSection extends StatelessWidget {
+  const _AccountActionsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAccountActionSuccess) {
+          _showActionSnackBar(context, state.message, success: true);
+        } else if (state is AuthError) {
+          _showActionSnackBar(context, state.message, success: false);
+        }
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: Colors.red.shade600,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'PROFILE & ACCOUNT',
+                style: TextStyle(
+                  color: Colors.red.shade600,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.6,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _AccountActionCard(
+            title: 'Deactivate Account',
+            description:
+                "Logs you out immediately and stops all alerts. Nothing is "
+                "deleted — contact support to reactivate.",
+            buttonLabel: 'Deactivate',
+            buttonColor: const Color(0xFF0F1B3E),
+            onConfirmed: () => context.read<AuthBloc>().add(
+              const AuthAccountStatusRequested('deactivate'),
+            ),
+            confirmDialogBuilder: (ctx) => _showDeactivateAccountDialog(ctx),
+          ),
+          const SizedBox(height: 12),
+          _AccountActionCard(
+            title: 'Delete Account',
+            description:
+                "Logs you out immediately. Your account and all data — "
+                "emergency contacts, alert history, everything — is "
+                "permanently deleted after 30 days. This can't be undone "
+                "by you once it starts.",
+            buttonLabel: 'Delete Account',
+            buttonColor: Colors.red.shade600,
+            isDanger: true,
+            onConfirmed: () => context.read<AuthBloc>().add(
+              const AuthAccountStatusRequested('delete'),
+            ),
+            confirmDialogBuilder: (ctx) => _showDeleteAccountDialog(ctx),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AccountActionCard extends StatelessWidget {
+  final String title;
+  final String description;
+  final String buttonLabel;
+  final Color buttonColor;
+  final bool isDanger;
+  final VoidCallback onConfirmed;
+  final Future<bool?> Function(BuildContext) confirmDialogBuilder;
+
+  const _AccountActionCard({
+    required this.title,
+    required this.description,
+    required this.buttonLabel,
+    required this.buttonColor,
+    required this.onConfirmed,
+    required this.confirmDialogBuilder,
+    this.isDanger = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDanger ? const Color(0xFFFFF8F8) : const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDanger ? const Color(0xFFFFE0E0) : const Color(0xFFDDE3F5),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xFF0F1B3E),
+              fontWeight: FontWeight.w700,
+              fontSize: 14.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () async {
+              final confirmed = await confirmDialogBuilder(context);
+              if (confirmed == true) onConfirmed();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 9,
+              ),
+              decoration: BoxDecoration(
+                color: buttonColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                buttonLabel,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+void _showActionSnackBar(BuildContext context, String message, {required bool success}) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      backgroundColor: success ? const Color(0xFF1A9E5C) : Colors.red.shade600,
+      content: Row(
+        children: [
+          Icon(
+            success ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+            color: Colors.white,
+            size: 16,
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+        ],
+      ),
+    ),
+  );
+}
+
+Future<bool?> _showDeactivateAccountDialog(BuildContext context) {
+  return showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.pause_circle_outline_rounded,
+              color: Colors.grey.shade700,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Text(
+            'Deactivate Account',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+          ),
+        ],
+      ),
+      content: const Padding(
+        padding: EdgeInsets.only(bottom: 20),
+        child: Text(
+          "You'll be logged out immediately and won't be able to log back "
+          "in yourself — contact support to reactivate. Nothing is deleted.",
+          style: TextStyle(color: Color(0xFF6B7280), fontSize: 14, height: 1.55),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
+        ),
+        GestureDetector(
+          onTap: () => Navigator.pop(ctx, true),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F1B3E),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Text(
+              'Deactivate',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+      ],
+    ),
+  );
+}
+
+Future<bool?> _showDeleteAccountDialog(BuildContext context) {
+  return showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.red.shade500,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Text(
+            'Delete Account',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+          ),
+        ],
+      ),
+      content: const Padding(
+        padding: EdgeInsets.only(bottom: 20),
+        child: Text(
+          "You'll be logged out immediately, and everything — your "
+          "profile, emergency contacts, and alert history — will be "
+          "permanently deleted in 30 days. This can't be undone by you "
+          "once it starts; contact support within 30 days if you change "
+          "your mind.",
+          style: TextStyle(color: Color(0xFF6B7280), fontSize: 14, height: 1.55),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
+        ),
+        GestureDetector(
+          onTap: () => Navigator.pop(ctx, true),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.red.shade500,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Text(
+              'Delete Account',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+      ],
+    ),
+  );
 }

@@ -571,31 +571,23 @@ class _DataDeletionPage extends StatelessWidget {
       icon: Icons.delete_outline_rounded,
       title: 'Select "Delete Account"',
       body:
-          'Scroll to the bottom of your Profile page. Tap the red "Delete Account" button to begin the deletion process.',
+          'Scroll to the "Profile & Account" section at the bottom of your Profile page and tap the red "Delete Account" button to begin the deletion process.',
     ),
     _LegalSection(
       number: '04',
-      color: Color(0xFF7B22CE),
-      icon: Icons.sms_rounded,
-      title: 'Confirm Your Identity',
-      body:
-          'A one-time OTP will be sent to your registered phone number. Enter it to verify you are the authorised account owner.',
-    ),
-    _LegalSection(
-      number: '05',
       color: Color(0xFF1A9E5C),
       icon: Icons.check_circle_outline_rounded,
       title: 'Final Confirmation',
       body:
-          'A confirmation dialog will summarise what will be permanently deleted. Tap "Confirm & Delete". This action is irreversible.',
+          'A confirmation dialog will summarise what happens. Tap "Delete Account" to confirm. You will be logged out of this device immediately, and this cannot be undone by you once it starts — contact support within 30 days if you change your mind.',
     ),
     _LegalSection(
-      number: '06',
+      number: '05',
       color: Color(0xFF8B5C00),
       icon: Icons.hourglass_bottom_rounded,
       title: 'Deletion Completed',
       body:
-          'Your account, contacts, dependents, location history, and alert records will be permanently deleted within 30 days. A confirmation will be sent to your registered number.',
+          'Your account is deactivated immediately. Your account, contacts, dependents, location history, and alert records are then permanently deleted 30 days after that, unless you contact support to cancel it first.',
     ),
   ];
 

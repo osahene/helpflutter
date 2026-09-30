@@ -11,6 +11,12 @@ class ApiService {
 
   Future<Response> logout() => _dio.post(AppConstants.logout);
 
+  Future<Response> updateAccountStatus(String action, {String? refresh}) =>
+      _dio.patch(
+        AppConstants.accountStatus,
+        data: {'action': action, if (refresh != null) 'refresh': refresh},
+      );
+
   Future<Response> register(Map<String, dynamic> data) =>
       _dio.post(AppConstants.register, data: data);
 
@@ -93,4 +99,21 @@ class ApiService {
     AppConstants.registerDevice,
     data: {'token': token},
   );
+
+  Future<Response> getTutorials() => _dio.get(AppConstants.tutorials);
+
+  Future<Response> startLiveLocation(String emergencyId) =>
+      _dio.post(AppConstants.alertLiveLocation(emergencyId));
+
+  Future<Response> updateLiveLocation(
+    String emergencyId,
+    double latitude,
+    double longitude,
+  ) => _dio.patch(
+    AppConstants.alertLiveLocation(emergencyId),
+    data: {'latitude': latitude, 'longitude': longitude},
+  );
+
+  Future<Response> stopLiveLocation(String emergencyId) =>
+      _dio.delete(AppConstants.alertLiveLocation(emergencyId));
 }
