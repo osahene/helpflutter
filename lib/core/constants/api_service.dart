@@ -14,7 +14,7 @@ class ApiService {
   Future<Response> updateAccountStatus(String action, {String? refresh}) =>
       _dio.patch(
         AppConstants.accountStatus,
-        data: {'action': action, if (refresh != null) 'refresh': refresh},
+        data: {'action': action, 'refresh': ?refresh},
       );
 
   Future<Response> register(Map<String, dynamic> data) =>

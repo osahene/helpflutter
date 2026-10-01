@@ -177,7 +177,20 @@ class AuthInterceptor extends Interceptor {
         completer.complete(access);
       } on DioException catch (e) {
         final status = e.response?.statusCode;
-        if (status == 401 || status == 403) {
+        // SimpleJWT's own rejection of a dead refresh token carries
+        // {"detail": "...", "code": "token_not_valid"} — that specific
+        // shape is the only thing that means "this token is genuinely
+        // dead." A 401 can also come from
+        // EmergencyBackend/frontend_api_key_middleware.py (a
+        // misconfigured/mismatched FRONTEND_API_KEY — see
+        // ApiClient.apiKey), which returns a 401 with no "code" field at
+        // all. That's a deployment/config problem, not an expired session,
+        // and it would hit *every* request — treating it as "session dead"
+        // would force-logout every session the moment the key drifts out
+        // of sync, which is worse than just failing the one call.
+        final body = e.response?.data;
+        final code = body is Map ? body['code'] : null;
+        if ((status == 401 || status == 403) && code == 'token_not_valid') {
           // The server explicitly rejected this refresh token — it's
           // genuinely dead (expired/blacklisted/revoked). No amount of
           // retrying helps.
