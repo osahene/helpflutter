@@ -112,7 +112,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout(String refreshToken) async {
     try {
-      await apiService.logout();
+      await apiService.logout(refreshToken);
       await SecureStorage.clearSession();
     } on DioException catch (e) {
       await SecureStorage.clearSession();

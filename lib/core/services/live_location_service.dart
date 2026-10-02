@@ -76,10 +76,21 @@ class LiveLocationService {
         position.latitude,
         position.longitude,
       );
+    } on PermissionDeniedException catch (e) {
+      // Permission was revoked (or never granted) *after* sharing already
+      // started — every subsequent tick would just fail the same way
+      // forever otherwise, so stop rather than silently retry.
+      debugPrint('LiveLocationService: permission denied, stopping: $e');
+      await stop(apiService);
+    } on LocationServiceDisabledException catch (e) {
+      // The device's location service itself was turned off mid-session.
+      debugPrint('LiveLocationService: location service disabled, stopping: $e');
+      await stop(apiService);
     } catch (e) {
-      // A single missed update is not worth surfacing to the user — the
-      // next tick tries again, and the backend's own 1-hour expiry is the
-      // real safety net regardless of how many updates land.
+      // Anything else (a single dropped fix, a network blip) is not worth
+      // surfacing to the user — the next tick tries again, and the
+      // backend's own 1-hour expiry is the real safety net regardless of
+      // how many updates land.
       debugPrint('LiveLocationService update failed: $e');
     }
   }

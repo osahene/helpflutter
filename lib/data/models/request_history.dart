@@ -13,9 +13,24 @@ class RequestHistory {
     required this.status,
   });
 
+  static const Map<String, String> _situationForCode = {
+    'fire': 'Fire Outbreak',
+    'health': 'Health Crisis',
+    'robbery': 'Robbery Attack',
+    'violence': 'Violence Alert',
+    'flood': 'Flood Alert',
+    'other': 'Call Emergency',
+  };
+
   factory RequestHistory.fromJson(Map<String, dynamic> json) {
-    // 1. Capture the backend value directly (matches AppConstants.situations)
-    final String situation = json['action'] ?? 'Call Emergency';
+    // 1. The backend sends the canonical alert code (Emergency.ALERT_TYPES,
+    //    e.g. "fire") — map it to the AppConstants.situations label the
+    //    history card's colors/icons are keyed by. A value that's already a
+    //    label passes through unchanged.
+    final String action = json['action']?.toString() ?? '';
+    final String situation =
+        _situationForCode[action.toLowerCase()] ??
+        (action.isEmpty ? 'Call Emergency' : action);
 
     // 2. Extract string names out of the backend's recipients list objects
     final List<dynamic> recipientsList = json['recipients'] ?? [];

@@ -26,6 +26,14 @@ class AlertConfirmationScreen extends StatefulWidget {
 class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
     with SingleTickerProviderStateMixin {
   bool _isSending = false;
+  // Decided up front, before sending — not as an afterthought once the
+  // alert's already out. Off (default) sends a one-time location fix with
+  // the alert; on starts continuous sharing right after a successful send.
+  // Once running, LiveLocationBanner is the one place that shows it's
+  // active and offers to stop it — this screen doesn't need its own
+  // ongoing toggle for that.
+  bool _shareLiveLocation = false;
+  final ApiService _apiService = ApiService();
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -96,10 +104,15 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
     return BlocListener<AlertBloc, AlertState>(
       listener: (context, state) {
         if (state is AlertSuccess) {
+          // The choice was already made before sending (the switch below)
+          // — act on it now rather than asking again post-send.
+          if (_shareLiveLocation) {
+            LiveLocationService.start(state.alertId, _apiService);
+          }
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (_) => _AlertSentDialog(alertId: state.alertId),
+            builder: (_) => _AlertSentDialog(sharingLive: _shareLiveLocation),
           );
         } else if (state is AlertFailure) {
           ScaffoldMessenger.of(
@@ -260,10 +273,15 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
 
                                 const SizedBox(height: 14),
 
+                                // Live location choice — decided now,
+                                // before sending. Off (default) sends just
+                                // a one-time location fix with the alert;
+                                // on keeps sharing for up to 1 hour once
+                                // the alert goes out.
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 14,
+                                    horizontal: 16,
+                                    vertical: 12,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
@@ -279,20 +297,43 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
                                     ],
                                   ),
                                   child: Row(
-                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
                                         Icons.location_on_outlined,
                                         size: 18,
                                         color: accentColor,
                                       ),
-                                      const SizedBox(width: 8),
-                                      const Text(
-                                        'Your live location will be shared',
-                                        style: TextStyle(
-                                          fontSize: 13.5,
-                                          color: Colors.black54,
-                                          fontWeight: FontWeight.w500,
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Share Live Location',
+                                              style: TextStyle(
+                                                fontSize: 13.5,
+                                                color: Colors.black87,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                            Text(
+                                              _shareLiveLocation
+                                                  ? 'Keeps updating for contacts, for up to 1 hour.'
+                                                  : 'Off — a one-time location goes with this alert.',
+                                              style: TextStyle(
+                                                fontSize: 11.5,
+                                                color: Colors.grey.shade600,
+                                                height: 1.3,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Switch(
+                                        value: _shareLiveLocation,
+                                        onChanged: (value) => setState(
+                                          () => _shareLiveLocation = value,
                                         ),
                                       ),
                                     ],
@@ -435,35 +476,12 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
   }
 }
 
-// ─── "Alert Sent" dialog, with the opt-in live-location switch ─────────────
+// ─── "Alert Sent" confirmation — the live-location choice was already made
+// on the confirmation screen before sending; this just reports it. ───────
 
-class _AlertSentDialog extends StatefulWidget {
-  final String alertId;
-  const _AlertSentDialog({required this.alertId});
-
-  @override
-  State<_AlertSentDialog> createState() => _AlertSentDialogState();
-}
-
-class _AlertSentDialogState extends State<_AlertSentDialog> {
-  final ApiService _apiService = ApiService();
-  bool _shareLive = false;
-  bool _busy = false;
-
-  Future<void> _onToggle(bool value) async {
-    setState(() => _busy = true);
-    if (value) {
-      await LiveLocationService.start(widget.alertId, _apiService);
-    } else {
-      await LiveLocationService.stop(_apiService);
-    }
-    if (mounted) {
-      setState(() {
-        _shareLive = LiveLocationService.isActive.value;
-        _busy = false;
-      });
-    }
-  }
+class _AlertSentDialog extends StatelessWidget {
+  final bool sharingLive;
+  const _AlertSentDialog({required this.sharingLive});
 
   @override
   Widget build(BuildContext context) {
@@ -487,44 +505,36 @@ class _AlertSentDialogState extends State<_AlertSentDialog> {
             'Your emergency alert has been sent to your contacts.',
             style: TextStyle(fontSize: 15, height: 1.5),
           ),
-          const SizedBox(height: 18),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Share Live Location',
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        _shareLive
-                            ? 'Updating every 20s while the app is open, for up to 1 hour.'
-                            : 'Keeps your location updating for contacts, for up to 1 hour.',
-                        style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600, height: 1.4),
-                      ),
-                    ],
+          if (sharingLive) ...[
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                _busy
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      )
-                    : Switch(value: _shareLive, onChanged: _onToggle),
-              ],
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Sharing your live location with contacts for up to 1 hour. '
+                      'You can stop it anytime from the banner on the dashboard.',
+                      style: TextStyle(fontSize: 12.5, color: Colors.black87, height: 1.4),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
       actions: [

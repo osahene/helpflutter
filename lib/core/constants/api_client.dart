@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:meta/meta.dart';
 import 'package:helpflutter/core/constants/constants.dart';
 import 'package:helpflutter/core/constants/secure_storage.dart';
 
@@ -139,6 +139,7 @@ class AuthInterceptor extends Interceptor {
         final refreshToken = await SecureStorage.getRefreshToken();
         if (refreshToken == null) {
           // Nothing to retry with — the session is genuinely over.
+          debugPrint('AuthInterceptor: forced logout — no refresh token stored');
           await SecureStorage.clearSession();
           ApiClient._logoutController.add(null);
           completer.complete(null);
@@ -194,6 +195,9 @@ class AuthInterceptor extends Interceptor {
           // The server explicitly rejected this refresh token — it's
           // genuinely dead (expired/blacklisted/revoked). No amount of
           // retrying helps.
+          debugPrint(
+            'AuthInterceptor: forced logout — refresh rejected ($status): $body',
+          );
           await SecureStorage.clearSession();
           ApiClient._logoutController.add(null);
         }

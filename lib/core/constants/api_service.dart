@@ -9,7 +9,10 @@ class ApiService {
   Future<Response> login(Map<String, dynamic> data) =>
       _dio.post(AppConstants.login, data: data);
 
-  Future<Response> logout() => _dio.post(AppConstants.logout);
+  // Sends the refresh token so the backend blacklists it — sessions are
+  // long-lived, so a logout must actually revoke it server-side.
+  Future<Response> logout(String refresh) =>
+      _dio.post(AppConstants.logout, data: {'refresh': refresh});
 
   Future<Response> updateAccountStatus(String action, {String? refresh}) =>
       _dio.patch(
