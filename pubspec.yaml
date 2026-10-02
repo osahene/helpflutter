@@ -146,11 +146,11 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 flutter_native_splash:
   color: "#FFFFFF"  # Background color of splash screen
-  image: assets/icon/splashscreen.png  # Path to your splash asset
+  image: assets/icon/splashscreen_small.png  # Path to your splash asset
   # Android 12+ ignores `image` above and shows the launcher icon instead
   # unless this is set too.
   android_12:
     color: "#FFFFFF"
-    image: assets/icon/splashscreen.png
+    image: assets/icon/splashscreen_small.png
   android: true
   ios: true
