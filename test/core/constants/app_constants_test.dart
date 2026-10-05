@@ -26,4 +26,33 @@ void main() {
       expect(AppConstants.situationToAlertType['Not A Real Situation'], isNull);
     });
   });
+
+  group('AppConstants.emergencyServiceFor', () {
+    String serviceName(String situation) =>
+        AppConstants.emergencyServiceFor(situation)['name'] as String;
+
+    test('routes each situation to the right national service', () {
+      expect(serviceName('Robbery Attack'), 'Ghana Police');
+      expect(serviceName('Call Emergency'), 'Ghana Police');
+      expect(serviceName('Violence Alert'), 'Ghana Police');
+      expect(serviceName('Fire Outbreak'), 'Ghana National Fire Service');
+      expect(serviceName('Health Crisis'), 'National Ambulance Service');
+      expect(serviceName('Accident Alert'), 'National Ambulance Service');
+      expect(
+        serviceName('Flood Alert'),
+        'National Disaster Management Organization',
+      );
+    });
+
+    test('falls back to the police for an unknown situation', () {
+      expect(serviceName('Not A Real Situation'), 'Ghana Police');
+    });
+
+    test('every mapped service exists in nationalEmergencies', () {
+      final names = AppConstants.nationalEmergencies.map((s) => s['name']);
+      for (final service in AppConstants.situationEmergencyService.values) {
+        expect(names, contains(service));
+      }
+    });
+  });
 }

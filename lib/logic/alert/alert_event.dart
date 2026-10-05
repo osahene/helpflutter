@@ -10,11 +10,17 @@ abstract class AlertEvent extends Equatable {
 class SendAlert extends AlertEvent {
   final String situation;
   final bool includeLocation;
+  // Same value on every retry of one alert — see AlertRepository.sendAlert.
+  final String? clientAlertId;
 
-  const SendAlert({required this.situation, required this.includeLocation});
+  const SendAlert({
+    required this.situation,
+    required this.includeLocation,
+    this.clientAlertId,
+  });
 
   @override
-  List<Object?> get props => [situation, includeLocation];
+  List<Object?> get props => [situation, includeLocation, clientAlertId];
 }
 
 /// Event to reset the alert state (e.g., after showing result).

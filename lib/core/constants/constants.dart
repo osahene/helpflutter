@@ -114,7 +114,7 @@ class AppConstants {
     },
     {
       'name': 'National Ambulance Service',
-      'phone': ['+2330501614877', '+2330505982870'],
+      'phone': ['193', '+233501614877', '+233505982870'],
       'icon': '🚑',
     },
     {
@@ -128,6 +128,23 @@ class AppConstants {
       'icon': '🌊',
     },
   ];
+
+  // Which national service to offer when an alert for a situation can't be
+  // sent at all (see AlertFailedSheet). Values are nationalEmergencies names.
+  static const Map<String, String> situationEmergencyService = {
+    'Robbery Attack': 'Ghana Police',
+    'Violence Alert': 'Ghana Police',
+    'Call Emergency': 'Ghana Police',
+    'Fire Outbreak': 'Ghana National Fire Service',
+    'Health Crisis': 'National Ambulance Service',
+    'Accident Alert': 'National Ambulance Service',
+    'Flood Alert': 'National Disaster Management Organization',
+  };
+
+  static Map<String, dynamic> emergencyServiceFor(String situation) {
+    final name = situationEmergencyService[situation] ?? 'Ghana Police';
+    return nationalEmergencies.firstWhere((s) => s['name'] == name);
+  }
 
   // Help Oo Help organization contacts
   static const List<Map<String, dynamic>> helpOoHelpContacts = [

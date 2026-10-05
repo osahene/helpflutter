@@ -20,6 +20,7 @@ class AlertBloc extends Bloc<AlertEvent, AlertState> {
       final result = await repository.sendAlert(
         situation: event.situation,
         includeLocation: event.includeLocation,
+        clientAlertId: event.clientAlertId,
       );
       emit(AlertSuccess(alertId: result.id, timestamp: DateTime.now()));
     } catch (e) {

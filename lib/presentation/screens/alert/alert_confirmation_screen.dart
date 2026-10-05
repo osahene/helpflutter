@@ -1,6 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:helpflutter/core/constants/api_service.dart';
+import 'package:helpflutter/core/constants/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:helpflutter/core/services/live_location_service.dart';
 import 'package:helpflutter/data/models/contact.dart';
 import 'package:helpflutter/logic/alert/alert_bloc.dart';
@@ -34,6 +38,9 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
   // ongoing toggle for that.
   bool _shareLiveLocation = false;
   final ApiService _apiService = ApiService();
+  // One id per alert, reused by every retry until it succeeds, so a retry
+  // after a lost response can't page contacts twice (see AlertRepository).
+  String? _clientAlertId;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -60,6 +67,22 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
   void dispose() {
     _pulseController.dispose();
     super.dispose();
+  }
+
+  void _sendAlert() {
+    final random = Random.secure();
+    _clientAlertId ??= List.generate(
+      16,
+      (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
+    setState(() => _isSending = true);
+    context.read<AlertBloc>().add(
+      SendAlert(
+        situation: widget.emergencyType,
+        includeLocation: true,
+        clientAlertId: _clientAlertId,
+      ),
+    );
   }
 
   /// Returns contacts that are [approved] AND whose situation map
@@ -109,16 +132,27 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
           if (_shareLiveLocation) {
             LiveLocationService.start(state.alertId, _apiService);
           }
+          _clientAlertId = null;
           showDialog(
             context: context,
             barrierDismissible: false,
             builder: (_) => _AlertSentDialog(sharingLive: _shareLiveLocation),
           );
         } else if (state is AlertFailure) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
           setState(() => _isSending = false);
+          // Nothing was sent — don't leave the user stuck on an error:
+          // offer a retry and the right national service to call directly.
+          showDialog(
+            context: context,
+            builder: (dialogContext) => _AlertFailedDialog(
+              situation: widget.emergencyType,
+              message: state.message,
+              onRetry: () {
+                Navigator.pop(dialogContext);
+                _sendAlert();
+              },
+            ),
+          );
         }
       },
       child: Scaffold(
@@ -376,17 +410,7 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
                                   width: double.infinity,
                                   height: 60,
                                   child: ElevatedButton(
-                                    onPressed: canSend
-                                        ? () {
-                                            setState(() => _isSending = true);
-                                            context.read<AlertBloc>().add(
-                                              SendAlert(
-                                                situation: widget.emergencyType,
-                                                includeLocation: true,
-                                              ),
-                                            );
-                                          }
-                                        : null,
+                                    onPressed: canSend ? _sendAlert : null,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: accentColor,
                                       foregroundColor: Colors.white,
@@ -472,6 +496,117 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
           ],
         ),
       ),
+    );
+  }
+}
+
+// ─── "Alert not sent" — the alert failed outright, so nobody was notified.
+// Offers a retry plus the national service for this situation, one tap to
+// dial (Android never lets an app place an emergency call itself; this opens
+// the dialer with the number filled in). ─────────────────────────────────
+
+class _AlertFailedDialog extends StatelessWidget {
+  final String situation;
+  final String message;
+  final VoidCallback onRetry;
+
+  const _AlertFailedDialog({
+    required this.situation,
+    required this.message,
+    required this.onRetry,
+  });
+
+  Future<void> _call(BuildContext context, String number) async {
+    final launched = await launchUrl(Uri(scheme: 'tel', path: number));
+    if (!launched && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open the dialer. Call $number.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final service = AppConstants.emergencyServiceFor(situation);
+    final numbers = List<String>.from(service['phone'] as List);
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Icon(Icons.error_rounded, color: Colors.red.shade600, size: 26),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'Alert not sent',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20),
+            ),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(message, style: const TextStyle(fontSize: 14.5, height: 1.5)),
+            const SizedBox(height: 18),
+            Text(
+              'Call ${service['name']} now',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 10),
+            for (final number in numbers)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _call(context, number),
+                    icon: const Icon(Icons.call_rounded, size: 20),
+                    label: Text(
+                      number,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade600,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Close', style: TextStyle(color: Colors.grey.shade600)),
+        ),
+        TextButton(
+          onPressed: onRetry,
+          child: Text(
+            'Try again',
+            style: TextStyle(
+              color: Colors.red.shade600,
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
