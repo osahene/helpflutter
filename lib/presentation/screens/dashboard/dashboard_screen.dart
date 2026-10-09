@@ -9,6 +9,7 @@ import 'package:helpflutter/presentation/screens/dashboard/register_contact_scre
 import 'package:helpflutter/presentation/screens/dashboard/emergency_contacts_screen.dart';
 import 'package:helpflutter/presentation/screens/extra/legal_screen.dart';
 import 'package:helpflutter/presentation/screens/extra/video_tutorials_screen.dart';
+import 'package:helpflutter/presentation/widgets/app_tour.dart';
 import 'package:helpflutter/presentation/widgets/bottom_nav_bar.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -22,6 +23,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
   final List<int> _history = [0];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // First-run tour targets: one per bottom-nav tab, plus the first
+  // situation tile on Home.
+  final List<GlobalKey> _tabKeys = List.generate(4, (_) => GlobalKey());
+  final GlobalKey _firstSituationKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) AppTour.showOnce(context, id: 'home_v1', steps: _tourSteps);
+    });
+  }
+
+  List<TourStep> get _tourSteps => [
+        TourStep(
+          target: _tabKeys[1],
+          title: 'Register 5 trusted contacts',
+          body: 'Add up to 5 contacts to your account. The more contacts you '
+              'have, the faster your alert is seen and responded to.',
+        ),
+        TourStep(
+          target: _tabKeys[2],
+          title: 'Make sure they approve',
+          body: 'Each contact receives a message asking them to accept your '
+              'request. Contacts who have not approved will NOT receive your '
+              'alerts — check their status here.',
+        ),
+        TourStep(
+          target: _firstSituationKey,
+          title: 'Sending an alert',
+          body: "Turn on your phone's location, then tap the situation "
+              "you're facing.",
+        ),
+        const TourStep(
+          title: 'Live location or current location',
+          body: 'Before you send, you can switch on Live Location to keep '
+              'sharing where you are for up to 1 hour. Leave it off to send '
+              'just your current location.',
+        ),
+        TourStep(
+          target: _tabKeys[3],
+          title: 'Emergency services',
+          body: 'Find the phone numbers of the police, fire service, '
+              'ambulance and NADMO here. Tap a number to call them directly.',
+        ),
+      ];
 
   void _goToTab(int index) {
     if (_currentIndex == index) return;
@@ -60,6 +108,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               HomeScreen(
                 onTabTapped: _goToTab,
                 onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+                firstSituationKey: _firstSituationKey,
               ),
               const RegisterContactScreen(),
               const ContactsScreen(),
@@ -69,6 +118,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           bottomNavigationBar: BottomNavBar(
             currentIndex: _currentIndex,
             onTap: _goToTab,
+            itemKeys: _tabKeys,
           ),
         ),
       ),
@@ -191,6 +241,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         builder: (_) => const VideoTutorialsScreen(),
                       ),
                     );
+                  },
+                ),
+
+                // Replays the first-run tour
+                _DrawerItem(
+                  icon: Icons.tour_rounded,
+                  label: 'App Tour',
+                  color: const Color(0xFF2C5FD4),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _goToTab(0);
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) AppTour.show(context, _tourSteps);
+                    });
                   },
                 ),
 

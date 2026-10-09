@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:helpflutter/core/constants/constants.dart';
-import 'package:helpflutter/presentation/screens/auth/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ── Onboarding page data ──────────────────────────────────────────────────────
@@ -55,6 +54,10 @@ const _pages = [
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
+
+  /// Whether onboarding has been seen. main.dart's root builder listens to
+  /// this and swaps itself to LoginScreen — onboarding never navigates.
+  static final ValueNotifier<bool> completed = ValueNotifier<bool>(false);
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -137,16 +140,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     HapticFeedback.mediumImpact();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.hasSeenOnboarding, true);
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, animation, _) => const LoginScreen(),
-        transitionsBuilder: (_, anim, _, child) =>
-            FadeTransition(opacity: anim, child: child),
-        transitionDuration: const Duration(milliseconds: 400),
-      ),
-    );
+    // The root (main.dart) swaps to LoginScreen on this — see `completed`.
+    OnboardingScreen.completed.value = true;
   }
 
   @override

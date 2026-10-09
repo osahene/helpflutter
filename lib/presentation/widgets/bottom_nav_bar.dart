@@ -5,10 +5,14 @@ class BottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
 
+  /// Optional keys, one per tab, so the first-run tour can spotlight them.
+  final List<GlobalKey>? itemKeys;
+
   const BottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.itemKeys,
   });
 
   static const _items = [
@@ -37,6 +41,7 @@ class BottomNavBar extends StatelessWidget {
             children: List.generate(_items.length, (index) {
               final bool isSelected = currentIndex == index;
               return _NavTile(
+                key: itemKeys?[index],
                 item: _items[index],
                 isSelected: isSelected,
                 onTap: () {
@@ -68,6 +73,7 @@ class _NavTile extends StatefulWidget {
   final VoidCallback onTap;
 
   const _NavTile({
+    super.key,
     required this.item,
     required this.isSelected,
     required this.onTap,

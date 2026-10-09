@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:helpflutter/logic/auth/auth_bloc.dart';
-import 'package:helpflutter/logic/profile/profile_bloc.dart';
-import 'package:helpflutter/presentation/screens/dashboard/dashboard_screen.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
   final String countryCode;
@@ -173,12 +171,11 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen>
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
-          final userData = state.user;
-          context.read<ProfileBloc>().add(LoadProfile(user: userData));
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const DashboardScreen()),
-          );
+          // main.dart's root already rebuilds to DashboardScreen and loads
+          // the profile on AuthAuthenticated — just clear the login screens
+          // off the stack. Pushing a second Dashboard here left the login
+          // screen underneath it, one popUntil(isFirst) away.
+          Navigator.of(context).popUntil((route) => route.isFirst);
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

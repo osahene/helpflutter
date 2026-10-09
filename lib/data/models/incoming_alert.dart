@@ -59,6 +59,19 @@ class IncomingAlert {
   final bool isVerified;
   final DateTime createdAt;
 
+  /// The viewer's own contact entry on this alert (how the reporter saved
+  /// them) — used to word [message] like the SMS they were sent. Null when
+  /// talking to an older backend that doesn't send it.
+  final String? contactFirstName;
+  final String? contactLastName;
+  final String? relation;
+
+  /// Google Maps link to [location], as in the SMS.
+  final String? mapsLink;
+
+  /// Link to verify/acknowledge the alert, as in the SMS.
+  final String? verificationLink;
+
   IncomingAlert({
     required this.emergencyId,
     required this.reporter,
@@ -69,7 +82,30 @@ class IncomingAlert {
     required this.alertCode,
     required this.isVerified,
     required this.createdAt,
+    this.contactFirstName,
+    this.contactLastName,
+    this.relation,
+    this.mapsLink,
+    this.verificationLink,
   });
+
+  /// The alert worded the same way as the SMS the viewer received
+  /// (backend account/messaging.py emergency_sms). The links are left out:
+  /// the screen shows the location as a map and the verify link as a button.
+  String get message {
+    final name = [contactFirstName, contactLastName]
+        .where((p) => p != null && p.trim().isNotEmpty)
+        .join(' ');
+    final who = (relation != null && relation!.trim().isNotEmpty)
+        ? 'Your ${relation!.toLowerCase()}, ${reporter.name},'
+        : reporter.name;
+    return '$situationDisplay Alert,\n\n'
+        'Hello${name.isEmpty ? '' : ' $name'},\n\n'
+        '$who has triggered an emergency ${situationDisplay.toLowerCase()} '
+        'alert. They are at $locationDisplay.\n\n'
+        'You are entreated to involve the appropriate agencies in order not '
+        'to endanger your life or that of your loved one.';
+  }
 
   factory IncomingAlert.fromJson(Map<String, dynamic> json) {
     final rawLocation = json['location'] as Map<String, dynamic>?;
@@ -90,6 +126,11 @@ class IncomingAlert {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),
+      contactFirstName: (json['contact'] as Map?)?['first_name'] as String?,
+      contactLastName: (json['contact'] as Map?)?['last_name'] as String?,
+      relation: (json['contact'] as Map?)?['relation'] as String?,
+      mapsLink: json['maps_link'] as String?,
+      verificationLink: json['verification_link'] as String?,
     );
   }
 }

@@ -9,6 +9,7 @@ import 'package:helpflutter/core/services/live_location_service.dart';
 import 'package:helpflutter/data/models/contact.dart';
 import 'package:helpflutter/logic/alert/alert_bloc.dart';
 import 'package:helpflutter/logic/contacts/contacts_bloc.dart';
+import 'package:helpflutter/presentation/widgets/app_tour.dart';
 
 class AlertConfirmationScreen extends StatefulWidget {
   final String emergencyType;
@@ -41,6 +42,7 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
   // One id per alert, reused by every retry until it succeeds, so a retry
   // after a lost response can't page contacts twice (see AlertRepository).
   String? _clientAlertId;
+  final GlobalKey _liveLocationKey = GlobalKey();
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -60,6 +62,26 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
     // Load contacts when the screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ContactsBloc>().add(LoadContacts());
+    });
+
+    // First visit only: point out the live-location choice. Delayed a
+    // moment so the contacts section (and the switch below it) has built;
+    // if it still hasn't, AppTour shows the tip as a centred card instead.
+    Future.delayed(const Duration(milliseconds: 700), () {
+      if (!mounted) return;
+      AppTour.showOnce(
+        context,
+        id: 'alert_screen_v1',
+        steps: [
+          TourStep(
+            target: _liveLocationKey,
+            title: 'Live location or current location',
+            body: 'Switch this on to keep sharing your live location with '
+                'your contacts for up to 1 hour after the alert. Leave it off '
+                'to send only your current location.',
+          ),
+        ],
+      );
     });
   }
 
@@ -313,6 +335,7 @@ class _AlertConfirmationScreenState extends State<AlertConfirmationScreen>
                                 // on keeps sharing for up to 1 hour once
                                 // the alert goes out.
                                 Container(
+                                  key: _liveLocationKey,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
                                     vertical: 12,

@@ -83,6 +83,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _apiService = ApiService();
+    OnboardingScreen.completed.value = widget.hasSeenOnboarding;
     initialization();
   }
 
@@ -186,9 +187,18 @@ class _MyAppState extends State<MyApp> {
               builder: (context, state) {
                 if (state is AuthAuthenticated) return const DashboardScreen();
                 if (state is AuthUnauthenticated) {
-                  return widget.hasSeenOnboarding
-                      ? const LoginScreen()
-                      : const OnboardingScreen();
+                  // Onboarding flips this when it finishes, swapping the
+                  // root itself to LoginScreen. It must never replace the
+                  // root route (it used to pushReplacement LoginScreen):
+                  // that left a plain LoginScreen as the first route, so
+                  // every later popUntil(isFirst) — e.g. "OK" after an
+                  // alert — landed on the login screen mid-session.
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: OnboardingScreen.completed,
+                    builder: (context, seen, _) => seen
+                        ? const LoginScreen()
+                        : const OnboardingScreen(),
+                  );
                 }
                 return const _SplashScreen(); // AuthInitial — still checking storage
               },

@@ -89,7 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   void _proceedToTerms() {
-    if (_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return;
     final phone = sanitizePhoneInput(
       _phoneController.text,
       dialCode: _selectedCountry.code,
@@ -266,7 +266,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text(
-                                      'Create Account',
+                                      'Create An Account',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 26,
@@ -517,13 +517,13 @@ class _RegisterScreenState extends State<RegisterScreen>
                             child: RichText(
                               text: const TextSpan(
                                 text: 'Already have an account?  ',
-                                style: TextStyle(color: _kMuted, fontSize: 14),
+                                style: TextStyle(color: _kMuted, fontSize: 16),
                                 children: [
                                   TextSpan(
                                     text: 'Sign in',
                                     style: TextStyle(
                                       color: _kPrimary,
-                                      fontSize: 14,
+                                      fontSize: 16,
                                       fontWeight: FontWeight.w700,
                                       decoration: TextDecoration.underline,
                                     ),

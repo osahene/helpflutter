@@ -109,13 +109,11 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _handleSendOtp() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Stays on until the request actually finishes (AuthOtpSent/AuthError in
+    // the listener below). It used to switch off after a fixed 400ms while
+    // the request was still in flight, so a slow network or a waking server
+    // left the button looking idle for many seconds.
     setState(() => _isLoading = true);
-
-    // Simulate a brief delay so the loading state is visible before navigating
-    await Future.delayed(const Duration(milliseconds: 400));
-
-    if (!mounted) return;
-    setState(() => _isLoading = false);
     _submittedPhone = sanitizePhoneInput(
       _phoneController.text,
       dialCode: _selectedCountry.code,
@@ -132,7 +130,14 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
+      // Only while this screen is on top: during registration the
+      // register/terms screens sit above it and handle AuthOtpSent
+      // themselves — reacting here too pushed a second VerifyOtpScreen.
+      listenWhen: (_, _) => ModalRoute.of(context)?.isCurrent ?? false,
       listener: (context, state) {
+        if (state is AuthOtpSent || state is AuthError) {
+          setState(() => _isLoading = false);
+        }
         if (state is AuthOtpSent) {
           Navigator.push(
             context,
@@ -256,7 +261,7 @@ class _LoginScreenState extends State<LoginScreen>
                                         CrossAxisAlignment.start,
                                     children: [
                                       const Text(
-                                        'Welcome Back',
+                                        'Login',
                                         style: TextStyle(
                                           fontSize: 26,
                                           fontWeight: FontWeight.w700,
@@ -551,7 +556,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   "Don't have an account?",
                                   style: TextStyle(
                                     color: _textSecondary,
-                                    fontSize: 14,
+                                    fontSize: 16,
                                   ),
                                 ),
                                 const SizedBox(width: 4),
@@ -566,7 +571,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     'Register',
                                     style: TextStyle(
                                       color: _accent,
-                                      fontSize: 14,
+                                      fontSize: 16,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),

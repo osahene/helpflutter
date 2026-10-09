@@ -93,6 +93,10 @@ class ApiService {
   Future<Response> markTitbitRead(String id) =>
       _dio.patch('${AppConstants.titbits}$id/read/');
 
+  // Hides it from this user's feed only — the record is kept server-side.
+  Future<Response> dismissTitbit(String id) =>
+      _dio.delete('${AppConstants.titbits}$id/');
+
   Future<Response> registerDevice(String token, String platform) => _dio.post(
     AppConstants.registerDevice,
     data: {'token': token, 'platform': platform},

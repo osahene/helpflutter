@@ -62,5 +62,40 @@ void main() {
       expect(alert.locationDisplay, 'Location unavailable');
       expect(alert.isVerified, false);
     });
+
+    test('message reads like the SMS the contact received', () {
+      final alert = IncomingAlert.fromJson({
+        'emergency_id': 'e4',
+        'reporter': {'name': 'Eric Mensah', 'phone': '+233244000000'},
+        'situation': 'health',
+        'situation_display': 'Health crisis',
+        'location_display': 'Osu, Accra',
+        'alert_code': 'CODE',
+        'contact': {'first_name': 'Ama', 'last_name': 'Owusu', 'relation': 'Friend'},
+        'maps_link': 'https://www.google.com/maps/search/?api=1&query=5.55,-0.18',
+        'verification_link': 'https://helpoohelp.com/verifyEmerg/verify?code=CODE',
+      });
+
+      expect(alert.message, startsWith('Health crisis Alert,\n\nHello Ama Owusu,'));
+      expect(
+        alert.message,
+        contains('Your friend, Eric Mensah, has triggered an emergency '
+            'health crisis alert. They are at Osu, Accra.'),
+      );
+      expect(alert.mapsLink, contains('query=5.55,-0.18'));
+      expect(alert.verificationLink, endsWith('code=CODE'));
+    });
+
+    test('message still reads well without contact details', () {
+      final alert = IncomingAlert.fromJson({
+        'emergency_id': 'e5',
+        'reporter': {'name': 'Eric Mensah'},
+        'situation_display': 'Fire outbreak',
+        'location_display': 'Kumasi',
+      });
+
+      expect(alert.message, startsWith('Fire outbreak Alert,\n\nHello,'));
+      expect(alert.message, contains('Eric Mensah has triggered'));
+    });
   });
 }

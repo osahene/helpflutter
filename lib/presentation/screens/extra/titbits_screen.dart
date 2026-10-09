@@ -3,8 +3,12 @@ import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:helpflutter/core/theme/theme.dart';
+import 'package:helpflutter/data/models/incoming_alert.dart';
 import 'package:helpflutter/data/models/titbit.dart';
+import 'package:helpflutter/data/repositories/incoming_alert_repository.dart';
 import 'package:helpflutter/data/repositories/titbit_repository.dart';
+import 'package:helpflutter/presentation/widgets/alert_map_preview.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// The Titbit inbox — a categorized, card-based feed of weather tips,
 /// hazard warnings, seasonal advisories, admin campaigns and system notices.
@@ -30,6 +34,7 @@ class _TitbitsScreenState extends State<TitbitsScreen> {
 
   static const _filters = <_FilterOption>[
     _FilterOption(null, 'All'),
+    _FilterOption('alert', 'Alerts'),
     _FilterOption('weather', 'Weather'),
     _FilterOption('hazard', 'Hazard'),
     _FilterOption('seasonal', 'Seasonal'),
@@ -137,6 +142,29 @@ class _TitbitsScreenState extends State<TitbitsScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => _TitbitDetailSheet(titbit: titbit, meta: meta, theme: theme),
     );
+  }
+
+  /// Swipe-to-delete. Only this user's copy is hidden (the backend keeps the
+  /// record), so nobody else's inbox is affected. Restored if the request
+  /// fails, so a deletion never silently "comes back" on the next refresh.
+  Future<void> _dismissTitbit(Titbit titbit, int index) async {
+    setState(() => _titbits.removeAt(index));
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await context.read<TitbitRepository>().dismiss(titbit.id);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Notification deleted'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _titbits.insert(index.clamp(0, _titbits.length), titbit));
+      messenger.showSnackBar(
+        const SnackBar(content: Text("Couldn't delete it. Please try again.")),
+      );
+    }
   }
 
   @override
@@ -258,10 +286,16 @@ class _TitbitsScreenState extends State<TitbitsScreen> {
             );
           }
           final titbit = _titbits[index];
-          return _TitbitCard(
-            titbit: titbit,
-            meta: _metaFor(titbit.category),
-            onTap: () => _openTitbit(titbit),
+          return Dismissible(
+            key: ValueKey(titbit.id),
+            direction: DismissDirection.endToStart,
+            background: const _DeleteSwipeBackground(),
+            onDismissed: (_) => _dismissTitbit(titbit, index),
+            child: _TitbitCard(
+              titbit: titbit,
+              meta: _metaFor(titbit.category),
+              onTap: () => _openTitbit(titbit),
+            ),
           );
         },
       ),
@@ -285,6 +319,8 @@ class _CategoryMeta {
 
 _CategoryMeta _metaFor(String category) {
   switch (category) {
+    case 'alert':
+      return const _CategoryMeta(Color(0xFFCC2222), Icons.sos_rounded, 'Alert');
     case 'weather':
       return const _CategoryMeta(Color(0xFF0A72C4), Icons.cloud_outlined, 'Weather');
     case 'hazard':
@@ -503,10 +539,16 @@ class _TitbitDetailSheet extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 16),
-              Text(
-                titbit.body,
-                style: TextStyle(fontSize: 15, height: 1.5, color: Colors.grey.shade800),
-              ),
+              if (titbit.relatedEmergencyId != null)
+                _AlertDetails(
+                  emergencyId: titbit.relatedEmergencyId!,
+                  fallbackBody: titbit.body,
+                )
+              else
+                Text(
+                  titbit.body,
+                  style: TextStyle(fontSize: 15, height: 1.5, color: Colors.grey.shade800),
+                ),
               if (titbit.source != null && titbit.source!.isNotEmpty) ...[
                 const SizedBox(height: 20),
                 Row(
@@ -522,35 +564,149 @@ class _TitbitDetailSheet extends StatelessWidget {
                   ],
                 ),
               ],
-              if (titbit.relatedEmergencyId != null) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.report_gmailerrorred_rounded,
-                          size: 18, color: theme.colorScheme.primary),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Related to a nearby alert.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+class _DeleteSwipeBackground extends StatelessWidget {
+  const _DeleteSwipeBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 24),
+      decoration: BoxDecoration(
+        color: Colors.red.shade600,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.delete_outline_rounded, color: Colors.white),
+          SizedBox(width: 6),
+          Text(
+            'Delete',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// An alert notification, shown the way the SMS reads, plus a map box of
+/// where it was raised. Loaded from the same endpoint the incoming-alert
+/// screen uses, so it also works for notifications created before the
+/// backend stored the full message.
+class _AlertDetails extends StatefulWidget {
+  final String emergencyId;
+  final String fallbackBody;
+
+  const _AlertDetails({required this.emergencyId, required this.fallbackBody});
+
+  @override
+  State<_AlertDetails> createState() => _AlertDetailsState();
+}
+
+class _AlertDetailsState extends State<_AlertDetails> {
+  late final Future<IncomingAlert> _alert = context
+      .read<IncomingAlertRepository>()
+      .getIncomingAlert(widget.emergencyId);
+
+  Future<void> _open(Uri uri) async {
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open that.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bodyStyle = TextStyle(fontSize: 15, height: 1.5, color: Colors.grey.shade800);
+
+    return FutureBuilder<IncomingAlert>(
+      future: _alert,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final alert = snapshot.data;
+        if (alert == null) {
+          // Not loadable (offline, or no longer available) — still show
+          // what the notification itself says.
+          return Text(widget.fallbackBody, style: bodyStyle);
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(alert.message, style: bodyStyle),
+            const SizedBox(height: 16),
+            if (alert.location != null)
+              AlertMapPreview(
+                location: alert.location!,
+                title: alert.reporter.name.isEmpty ? 'Alert location' : alert.reporter.name,
+                mapsLink: alert.mapsLink,
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_off_rounded, color: Colors.grey.shade500),
+                    const SizedBox(width: 10),
+                    const Expanded(child: Text('Location not available for this alert.')),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                if (alert.reporter.phone.isNotEmpty)
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _open(Uri(scheme: 'tel', path: alert.reporter.phone)),
+                      icon: const Icon(Icons.call_rounded, size: 18),
+                      label: const Text('Call'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFCC2222),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                if (alert.reporter.phone.isNotEmpty && alert.verificationLink != null)
+                  const SizedBox(width: 10),
+                if (alert.verificationLink != null)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _open(Uri.parse(alert.verificationLink!)),
+                      icon: const Icon(Icons.verified_outlined, size: 18),
+                      label: const Text('Verify alert'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
         );
       },
     );

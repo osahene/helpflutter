@@ -75,21 +75,31 @@ class AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     if (!_isAuthPath(options.path)) {
-      final token = await SecureStorage.getAccessToken();
-      if (token != null) {
-        if (!_isExpired(token)) {
-          options.headers['Authorization'] = 'Bearer $token';
-        } else {
-          final newToken = await _refresh();
-          if (newToken != null) {
-            options.headers['Authorization'] = 'Bearer $newToken';
-          }
-          // else: refresh was inconclusive (network blip) or the session is
-          // confirmed dead (_refresh() already fired the logout stream in
-          // that case). Either way, let this one request go out without a
-          // fresh token rather than blocking it entirely — onError below is
-          // still there to catch the 401 it'll likely get.
+      String? token = await SecureStorage.getAccessToken();
+      // An expired access token — or a missing one while a refresh token is
+      // still stored — just needs renewing, not a signed-out user.
+      if ((token != null && _isExpired(token)) ||
+          (token == null && await SecureStorage.getRefreshToken() != null)) {
+        token = await _refresh();
+        if (token == null) {
+          // Refresh was inconclusive (no connection, server still waking
+          // up) or the session is confirmed dead (_refresh() already fired
+          // the logout stream). Never send the request without a token: the
+          // server would answer "Authentication credentials were not
+          // provided", which reads like a broken login rather than the
+          // connection problem it is. Fail it as a connection error instead
+          // so callers show a retryable message.
+          return handler.reject(
+            DioException(
+              requestOptions: options,
+              type: DioExceptionType.connectionError,
+              message: 'Could not renew the session before this request.',
+            ),
+          );
         }
+      }
+      if (token != null) {
+        options.headers['Authorization'] = 'Bearer $token';
       }
     }
     handler.next(options);
@@ -149,6 +159,10 @@ class AuthInterceptor extends Interceptor {
         final refreshDio = Dio(
           BaseOptions(
             baseUrl: ApiClient.baseUrl,
+            // Long enough to ride out a sleeping server waking up (~50s on
+            // Render's free tier) instead of hanging forever with no limit.
+            connectTimeout: const Duration(seconds: 60),
+            receiveTimeout: const Duration(seconds: 60),
             headers: {
               'Content-Type': 'application/json',
               'X-API-Key': ApiClient.apiKey,

@@ -16,7 +16,15 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback? onMenuTap;
   final Function(int) onTabTapped;
 
-  const HomeScreen({super.key, this.onMenuTap, required this.onTabTapped});
+  /// Lets the first-run tour spotlight the situation grid's first tile.
+  final GlobalKey? firstSituationKey;
+
+  const HomeScreen({
+    super.key,
+    this.onMenuTap,
+    required this.onTabTapped,
+    this.firstSituationKey,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -147,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       return EmergencyTile(
+                        key: index == 0 ? widget.firstSituationKey : null,
                         title: _situations[index],
                         icon: _icons[index],
                         color: _colors[index],

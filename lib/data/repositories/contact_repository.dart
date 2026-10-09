@@ -20,6 +20,37 @@ abstract class ContactRepository {
   Future<void> deleteContact(String contactId);
 }
 
+/// A contact action that failed — [message] is plain language, shown to the
+/// user as-is (ContactsBloc emits `e.toString()`).
+class ContactException implements Exception {
+  final String message;
+  const ContactException(this.message);
+
+  @override
+  String toString() => message;
+
+  factory ContactException.from(DioException e, String action) {
+    final data = e.response?.data;
+    if (data is Map) {
+      final serverMessage = data['error'] ?? data['detail'] ?? data['message'];
+      if (serverMessage is String && serverMessage.isNotEmpty) {
+        return ContactException(serverMessage);
+      }
+    }
+    switch (e.type) {
+      case DioExceptionType.connectionError:
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return ContactException(
+          "Couldn't $action — check your internet connection and try again.",
+        );
+      default:
+        return ContactException("Couldn't $action. Please try again.");
+    }
+  }
+}
+
 class ContactRepositoryImpl implements ContactRepository {
   final ApiService apiService;
 
@@ -30,9 +61,7 @@ class ContactRepositoryImpl implements ContactRepository {
     try {
       await apiService.createRelation(contact.toJson());
     } on DioException catch (e) {
-      throw Exception(
-        'Failed to add contact: ${e.response?.data ?? e.message}',
-      );
+      throw ContactException.from(e, 'add this contact');
     }
   }
 
@@ -41,9 +70,7 @@ class ContactRepositoryImpl implements ContactRepository {
     try {
       await apiService.deleteContact({'pk': contactId});
     } on DioException catch (e) {
-      throw Exception(
-        'Failed to delete contact: ${e.response?.data ?? e.message}',
-      );
+      throw ContactException.from(e, 'delete this contact');
     }
   }
 
@@ -72,7 +99,7 @@ class ContactRepositoryImpl implements ContactRepository {
       return [];
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) return [];
-      throw Exception('Server Error: ${e.response?.statusCode}');
+      throw ContactException.from(e, 'load your contacts');
     } catch (_) {
       return [];
     }
@@ -100,9 +127,7 @@ class ContactRepositoryImpl implements ContactRepository {
       };
       await apiService.updateContact(payload);
     } on DioException catch (e) {
-      throw Exception(
-        'Failed to update contact: ${e.response?.data ?? e.message}',
-      );
+      throw ContactException.from(e, 'update this contact');
     }
   }
 }

@@ -12,6 +12,10 @@ abstract class TitbitRepository {
   /// Marks a single Titbit as read and returns the updated record.
   Future<Titbit> markRead(String id);
 
+  /// Removes a Titbit from this user's inbox (swipe to delete). Only this
+  /// user's copy is hidden; the backend keeps the record.
+  Future<void> dismiss(String id);
+
   /// Registers this device's FCM token with the backend so it can receive
   /// push notifications.
   Future<void> registerDevice(String token, String platform);
@@ -50,6 +54,11 @@ class TitbitRepositoryImpl implements TitbitRepository {
   Future<Titbit> markRead(String id) async {
     final response = await apiService.markTitbitRead(id);
     return Titbit.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> dismiss(String id) async {
+    await apiService.dismissTitbit(id);
   }
 
   @override
